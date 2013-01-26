@@ -1,3 +1,8 @@
+# Eclipse, Subversion, Maven
+.project
+.classpath
 .svn/
 target/
+
+# Convenience for colocating multiple Tomcats with the source
 /tomcat-*
