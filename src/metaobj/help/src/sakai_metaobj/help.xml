@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
+
+<beans>
+   <bean id="forms_overview" class="org.sakaiproject.component.app.help.model.ResourceBean">
+      <property name="docId"><value>aymj</value></property>
+      <property name="name"><value>Forms Overview</value></property>
+      <property name="location"><value>/sakai_metaobj/aymj.html</value></property>
+      <property name="defaultForTool"><value>sakai.metaobj</value></property>
+   </bean>
+
+   <bean id="forms_resources" class="org.sakaiproject.component.app.help.model.ResourceBean">
+      <property name="docId"><value>aymk</value></property>
+      <property name="name"><value>Resources Tool</value></property>
+      <property name="location"><value>/sakai_metaobj/aymk.html</value></property>
+   </bean>
+
+   <bean id="forms_list" class="org.sakaiproject.component.app.help.model.ResourceBean">
+      <property name="docId"><value>aymo</value></property>
+      <property name="name"><value>Accessing a List of Forms</value></property>
+      <property name="location"><value>/sakai_metaobj/aymo.html</value></property>
+   </bean>
+
+   <bean id="forms_create" class="org.sakaiproject.component.app.help.model.ResourceBean">
+      <property name="docId"><value>ayml</value></property>
+      <property name="name"><value>Adding and Managing Forms</value></property>
+      <property name="location"><value>/sakai_metaobj/ayml.html</value></property>
+   </bean>
+
+   <bean id="forms_view" class="org.sakaiproject.component.app.help.model.ResourceBean">
+      <property name="docId"><value>forms_view</value></property>
+      <property name="name"><value>Viewing a Form</value></property>
+      <property name="location"><value>/sakai_metaobj/forms_view.html</value></property>
+   </bean>
+
+   <bean id="forms_change" class="org.sakaiproject.component.app.help.model.ResourceBean">
+      <property name="docId"><value>aymq</value></property>
+      <property name="name"><value>Editing a Form</value></property>
+      <property name="location"><value>/sakai_metaobj/aymq.html</value></property>
+   </bean>
+
+   <bean id="forms_publish" class="org.sakaiproject.component.app.help.model.ResourceBean">
+      <property name="docId"><value>aymr</value></property>
+      <property name="name"><value>Publishing a Form</value></property>
+      <property name="location"><value>/sakai_metaobj/aymr.html</value></property>
+   </bean>
+
+   <bean id="forms_publish_request" class="org.sakaiproject.component.app.help.model.ResourceBean">
+      <property name="docId"><value>aymt</value></property>
+      <property name="name"><value>Requesting that a Form Be Published Globally</value></property>
+      <property name="location"><value>/sakai_metaobj/aymt.html</value></property>
+   </bean>
+
+   <bean id="forms_publish_global" class="org.sakaiproject.component.app.help.model.ResourceBean">
+      <property name="docId"><value>aymw</value></property>
+      <property name="name"><value>Publishing a Form Globally</value></property>
+      <property name="location"><value>/sakai_metaobj/aymw.html</value></property>
+   </bean>
+
+   <bean id="forms_exportimport" class="org.sakaiproject.component.app.help.model.ResourceBean">
+      <property name="docId"><value>ayna</value></property>
+      <property name="name"><value>Exporting and Importing Forms</value></property>
+      <property name="location"><value>/sakai_metaobj/ayna.html</value></property>
+   </bean>
+
+   <bean id="forms_perms" class="org.sakaiproject.component.app.help.model.ResourceBean">
+      <property name="docId"><value>aymx</value></property>
+      <property name="name"><value>Changing Permissions</value></property>
+      <property name="location"><value>/sakai_metaobj/aymx.html</value></property>
+   </bean>
+
+    <bean id="org.sakaiproject.api.app.help.TableOfContents"
+          class="org.sakaiproject.component.app.help.model.TableOfContentsBean">
+      <property name="name"><value>root</value></property>
+      <property name="categories">
+         <list>
+            <bean id="ospMatrixCategory" class="org.sakaiproject.component.app.help.model.CategoryBean">
+               <property name="name"><value>Forms</value></property>
+               <property name="resources">
+                  <list>
+                     <ref bean="forms_overview"/>
+                     <ref bean="forms_resources"/>
+                     <ref bean="forms_list"/>
+                     <ref bean="forms_create"/>
+                     <ref bean="forms_view"/>
+                     <ref bean="forms_change"/>
+                     <ref bean="forms_publish"/>
+                     <ref bean="forms_publish_request"/>
+                     <ref bean="forms_publish_global"/>
+                     <ref bean="forms_exportimport"/>
+                     <ref bean="forms_perms"/>
+                  </list>
+               </property>
+            </bean>
+           </list>
+         </property>
+       </bean>
+</beans>

@@ -1,0 +1,10 @@
+#!/bin/sh
+
+# compare 2.9 and 2.10 versions of database and produce updates
+# uses diff utility because doing a good diff is surprisingly complex
+
+for i in db2 derby hsqldb mssql mysql oracle postgres
+  do
+  java sqlupdate old/$i/lessonbuilder.sql $i/lessonbuilder.sql $i/lessonbuilder-1.4-1.5.sql
+done
+

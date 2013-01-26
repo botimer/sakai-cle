@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html><head>
+<title>Adding and managing forms</title>
+<style type="text/css">
+		/* Style for specific inline images */
+		div.image{display: inline;}
+		/* Style for specific ordered lists */
+		
+		/* Style for specific table cells */
+		</style>
+<link type="text/css" href="/library/skin/tool_base.css" media="all" rel="stylesheet" />
+<link type="text/css" href="/library/skin/default/tool.css" media="all" rel="stylesheet" />
+</head>
+<body>
+<div class="helpBody">
+<h2>Adding and managing forms</h2>
+<p><strong>Note:</strong> Typically, CIG coordinators perform the
+actions described below.</p>
+
+<h3>Preliminary steps</h3>
+
+
+<p>Before adding a form:</p>
+
+<ol><li>Create, or find, the XSD file that defines the data structure
+you want. Review existing global forms on your instance. You may find
+a form that suits your purposes, in which case you do not need to
+create a new one. You cannot create an XSD file in the Forms tool; to
+create an XSD file, use an offline XML editor or the Form Builder
+(Contrib) tool.  <br /><br />
+</li><li>When creating or editing an XSD file, plan the content
+carefully. Keep the following points in mind:
+<br /><br />
+
+<ul><li>Field names are displayed to the left of the text fields to which
+they apply.
+</li><li>Field names wrap somewhat unpredictably.
+</li><li>Long field names are difficult for participants to read.</li></ul><br />
+</li><li>Consider adding the new form to the Forms tool in a test site in
+order to view and change it as needed before including it in your
+production site.</li></ol>
+
+<h3>Adding a form</h3>
+
+<p>To add a form, within the Forms tool:</p>
+
+<ol><li>If you have not already done so, upload the XSD file (as well as
+any alternate renders for the XSD) to Resources; see <a href="content.hlp?docId=avby">Working with files in Resources</a>.  <br /><br />
+</li><li>In the site where you wish to add the form, open the Forms tool.
+<br /><br />
+</li><li>If you are not already on the Manage Forms screen, click the reset
+button ( <div class="inlineimage image"><img class="noborder" src="image/a009j.jpg" alt="The reset button looks like two blue arrows" /></div> ).  <br /><br />
+</li><li>In the menu at the top, click <strong><code>Add</code></strong>.
+<br /><br />
+</li><li>In the "Name" box, enter a meaningful name for the form.  
+
+<p>Choose the name carefully; be sure to choose a name that indicates
+the specific use of this form. After the form has been added to the
+site or published globally, its name will be visible in Resources to
+all site participants (or if published globally, to all participants
+of all sites in the instance). Therefore, if the form is tailored to a
+particular matrix cell or wizard page, a generic name such as
+Reflection is misleading and makes the form seem appropriate for
+general use when, in fact, it is not. Use a generic name for a form
+only if the fields, field names, and instructions in it make the form
+suitable for use in a wide variety of situations.</p>
+
+</li><li>Click <strong><code>Select Schema File</code></strong>.
+<br /><br />
+</li><li>Find the XSD file you uploaded in step 1 and, next to its name,
+click <strong><code>Select</code></strong>.  <br /><br />
+</li><li>Click <strong><code>Continue</code></strong> to return to the Add Form screen. 
+<br /><br />
+</li><li>In the "Instruction" box, enter instructions to help the
+participant complete the form.  Use the icons and drop-down menus to
+format the text as appropriate.  <br /><br />
+</li><li>If you developed an alternate form creation renderer (controlling
+the data entry view) and/or form view renderer (controlling the
+read-only view) for the XSD, use the <strong><code>Select XSL File</code></strong> links to
+upload and select the XSL renderers.  <br /><br />
+</li><li>To preview the form, click <strong><code>Preview</code></strong>.  Enter test data into
+the preview version of the form and click <strong><code>Validate</code></strong> to ensure
+the form works properly.  Then, click <strong><code>Return</code></strong> to go back to
+the Add Form screen.  <br /><br />
+</li><li>To complete the process, click <strong><code>Add Form</code></strong>. The new form is
+added to the list in an unpublished state.</li></ol>
+
+<h3>Previewing a form</h3>
+
+<p>Before adding a form to a matrix cell, wizard page, or portfolio
+template, you can preview the form to make sure it's appropriate for
+your intended purpose. You have two options:</p>
+
+<h4>Method one</h4>
+
+<p>This method works for forms listed in the Forms tool, including hidden
+forms. However, it cannot be used to preview global forms, i.e., forms
+that the administrator has made available to all users.</p>
+
+<ol><li>Go to the worksite containing the form you wish to preview. From
+the menubar, click <strong><code>Forms</code></strong>.
+<br /><br />
+</li><li>On the Manage Forms page, for the form you wish to preview, click
+<strong><code>Edit</code></strong>.
+<br /><br />
+</li><li>On the Edit Form page, click <strong><code>Preview</code></strong>. An empty version of
+the form will appear.  <br /><br />
+</li><li>To test the form, enter sample data in each field and click
+<strong><code>Validate</code></strong>. To return to the Edit Form page, click <strong><code>Return</code></strong>.
+<br /><br />
+</li><li>Click <strong><code>Save Changes</code></strong> or <strong><code>Cancel</code></strong> to return to the
+Manage Forms page.</li></ol>
+
+
+<h4>Method two</h4> 
+
+<p>This method works for site-specific and global forms, but cannot be
+used to preview hidden forms.</p>
+
+<ol><li>Go to My Workspace. In the menubar, click <strong><code>Resources</code></strong> to
+open the Resources tool.  <br /><br />
+</li><li>Open the <strong><code>Add</code></strong> menu next to any folder, and choose <strong><code>New
+Form Item</code></strong>.  <br /><br />
+</li><li>All of the forms to which you have access (except hidden forms)
+will be listed on the Select a Form page. Forms are organized into
+groups by site (the site in which the form resides), and then
+alphabetically by form name. Select the form you wish to preview, and
+click <strong><code>Continue</code></strong>. An empty version of the form will appear.
+<br /><br />
+</li><li>To test the form, enter sample data in each field and click
+<strong><code>Continue</code></strong>. The Edit Details screen for the form will be
+displayed. Otherwise, click <strong><code>Back</code></strong> to return to the list and
+preview another form, or <strong><code>Cancel</code></strong> to return to Resources in My
+Workspace.  <br /><br />
+</li><li>Give the completed form an appropriate name, complete the Edit
+Details screen, and click <strong><code>Finish</code></strong>. The Resources folder for My
+Workspace will be displayed.  <br /><br />
+</li><li>Click the name of the completed form to review its
+content; remove the completed form if it is no longer needed.
+</li></ol>
+
+</div>
+</body></html>

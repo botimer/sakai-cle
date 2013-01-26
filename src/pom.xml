@@ -1,0 +1,272 @@
+<?xml version="1.0"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <artifactId>master</artifactId>
+        <groupId>org.sakaiproject</groupId>
+        <version>2.10-SNAPSHOT</version>
+        <relativePath>master/pom.xml</relativePath>
+    </parent>
+
+    <name>Sakai base pom</name>
+    <groupId>org.sakaiproject</groupId>
+    <artifactId>base</artifactId>
+    <packaging>pom</packaging>
+
+    <organization>
+        <name>The Sakai Foundation</name>
+        <url>http://www.sakaiproject.org/</url>
+    </organization>
+
+    <url>http://www.sakaiproject.org/</url>
+
+    <licenses>
+        <license>
+            <name>Educational Community License, Version 2.0</name>
+            <url>http://www.opensource.org/licenses/ecl2.txt</url>
+            <distribution>svn</distribution>
+        </license>
+    </licenses>
+
+    <issueManagement>
+        <system>Jira</system>
+        <url>http://issues.sakaiproject.org/jira/browse/SAK</url>
+    </issueManagement>
+
+    <scm>
+        <connection>scm:svn:https://source.sakaiproject.org/svn/sakai/trunk</connection>
+        <developerConnection>scm:svn:https://source.sakaiproject.org/svn/sakai/trunk</developerConnection>
+        <url>https://source.sakaiproject.org/svn/sakai/trunk</url>
+    </scm>
+
+    <profiles>
+        <profile>
+            <id>all</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <modules>
+                <!-- TEMP -->
+                <module>deploy</module>
+            
+                <!-- Indie services -->
+                <module>kernel</module>
+                <module>common</module>
+                <module>content-review</module>
+                <module>edu-services</module>
+                <module>emailtemplateservice</module>
+                <module>entitybroker</module>
+                <module>jsf</module>
+                <module>sakai-mock</module>
+                <module>webservices</module>
+                
+                <!-- Indie tools -->
+                <module>basiclti</module>
+                <module>jobscheduler</module>
+                <module>lessonbuilder</module>
+                <module>mailsender</module>
+                <module>msgcntr</module>
+                <module>polls</module>
+                <module>profile</module>
+                <module>profile2</module>
+                <module>reset-pass</module>
+                <module>samigo</module>
+                <module>search</module>
+                <module>shortenedurl</module>
+                <module>sitestats</module>
+                
+                <!-- Monolithic Sakai -->
+                <!-- <module>kernel-deploy</module> -->
+                <module>master</module>
+                <!-- <module>core-deploy</module> -->
+                <!-- <module>jstl-shared-deploy</module> -->
+                <module>access</module>
+                <module>alias</module>
+                <module>announcement</module>
+                <module>archive</module>
+                <module>assignment</module>
+                <module>authz</module>
+                <module>calendar</module>
+                <module>chat</module>
+                <module>citations</module>
+                <module>config</module>
+                <module>content</module>
+                <module>courier</module>
+                <module>dav</module>
+                <module>gradebook</module>
+                <module>help</module>
+                <module>linktool</module>
+                <module>login</module>
+                <module>mailarchive</module>
+                <module>memory</module>
+                <module>message</module>
+                <module>metaobj</module>
+                <module>osp</module>
+                <module>podcasts</module>
+                <module>portal</module>
+                <module>postem</module>
+                <module>presence</module>
+                <module>providers</module>
+                <module>reference</module>
+                <module>rights</module>
+                <module>roster</module>
+                <module>rwiki</module>
+                <module>sections</module>
+                <module>site</module>
+                <module>site-manage</module>
+                <module>syllabus</module>
+                <module>taggable</module>
+                <module>textarea</module>
+                <module>tool</module>
+                <module>user</module>
+                <module>usermembership</module>
+                <module>velocity</module>
+                <module>warehouse</module>
+                <module>web</module>
+            </modules>
+        </profile>
+        <profile>
+            <id>experimental</id>
+            <modules>
+                <!-- TEMP -->
+                <module>deploy</module>
+            
+                <!-- Indie purepoms -->
+                <module>purepoms</module>
+            
+                <!-- Indie services -->
+                <module>kernel</module>
+                <module>common</module>
+                <module>content-review</module>
+                <module>edu-services</module>
+                <module>emailtemplateservice</module>
+                <module>entitybroker</module>
+                <module>jsf</module>
+                <module>sakai-mock</module>
+                <module>webservices</module>
+                
+                <!-- Indie tools -->
+                <module>basiclti</module>
+                <module>jobscheduler</module>
+                <module>lessonbuilder</module>
+                <module>mailsender</module>
+                <module>msgcntr</module>
+                <module>polls</module>
+                <module>profile</module>
+                <module>profile2</module>
+                <module>reset-pass</module>
+                <module>samigo</module>
+                <module>search</module>
+                <module>shortenedurl</module>
+                <module>sitestats</module>
+                
+                <!-- Monolithic Sakai -->
+                <!-- <module>kernel-deploy</module> -->
+                <module>master</module>
+                <!-- <module>core-deploy</module> -->
+                <!-- <module>jstl-shared-deploy</module> -->
+                <module>access</module>
+                <module>alias</module>
+                <module>announcement</module>
+                <module>archive</module>
+                <module>assignment</module>
+                <module>authz</module>
+                <module>calendar</module>
+                <module>chat</module>
+                <module>citations</module>
+                <module>config</module>
+                <module>content</module>
+                <module>courier</module>
+                <module>dav</module>
+                <module>gradebook</module>
+                <module>help</module>
+                <module>linktool</module>
+                <module>login</module>
+                <module>mailarchive</module>
+                <module>memory</module>
+                <module>message</module>
+                <module>metaobj</module>
+                <module>osp</module>
+                <module>podcasts</module>
+                <module>portal</module>
+                <module>postem</module>
+                <module>presence</module>
+                <module>providers</module>
+                <module>reference</module>
+                <module>rights</module>
+                <module>roster</module> <!-- replace with roster2 -->
+                <module>rwiki</module>
+                <module>sections</module>
+                <module>site</module>
+                <module>site-manage</module>
+                <module>syllabus</module>
+                <module>taggable</module>
+                <module>textarea</module>
+                <module>tool</module>
+                <module>user</module>
+                <module>usermembership</module>
+                <module>velocity</module>
+                <module>warehouse</module>
+                <module>web</module>
+                
+                <!-- Experimental -->
+                <module>hybrid</module>
+                <!-- <module>roster2</module> -->
+            </modules>
+        </profile>
+        
+        <!-- pack profiles for building release artifacts -->
+        <profile>
+            <id>pack</id>
+            <modules>
+				<module>master</module>
+                <module>pack/pack-src</module>
+                <module>pack/pack-bin</module>
+                <module>pack/pack-demo</module>
+            </modules>
+        </profile>
+        <profile>
+            <id>pack-bin</id>
+            <modules>
+				<module>master</module>
+                <module>pack/pack-bin</module>
+            </modules>
+        </profile>
+        <profile>
+            <id>pack-demo</id>
+            <modules>
+                <module>master</module>
+                <module>pack/pack-demo</module>
+            </modules>
+        </profile>
+        <profile>
+            <id>pack-src</id>
+            <modules>
+                <module>master</module>
+                <module>pack/pack-src</module>
+            </modules>
+        </profile>
+        
+    </profiles>
+    <reporting>
+        <plugins>
+            <plugin>
+                <!-- javadocs -->
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>2.8.1</version>
+                <configuration>
+                    <debug>true</debug>
+                    <links>
+                        <link>http://download.oracle.com/javase/6/docs/api/</link>
+                    </links>
+                    <breakiterator>true</breakiterator>
+                    <verbose>false</verbose>
+                    <maxmemory>1024m</maxmemory>
+                    <additionalJOption>-J-Xms168m -J-Xmx1024m -J-XX:PermSize=128m -J-XX:NewSize=64m</additionalJOption>
+                </configuration>
+            </plugin>
+        </plugins>
+    </reporting>
+</project>
