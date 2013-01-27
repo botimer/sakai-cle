@@ -6,6 +6,11 @@ target/
 
 # Various paths that get generated during builds
 /src/lessonbuilder/tool/src/ddl/
+/src/basiclti/basiclti-impl/testdb.log
+/src/basiclti/basiclti-impl/testdb.properties
+/src/basiclti/basiclti-impl/testdb.script
+/src/search/search-impl/impl/derby.log
+
 
 # Convenience for colocating multiple Tomcats with the source
 /tomcat
