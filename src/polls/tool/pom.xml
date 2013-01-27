@@ -17,6 +17,9 @@
         This project creates a WAR containing the Poll Tool for Sakai.
     </description>
 
+    <properties>
+        <rsfutil.version>0.8.0-SNAPSHOT</rsfutil.version>
+    </properties>
     <!-- included for staging RSF libraries -->
     <repositories>
       <repository>

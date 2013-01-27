@@ -53,7 +53,7 @@ public class AddCommentController extends AbstractPresentationController {
          errors.rejectValue("comment", "required", "required");
       }
 
-      request.put(BindException.ERROR_KEY_PREFIX + "newComment",
+      request.put(BindException.MODEL_KEY_PREFIX + "newComment",
          errors);
 
       if (!errors.hasErrors()) {

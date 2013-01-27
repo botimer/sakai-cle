@@ -59,8 +59,7 @@
 
 		<dependency>
 			<groupId>org.springframework</groupId>
-			<artifactId>spring</artifactId>
-			<scope>provided</scope>
+			<artifactId>spring-core</artifactId>
 		</dependency>
 
 		<!-- internal dependencies -->
