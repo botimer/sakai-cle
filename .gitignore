@@ -4,5 +4,9 @@
 .svn/
 target/
 
+# Various paths that get generated during builds
+/src/lessonbuilder/tool/src/ddl/
+
 # Convenience for colocating multiple Tomcats with the source
+/tomcat
 /tomcat-*
