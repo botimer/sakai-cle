@@ -92,7 +92,7 @@ public class AddableResourceBundleViewResolver extends ResourceBundleViewResolve
                Thread.currentThread().getContextClassLoader());
          reader.registerBeanDefinitions(bundle);
       }
-      factory.registerCustomEditor(Resource.class, new ResourceEditor(getApplicationContext()));
+      factory.registerCustomEditor(Resource.class, (new ResourceEditor(getApplicationContext())).getClass());
 
       if (isCache()) {
          factory.preInstantiateSingletons();
