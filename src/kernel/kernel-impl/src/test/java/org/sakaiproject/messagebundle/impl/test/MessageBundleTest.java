@@ -1,9 +1,6 @@
 /**********************************************************************************
- * $URL: https://source.sakaiproject.org/svn/kernel/branches/KNL-515/kernel-impl/src/test/java/org/sakaiproject/site/impl/SiteServiceTest.java $
- * $Id: SiteServiceTest.java 107504 2012-04-24 13:20:06Z matthew.buckett@oucs.ox.ac.uk $
- ***********************************************************************************
  *
- * Copyright (c) 2006, 2008 Sakai Foundation
+ * Copyright (c) 2006, 2008, 2013 Sakai Foundation
  *
  * Licensed under the Educational Community License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
