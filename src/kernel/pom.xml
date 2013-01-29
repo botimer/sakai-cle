@@ -42,10 +42,11 @@
     <inceptionYear>2003</inceptionYear>
     <properties>
          <sakai.jdk.version>1.6</sakai.jdk.version>
-	 <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-	 <kernel.hibernate.version>3.6.10.Final</kernel.hibernate.version>
-	 <kernel.hibernate.annotations.version>3.2.0.Final</kernel.hibernate.annotations.version>
-	 <kernel.hibernate.jpa.version>1.0.1.Final</kernel.hibernate.jpa.version>
+         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+         <kernel.spring.version>3.2.1.RELEASE</kernel.spring.version>
+         <kernel.hibernate.version>3.6.10.Final</kernel.hibernate.version>
+         <kernel.hibernate.annotations.version>3.2.0.Final</kernel.hibernate.annotations.version>
+         <kernel.hibernate.jpa.version>1.0.1.Final</kernel.hibernate.jpa.version>
     </properties>
     <mailingLists>
         <mailingList>
@@ -522,77 +523,72 @@
             <dependency>
                 <groupId>org.springframework</groupId>
                 <artifactId>spring-core</artifactId>
-                <version>3.1.2.RELEASE</version>
+                <version>${kernel.spring.version}</version>
                 <scope>provided</scope>
             </dependency>
             <dependency>
                 <groupId>org.springframework</groupId>
                 <artifactId>spring-test</artifactId>
-                <version>3.1.2.RELEASE</version>
+                <version>${kernel.spring.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.springframework</groupId>
                 <artifactId>spring-aop</artifactId>
-                <version>3.1.2.RELEASE</version>
-                <scope>provided</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.springframework</groupId>
-                <artifactId>spring-asm</artifactId>
-                <version>3.1.2.RELEASE</version>
+                <version>${kernel.spring.version}</version>
                 <scope>provided</scope>
             </dependency>
             <dependency>
                 <groupId>org.springframework</groupId>
                 <artifactId>spring-beans</artifactId>
-                <version>3.1.2.RELEASE</version>
+                <version>${kernel.spring.version}</version>
                 <scope>provided</scope>
             </dependency>
             <dependency>
                 <groupId>org.springframework</groupId>
                 <artifactId>spring-context</artifactId>
-                <version>3.1.2.RELEASE</version>
+                <version>${kernel.spring.version}</version>
                 <scope>provided</scope>
             </dependency>
             <dependency>
                 <groupId>org.springframework</groupId>
                 <artifactId>spring-context-support</artifactId>
-                <version>3.1.2.RELEASE</version>
+                <version>${kernel.spring.version}</version>
                 <scope>provided</scope>
             </dependency>
             <dependency>
                 <groupId>org.springframework</groupId>
                 <artifactId>spring-expression</artifactId>
-                <version>3.1.2.RELEASE</version>
+                <version>${kernel.spring.version}</version>
                 <scope>provided</scope>
             </dependency>
             <dependency>
                 <groupId>org.springframework</groupId>
                 <artifactId>spring-jdbc</artifactId>
-                <version>3.1.2.RELEASE</version>
+                <version>${kernel.spring.version}</version>
                 <scope>provided</scope>
             </dependency>
             <dependency>
                 <groupId>org.springframework</groupId>
                 <artifactId>spring-orm</artifactId>
-                <version>3.1.2.RELEASE</version>
+                <version>${kernel.spring.version}</version>
                 <scope>provided</scope>
             </dependency>
             <dependency>
                 <groupId>org.springframework</groupId>
                 <artifactId>spring-tx</artifactId>
-                <version>3.1.2.RELEASE</version>
+                <version>${kernel.spring.version}</version>
+                <scope>provided</scope>
             </dependency>
             <dependency>
                 <groupId>org.springframework</groupId>
                 <artifactId>spring-web</artifactId>
-                <version>3.1.2.RELEASE</version>
+                <version>${kernel.spring.version}</version>
                 <scope>provided</scope>
             </dependency>
             <dependency>
                 <groupId>org.springframework</groupId>
                 <artifactId>spring-webmvc</artifactId>
-                <version>3.1.2.RELEASE</version>
+                <version>${kernel.spring.version}</version>
             </dependency>
             <dependency>
                 <groupId>javax.activation</groupId>

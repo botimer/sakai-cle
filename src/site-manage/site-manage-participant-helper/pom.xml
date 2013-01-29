@@ -19,12 +19,6 @@
     <inceptionYear>2003</inceptionYear>
     <packaging>war</packaging>
 
-    <properties>
-        <rsfutil.version>0.8.0-SNAPSHOT</rsfutil.version>
-        <deploy.webappname>tbook</deploy.webappname>
-        <appserver.id>${sakai.appserver.id}</appserver.id>
-    </properties>
-
     <dependencies>
         <dependency>
             <groupId>org.sakaiproject.kernel</groupId>

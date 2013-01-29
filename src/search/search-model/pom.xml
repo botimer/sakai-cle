@@ -45,7 +45,7 @@
 <!-- other resources for the jar - the message bundles -->
   </build>
   <dependencies>
-     <dependency>
+    <dependency>
       <groupId>org.sakaiproject.search</groupId>
       <artifactId>search-api</artifactId>
     </dependency>
