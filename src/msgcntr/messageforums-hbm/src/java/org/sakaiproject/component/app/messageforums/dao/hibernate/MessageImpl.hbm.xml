@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE hibernate-mapping
     PUBLIC "-//Hibernate/Hibernate Mapping DTD//EN"
-    "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+    "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 
 <hibernate-mapping>
 
@@ -37,7 +37,7 @@
     <property name="title">
       <column name="TITLE" length="255" not-null="true" index="MFR_MESSAGE_TITLE_I"/>
     </property>
-    <property name="body" type="text">
+    <property name="body" type="materialized_clob">
       <column name="BODY" not-null="false" />
     </property>
     <property name="author">
@@ -130,10 +130,10 @@
       <property name="externalEmailAddress">
         <column name="EXTERNAL_EMAIL_ADDRESS" length="255" not-null="false" />
       </property>
-      <property name="recipientsAsText" type="text" not-null="false" >
+      <property name="recipientsAsText" type="materialized_clob" not-null="false" >
         <column name="RECIPIENTS_AS_TEXT"/>
       </property>      
-      <property name="recipientsAsTextBcc" type="text" not-null="false" >
+      <property name="recipientsAsTextBcc" type="materialized_clob" not-null="false" >
         <column name="RECIPIENTS_AS_TEXT_BCC"/>
       </property> 
     </subclass>
