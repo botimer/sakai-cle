@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/basiclti/trunk/basiclti-tool/src/java/org/sakaiproject/blti/tool/LTIAdminTool.java $
- * $Id: LTIAdminTool.java 110352 2012-07-11 18:50:47Z zqian@umich.edu $
+ * $Id: LTIAdminTool.java 119499 2013-02-05 05:43:39Z zqian@umich.edu $
  ***********************************************************************************
  *
  * Copyright (c) 2011 The Sakai Foundation
@@ -847,7 +847,7 @@ public class LTIAdminTool extends VelocityPortletPaneledAction
 		Properties reqProps = data.getParameters().getProperties();
 		String id = data.getParameters().getString(LTIService.LTI_ID);
 		String toolId = data.getParameters().getString(LTIService.LTI_TOOL_ID);
-		String title = data.getParameters().getString(LTIService.LTI_TITLE);
+		String title = data.getParameters().getString(LTIService.LTI_PAGETITLE);
 		Object retval = ltiService.insertToolContent(id, toolId, reqProps);
 		
 		if ( retval instanceof String ) 

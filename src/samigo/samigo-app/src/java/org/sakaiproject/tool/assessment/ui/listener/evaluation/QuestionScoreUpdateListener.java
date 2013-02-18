@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/sam/trunk/samigo-app/src/java/org/sakaiproject/tool/assessment/ui/listener/evaluation/QuestionScoreUpdateListener.java $
- * $Id: QuestionScoreUpdateListener.java 118338 2013-01-14 19:16:05Z ktsao@stanford.edu $
+ * $Id: QuestionScoreUpdateListener.java 119797 2013-02-08 23:28:38Z ktsao@stanford.edu $
  ***********************************************************************************
  *
  * Copyright (c) 2004, 2005, 2006, 2007, 2008, 2009 The Sakai Foundation
@@ -61,7 +61,7 @@ import org.sakaiproject.tool.assessment.util.TextFormat;
  * <p>Copyright: Copyright (c) 2004</p>
  * <p>Organization: Sakai Project</p>
  * @author Ed Smiley
- * @version $Id: QuestionScoreUpdateListener.java 118338 2013-01-14 19:16:05Z ktsao@stanford.edu $
+ * @version $Id: QuestionScoreUpdateListener.java 119797 2013-02-08 23:28:38Z ktsao@stanford.edu $
  */
 
 public class QuestionScoreUpdateListener
@@ -126,6 +126,19 @@ public class QuestionScoreUpdateListener
           (ar.getAssessmentGradingId() + ":" + itemId);
         if (datas == null)
           datas = new ArrayList();
+        
+        int fibFinNumCorrect  = 0;
+        if (bean.getTypeId().equals("8") || bean.getTypeId().equals("11")) {        
+        	Iterator iter1 = datas.iterator();
+        	while (iter1.hasNext()){
+        		Object obj = iter1.next();
+        		ItemGradingData data = (ItemGradingData) obj;
+        		if (data.getIsCorrect() != null && data.getIsCorrect().booleanValue()) {
+        			fibFinNumCorrect++;
+        		}
+        	}
+        }
+        
         Iterator iter2 = datas.iterator();
         while (iter2.hasNext()){
           Object obj = iter2.next();
@@ -133,7 +146,15 @@ public class QuestionScoreUpdateListener
           ItemGradingData data = (ItemGradingData) obj;
 
           // check if there is differnce in score, if so, update. Otherwise, do nothing
-          float newAutoScore = (Float.valueOf(ar.getTotalAutoScore())).floatValue() / (float) datas.size();
+          float newAutoScore = 0;
+          if ((bean.getTypeId().equals("8") || bean.getTypeId().equals("11")) && fibFinNumCorrect != 0) {
+        	  if (Boolean.TRUE.equals(data.getIsCorrect())) {
+        		  newAutoScore = (Float.valueOf(ar.getTotalAutoScore())).floatValue() / (float) fibFinNumCorrect;
+        	  }
+          }
+          else {
+        	  newAutoScore = (Float.valueOf(ar.getTotalAutoScore())).floatValue() / (float) datas.size();
+          }
           String newComments = TextFormat.convertPlaintextToFormattedTextNoHighUnicode(log, ar.getComments());
           ar.setComments(newComments);
           if (newComments!=null) {

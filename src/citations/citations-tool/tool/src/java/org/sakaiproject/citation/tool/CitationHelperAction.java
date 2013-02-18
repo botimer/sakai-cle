@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/citations/trunk/citations-tool/tool/src/java/org/sakaiproject/citation/tool/CitationHelperAction.java $
- * $Id: CitationHelperAction.java 118204 2013-01-09 18:22:51Z jimeng@umich.edu $
+ * $Id: CitationHelperAction.java 119320 2013-01-30 15:15:14Z dgcliff@iu.edu $
  ***********************************************************************************
  *
  * Copyright (c) 2006, 2007, 2008, 2009 The Sakai Foundation
@@ -1817,6 +1817,8 @@ public class CitationHelperAction extends VelocityPortletPaneledAction
 		}
 		context.put("citations", newIterator);
 		context.put("citationCollectionId", collection.getId());
+		context.put("resourceId", resourceId);
+		
 		if(! collection.isEmpty())
 		{
 			context.put("show_citations", Boolean.TRUE);

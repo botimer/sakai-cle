@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/basiclti/trunk/basiclti-impl/src/java/org/sakaiproject/util/foorm/Foorm.java $
- * $Id: Foorm.java 106522 2012-04-04 10:45:41Z csev@umich.edu $
+ * $Id: Foorm.java 119519 2013-02-05 19:00:15Z zqian@umich.edu $
  ***********************************************************************************
  *
  * Copyright (c) 2011 The Sakai Foundation
@@ -434,6 +434,8 @@ public class Foorm {
 		int val = 0;
 		if (value != null && value instanceof Integer)
 			val = ((Integer) value).intValue();
+		if (value != null && value instanceof Number)
+			val = ((Number) value).intValue();
 		if (value != null && value instanceof String) {
 			Integer ival = new Integer((String) value);
 			val = ival.intValue();
@@ -569,17 +571,39 @@ public class Foorm {
 		Properties info = parseFormString(fieldinfo);
 		String field = info.getProperty("field", null);
 		String type = info.getProperty("type", null);
-		Object value = getField(row, field);
+		
 		if (field == null || type == null) {
 			throw new IllegalArgumentException(
 					"All model elements must include field name and type");
 		}
 
+		Object value = getField(row, field);
+		String label = info.getProperty("label", field);
+		
+		// look for tool id prefix
+		if (field.indexOf("_") != -1)
+		{
+			String[] array = field.split("_");
+			
+			try
+			{
+				// the first array item should be an long value
+				Long.parseLong(array[0]);
+				// reset the input value
+				value = getField(row, array[1]);
+				// reset the input label
+				label = info.getProperty("label", array[1]);
+			}
+			catch (NumberFormatException e)
+			{
+				// do nothing
+			}
+		}
+		
 		String hidden = info.getProperty("hidden", null);
 		if ("true".equals(hidden))
 			return "";
 
-		String label = info.getProperty("label", field);
 		boolean required = "true".equals(info.getProperty("required", "false"));
 		String size = info.getProperty("size", "40");
 		String cols = info.getProperty("cols", "40");
@@ -611,6 +635,12 @@ public class Foorm {
 			String[] choiceList = choices.split(",");
 			if (choiceList.length < 1)
 				return "\n<!-- Foorm.formInput() requires choices=on,off,part -->\n";
+			
+			// set the default value of radio button
+			if (value == null)
+			{
+				value= "0";
+			}
 			return formInputRadio(value, field, label, required, choiceList, loader);
 		}
 		if ("header".equals(type))
@@ -1242,7 +1272,15 @@ public class Foorm {
 			} else {
 				// Allow = 0ff (0) or On (1)
 				int value = getInt(getField(controlRow, "allow" + field));
-				if (value == 1 || ! isFieldSet(controlRow, "allow"+field) ) ret.add(line);
+				if (value == 1)
+				{
+					line = line.replaceAll("hidden=true", "hidden=false");
+					ret.add(line);
+				}
+				else if (! isFieldSet(controlRow, "allow"+field) )
+				{
+					ret.add(line);
+				}
 			}
 		}
 		return ret.toArray(new String[ret.size()]);

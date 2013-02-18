@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/sam/trunk/samigo-api/src/java/org/sakaiproject/tool/assessment/data/dao/grading/ItemGradingData.java $
- * $Id: ItemGradingData.java 118338 2013-01-14 19:16:05Z ktsao@stanford.edu $
+ * $Id: ItemGradingData.java 119797 2013-02-08 23:28:38Z ktsao@stanford.edu $
  ***********************************************************************************
  *
  * Copyright (c) 2004, 2005, 2006, 2008 The Sakai Foundation
@@ -54,6 +54,7 @@ public class ItemGradingData implements java.io.Serializable {
 	// these two properties are used by audio question in Samigo 2.2
 	private Integer attemptsRemaining;
 	private String lastDuration;
+	private Boolean isCorrect;
 	private List mediaArray;
 	private Set<ItemGradingAttachment> itemGradingAttachmentSet = new HashSet<ItemGradingAttachment>();
 
@@ -199,6 +200,17 @@ public class ItemGradingData implements java.io.Serializable {
 
 	public void setLastDuration(String lastDuration) {
 		this.lastDuration = lastDuration;
+	}
+	
+	public Boolean getIsCorrect() {
+		if (isCorrect == null) {
+			isCorrect = Boolean.FALSE;
+		}
+		return isCorrect;
+	}
+
+	public void setIsCorrect(Boolean isCorrect) {
+		this.isCorrect = isCorrect;
 	}
 
 	public List getMediaArray() {

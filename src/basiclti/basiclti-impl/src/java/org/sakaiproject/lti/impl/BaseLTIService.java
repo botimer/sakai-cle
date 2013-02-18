@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/basiclti/trunk/basiclti-impl/src/java/org/sakaiproject/lti/impl/BaseLTIService.java $
- * $Id: BaseLTIService.java 116560 2012-11-20 04:58:35Z zqian@umich.edu $
+ * $Id: BaseLTIService.java 119499 2013-02-05 05:43:39Z zqian@umich.edu $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008, 2009 The Sakai Foundation
@@ -801,23 +801,17 @@ public abstract class BaseLTIService implements LTIService {
 				SitePage sitePage = site.addPage();
 		
 				ToolConfiguration tool = sitePage.addTool(WEB_PORTLET);
-				String toolId = tool.getPageId();
+				tool.getPlacementConfig().setProperty("source",(String)content.get("launch_url"));
+				tool.setTitle((String) content.get(LTI_TITLE));
+				
 				sitePage.setTitle(button_text);
 				sitePage.setTitleCustom(true);
-				
 				siteService.save(site);
-				
-				tool.getPlacementConfig().setProperty("source",(String)content.get("launch_url"));
-				tool.setTitle(button_text);
-		
-				tool.save();
 		
 				// Record the new placement in the content item
 				Properties newProps = new Properties();
 				newProps.setProperty(LTI_PLACEMENT, tool.getId());
 				retval = updateContent(key, newProps, siteId);
-				
-				siteService.save(site);
 			}
 			catch (PermissionException ee)
 			{

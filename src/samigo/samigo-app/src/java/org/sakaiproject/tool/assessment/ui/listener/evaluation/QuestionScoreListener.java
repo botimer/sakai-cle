@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/sam/trunk/samigo-app/src/java/org/sakaiproject/tool/assessment/ui/listener/evaluation/QuestionScoreListener.java $
- * $Id: QuestionScoreListener.java 118338 2013-01-14 19:16:05Z ktsao@stanford.edu $
+ * $Id: QuestionScoreListener.java 119797 2013-02-08 23:28:38Z ktsao@stanford.edu $
  ***********************************************************************************
  *
  * Copyright (c) 2004, 2005, 2006, 2007, 2008, 2009 The Sakai Foundation
@@ -659,9 +659,15 @@ public class QuestionScoreListener implements ActionListener,
 
 					//SAM-755-"checkmark" indicates right, add "X" to indicate wrong
 					if (gdataAnswer != null) {
-						if (bean.getTypeId().equals("8") || bean.getTypeId().equals("11") 
-						        || bean.getTypeId().equals("15") // CALCULATED_QUESTION
-						        ) {
+						if (bean.getTypeId().equals("8") || bean.getTypeId().equals("11")) {
+							if (gdata.getIsCorrect() != null && gdata.getIsCorrect().booleanValue()) {
+								answerText = "<img src='/samigo-app/images/delivery/checkmark.gif'>" + answerText;
+							}
+							else {
+								answerText = "<img src='/samigo-app/images/crossmark.gif'>" + answerText;
+							}
+						}
+						else if (bean.getTypeId().equals("15")) {  // CALCULATED_QUESTION
 							//need to do something here for fill in the blanks
 							if(gdataAnswer.getScore() > 0){
 								//if score is 0, there is no way to tell if user got the correct answer

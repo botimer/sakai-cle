@@ -12,15 +12,18 @@ response.setContentType("text/html; charset=UTF-8");
 
 <sakai:view title="#{msgs.facet_roster_list}" toolCssHref="/sakai-roster-tool/css/roster.css">
 	<%="<script src=\"js/roster.js\"></script>"%>
-		<h:form id="roster_form">
+		<h:form id="nav_form">
 			<t:aliasBean alias="#{viewBean}" value="#{overview}">
 				<%@ include file="inc/nav.jspf" %>
 			</t:aliasBean>
+            
 
 			<h:outputText value="#{msgs.title_msg}"
 				rendered="#{overview.renderModifyMembersInstructions}" styleClass="instruction"
 				style="display: block;" />
+        </h:form>
 
+		<h:form id="roster_form">
             <%@ include file="inc/filter.jspf" %>
 			
             <t:dataTable cellpadding="0" cellspacing="0"

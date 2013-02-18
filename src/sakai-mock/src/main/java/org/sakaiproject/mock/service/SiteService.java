@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/sakai-mock/trunk/src/main/java/org/sakaiproject/mock/service/SiteService.java $
- * $Id: SiteService.java 111514 2012-08-16 09:25:39Z steve.swinsburg@gmail.com $
+ * $Id: SiteService.java 119929 2013-02-13 13:55:43Z bkirschn@umich.edu $
  ***********************************************************************************
  *
  * Copyright (c) 2007, 2008 The Sakai Foundation
@@ -374,5 +374,12 @@ public class SiteService implements org.sakaiproject.site.api.SiteService {
 	{
 		return true;
 	}
-
+	
+	/* (non-Javadoc)
+	 * @see org.sakaiproject.site.api.SiteService#getSiteTypeStrings()
+	 */
+	public List<String> getSiteTypeStrings(String type)
+	{
+		return null;
+	}
 }

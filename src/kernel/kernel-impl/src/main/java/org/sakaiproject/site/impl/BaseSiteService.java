@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/kernel/trunk/kernel-impl/src/main/java/org/sakaiproject/site/impl/BaseSiteService.java $
- * $Id: BaseSiteService.java 118863 2013-01-25 18:44:59Z matthew@longsight.com $
+ * $Id: BaseSiteService.java 119929 2013-02-13 13:55:43Z bkirschn@umich.edu $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008 Sakai Foundation
@@ -1088,12 +1088,12 @@ public abstract class BaseSiteService implements SiteService
 	/**
 	 * read the site Type definition from configuration files
 	 */
-	private List<String> getSiteTypeStrings(String typeName, String defaultValue)
+	public List<String> getSiteTypeStrings(String type)
 	{
-		String[] siteTypes = serverConfigurationService().getStrings(typeName);
+		String[] siteTypes = serverConfigurationService().getStrings(type + "SiteType");
 		if (siteTypes == null || siteTypes.length == 0)
 		{
-			siteTypes = new String[] {defaultValue};
+			siteTypes = new String[] {type};
 		}
 		return Arrays.asList(siteTypes);
 	}
@@ -1102,7 +1102,7 @@ public abstract class BaseSiteService implements SiteService
 		boolean rv = false;
 		try {
 			Site s = getSite(siteId);
-			List<String> courseSiteTypes = getSiteTypeStrings("courseSiteType", "course");
+			List<String> courseSiteTypes = getSiteTypeStrings("course");
 			if (courseSiteTypes.contains(s.getType())) 
 				return true;
 				
@@ -1117,7 +1117,7 @@ public abstract class BaseSiteService implements SiteService
 		boolean rv = false;
 		try {
 			Site s = getSite(siteId);
-			List<String> portfolioSiteTypes = getSiteTypeStrings("portfolioSiteType", "portfolio");
+			List<String> portfolioSiteTypes = getSiteTypeStrings("portfolio");
 			if (portfolioSiteTypes.contains(s.getType())) 
 				return true;
 				
@@ -1132,7 +1132,7 @@ public abstract class BaseSiteService implements SiteService
 		boolean rv = false;
 		try {
 			Site s = getSite(siteId);
-			List<String> projectSiteTypes = getSiteTypeStrings("projectSiteType", "project");
+			List<String> projectSiteTypes = getSiteTypeStrings("project");
 			if (projectSiteTypes.contains(s.getType())) 
 				return true;
 				
@@ -1177,17 +1177,17 @@ public abstract class BaseSiteService implements SiteService
 		
 		
 		// SAK-12631
-		if (serverConfigurationService().getString("courseSiteType", "course").equals(type)) {
+		if (getSiteTypeStrings("course").contains(type)) {
 			unlock(SECURE_ADD_COURSE_SITE, siteReference(id));
 		}
 
 		// KNL-703
-		if (serverConfigurationService().getString("portfolioSiteType", "portfolio").equals(type)) {
+		if (getSiteTypeStrings("portfolio").contains(type)) {
 			unlock(SECURE_ADD_PORTFOLIO_SITE, siteReference(id));
 		}
 		
 		// KNL-952
-		if (serverConfigurationService().getString("projectSiteType", "project").equals(type)) {
+		if (getSiteTypeStrings("project").contains(type)) {
 			unlock(SECURE_ADD_PROJECT_SITE, siteReference(id));
 		}
 

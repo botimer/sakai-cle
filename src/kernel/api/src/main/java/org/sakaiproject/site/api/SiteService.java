@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/kernel/trunk/api/src/main/java/org/sakaiproject/site/api/SiteService.java $
- * $Id: SiteService.java 113964 2012-10-04 05:22:35Z steve.swinsburg@gmail.com $
+ * $Id: SiteService.java 119929 2013-02-13 13:55:43Z bkirschn@umich.edu $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008 Sakai Foundation
@@ -857,4 +857,16 @@ public interface SiteService extends EntityProducer
 	 * @return true if the site is allowed to addRoleSwap(id), false if not.
 	 */
 	boolean allowRoleSwap(String id);
-}
+	
+	/**
+	 * returns all type strings that are associated with specified site type.
+	 * Following is an example of site type settings, which defines two strings as "course"-type
+	 * courseSiteType.count=2
+	 * courseSiteType.1=course
+	 * courseSiteType.2=course2
+	 * @param type Site type
+	 * @return list of site type strings
+	 */
+	public List<String> getSiteTypeStrings(String type);
+	
+} 

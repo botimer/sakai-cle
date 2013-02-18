@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/citations/trunk/citations-impl/impl/src/java/org/sakaiproject/citation/impl/DbCitationService.java $
- * $Id: DbCitationService.java 118204 2013-01-09 18:22:51Z jimeng@umich.edu $
+ * $Id: DbCitationService.java 119774 2013-02-08 09:58:57Z a.fish@lancaster.ac.uk $
  ***********************************************************************************
  *
  * Copyright (c) 2006, 2007, 2008 The Sakai Foundation
@@ -905,7 +905,7 @@ public class DbCitationService extends BaseCitationService
 			}
 			
 			// Now add the citations into the ordering table. This has replaced the sakai:hasCitation linking mechanism.
-			String orderStatement = "select * from " + m_collectionOrderTableName + " where (COLLECTION_ID = ?) ORDER BY POSITION";
+			String orderStatement = "select * from " + m_collectionOrderTableName + " where (COLLECTION_ID = ?) ORDER BY LOCATION";
 			List<Triple> orderTriples = m_sqlService.dbRead(orderStatement, new Object[] {collectionId}, new TripleReader());
 			
 			for(Triple orderTriple : orderTriples)

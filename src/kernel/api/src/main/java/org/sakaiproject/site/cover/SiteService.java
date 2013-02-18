@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/kernel/trunk/api/src/main/java/org/sakaiproject/site/cover/SiteService.java $
- * $Id: SiteService.java 111513 2012-08-16 09:22:06Z steve.swinsburg@gmail.com $
+ * $Id: SiteService.java 119929 2013-02-13 13:55:43Z bkirschn@umich.edu $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008 Sakai Foundation
@@ -484,5 +484,13 @@ public class SiteService
 		if (service == null) return false;
 
 		return service.allowRoleSwap(param0);
+	}
+	
+	public static java.util.List<String> getSiteTypeStrings(java.lang.String param0)
+	{
+		org.sakaiproject.site.api.SiteService service = getInstance();
+		if (service == null) return null;
+
+		return service.getSiteTypeStrings(param0);
 	}
 }

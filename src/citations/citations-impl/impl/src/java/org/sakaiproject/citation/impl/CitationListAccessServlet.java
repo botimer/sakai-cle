@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/citations/trunk/citations-impl/impl/src/java/org/sakaiproject/citation/impl/CitationListAccessServlet.java $
- * $Id: CitationListAccessServlet.java 118231 2013-01-10 14:34:19Z jimeng@umich.edu $
+ * $Id: CitationListAccessServlet.java 119320 2013-01-30 15:15:14Z dgcliff@iu.edu $
  ***********************************************************************************
  *
  * Copyright (c) 2006, 2007, 2008 The Sakai Foundation
@@ -123,8 +123,19 @@ public class CitationListAccessServlet implements HttpAccess
 	
 	protected void handleExportRequest(HttpServletRequest req, HttpServletResponse res,
 			Reference ref, String format, String subtype) 
-			throws EntityNotDefinedException, EntityAccessOverloadException 
+			throws EntityNotDefinedException, EntityAccessOverloadException, EntityPermissionException 
 	{
+		if(! ContentHostingService.allowGetResource(req.getParameter("resourceId")))
+		{
+			String url = (req.getRequestURL()).toString();
+			String user = "";
+			if(req.getUserPrincipal() != null)
+			{
+				user = req.getUserPrincipal().getName();
+			}
+			throw new EntityPermissionException(user, ContentHostingService.EVENT_RESOURCE_READ, ref.getReference());
+		}			
+		
 		String fileName = req.getParameter("resourceDisplayName");
 		if(fileName == null || fileName.trim().equals("")) {
 			fileName = rb.getString("export.default.filename");

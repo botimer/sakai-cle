@@ -10,7 +10,7 @@
 
 <h:panelGrid id="search_group" columns="2" styleClass="searchFilter">
     <t:div id="search_filter" styleClass="act">
-        <h:inputText id="search" value="#{filter.searchFilterString}" onfocus="clearIfDefaultString(this, '#{msgs.roster_search_text}')" onkeypress="return handleEnterKey(this, event)"/>
+        <h:inputText id="search" value="#{filter.searchFilterString}" onfocus="clearIfDefaultString(this, '#{msgs.roster_search_text}')" />
         <h:commandButton id="search_button" value="#{msgs.roster_search_button}" actionListener="#{filter.search}" styleClass="active" />
         <h:commandButton id="clear_button" value="#{msgs.roster_clear_button}" actionListener="#{filter.clearSearch}" />
     </t:div>

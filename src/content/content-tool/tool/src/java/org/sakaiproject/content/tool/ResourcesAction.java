@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/content/trunk/content-tool/tool/src/java/org/sakaiproject/content/tool/ResourcesAction.java $
- * $Id: ResourcesAction.java 110034 2012-07-02 13:01:41Z jimeng@umich.edu $
+ * $Id: ResourcesAction.java 119612 2013-02-07 17:15:46Z azeckoski@unicon.net $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008, 2009 The Sakai Foundation
@@ -138,7 +138,7 @@ import org.w3c.dom.Element;
 * <p>ResourceAction is a ContentHosting application</p>
 *
 * @author University of Michigan, CHEF Software Development Team
-* @version $Revision: 110034 $
+* @version $Revision: 119612 $
 */
 public class ResourcesAction 
 	extends PagedResourceHelperAction // VelocityPortletPaneledAction
@@ -8516,23 +8516,16 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 				ContentResourceEdit resource = ContentHostingService.addResource(collectionId,Validator.escapeResourceName(basename),Validator.escapeResourceName(extension),MAXIMUM_ATTEMPTS_FOR_UNIQUENESS);
 				
 				extractContent(fp, resource);
-//				byte[] content = fp.getRevisedContent();
-//				if(content == null)
-//				{
-//					InputStream stream = fp.getRevisedContentStream();
-//					if(stream == null)
-//					{
-//						logger.debug("pipe with null content and null stream: " + pipe.getFileName());
-//					}
-//					else
-//					{
-//						resource.setContent(stream);
-//					}
-//				}
-//				else
-//				{
-//					resource.setContent(content);
-//				}
+
+				// SAK-23171 - cleanup the URL spaces
+				String url = new String(resource.getContent());
+				String cleanedURL = StringUtils.trim(url);
+				cleanedURL = StringUtils.replace(cleanedURL, " ", "%20");
+				if (!StringUtils.equals(url, cleanedURL)) {
+				    // the url was cleaned up, log it and update it
+				    logger.info("Resources URL cleanup changed url to '"+cleanedURL+"' from '"+url+"'");
+				    resource.setContent(cleanedURL.getBytes());
+				}
 
 				resource.setContentType(fp.getRevisedMimeType());
 				resource.setResourceType(pipe.getAction().getTypeId());

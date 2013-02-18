@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/sam/trunk/samigo-app/src/java/org/sakaiproject/tool/assessment/ui/listener/delivery/DeliveryActionListener.java $
- * $Id: DeliveryActionListener.java 118338 2013-01-14 19:16:05Z ktsao@stanford.edu $
+ * $Id: DeliveryActionListener.java 119797 2013-02-08 23:28:38Z ktsao@stanford.edu $
  ***********************************************************************************
  *
  * Copyright (c) 2004, 2005, 2006, 2007, 2008, 2009 The Sakai Foundation
@@ -97,7 +97,7 @@ import org.sakaiproject.util.ResourceLoader;
  * <p>Purpose:  this module creates the lists of published assessments for the select index
  * <p>Description: Sakai Assessment Manager</p>
  * @author Ed Smiley
- * @version $Id: DeliveryActionListener.java 118338 2013-01-14 19:16:05Z ktsao@stanford.edu $
+ * @version $Id: DeliveryActionListener.java 119797 2013-02-08 23:28:38Z ktsao@stanford.edu $
  */
 
 public class DeliveryActionListener
@@ -1766,23 +1766,10 @@ public class DeliveryActionListener
             {
               answer.setText("");
             }
-            StringTokenizer st2 = new StringTokenizer(answer.getText(), "|");
-            while (st2.hasMoreTokens())
+            
+            if (data.getIsCorrect() != null && data.getIsCorrect().booleanValue())
             {
-              String nextT = st2.nextToken();
-              log.debug("nextT = " + nextT);
-//  mark answer as correct if autoscore > 0
- 
-/*
-              if (data.getAnswerText() != null &&
-                  data.getAnswerText().equalsIgnoreCase(nextT))
-*/
-              if (data.getAutoScore() != null &&
-                  data.getAutoScore().floatValue() > 0.0)
-              {
-                fbean.setIsCorrect(true);
-              }
-// need to check if case sensitive, mutual exclusive.
+              fbean.setIsCorrect(true);
             }
           }
         }
@@ -1926,23 +1913,10 @@ public class DeliveryActionListener
             {
               answer.setText("");
             }
-            StringTokenizer st2 = new StringTokenizer(answer.getText(), "|");
-            while (st2.hasMoreTokens())
+            
+            if (data.getIsCorrect() != null && data.getIsCorrect().booleanValue())
             {
-              String nextT = st2.nextToken();
-              log.debug("nextT = " + nextT);
-//  mark answer as correct if autoscore > 0
- 
-/*
-              if (data.getAnswerText() != null &&
-                  data.getAnswerText().equalsIgnoreCase(nextT))
-*/
-              if (data.getAutoScore() != null &&
-                  data.getAutoScore().floatValue() > 0.0)
-               {
-                fbean.setIsCorrect(true);
-              }
-// need to check if case sensitive, mutual exclusive.
+              fbean.setIsCorrect(true);
             }
           }
         }

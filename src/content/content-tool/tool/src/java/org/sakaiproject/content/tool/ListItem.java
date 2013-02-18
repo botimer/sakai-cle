@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/content/trunk/content-tool/tool/src/java/org/sakaiproject/content/tool/ListItem.java $
- * $Id: ListItem.java 117691 2012-12-14 13:40:24Z azeckoski@unicon.net $
+ * $Id: ListItem.java 120126 2013-02-15 16:46:10Z matthew.buckett@it.ox.ac.uk $
  ***********************************************************************************
  *
  * Copyright (c) 2007, 2008, 2009 The Sakai Foundation
@@ -4065,11 +4065,14 @@ public class ListItem
 		if(this.isDropbox)
 		{
 			String dropboxId = null;
+			// When modifying an ListItem's properties the id contains the full path.
 			if(id != null && !id.trim().equals(""))
 			{
 				dropboxId = getIndividualDropboxId(id);
 			}
-			else if(containingCollectionId != null && ! containingCollectionId.trim().equals(""))
+			// When uploading a new item the ListItem's id just contains the filename and the containingCollectionId
+			// contains the dropbox into which it is going.
+			if(dropboxId == null && containingCollectionId != null && ! containingCollectionId.trim().equals(""))
 			{
 				dropboxId = getIndividualDropboxId(containingCollectionId);
 			}

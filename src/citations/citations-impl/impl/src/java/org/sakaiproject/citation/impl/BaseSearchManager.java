@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/citations/trunk/citations-impl/impl/src/java/org/sakaiproject/citation/impl/BaseSearchManager.java $
- * $Id: BaseSearchManager.java 118204 2013-01-09 18:22:51Z jimeng@umich.edu $
+ * $Id: BaseSearchManager.java 119081 2013-01-29 19:11:52Z dgcliff@iu.edu $
  ***********************************************************************************
  *
  * Copyright (c) 2006, 2007, 2008, 2009 The Sakai Foundation
@@ -1854,7 +1854,8 @@ public class BaseSearchManager implements SearchManager, Observer
 	public static final String SAKAI_KEY = "sakai.key";
 	public static final String SAKAI_HOST = "sakai.host";
 
-	public static final String SERVLET_NAME = "savecite";
+	//public static final String SERVLET_NAME = "savecite";
+	public static final String SERVLET_NAME = "sakai-citations-servlet";
 	public static final String WINDOW_PREFIX = "WebLearn Solo - ";
 
 	// Our types (defined in setupTypes())

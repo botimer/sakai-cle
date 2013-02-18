@@ -1,4 +1,4 @@
-<!-- $Id: chef_assignments_student_view_submission.vm 118096 2013-01-04 17:42:01Z holladay@longsight.com $ -->
+<!-- $Id: chef_assignments_student_view_submission.vm 119960 2013-02-14 15:57:00Z holladay@longsight.com $ -->
 <!-- start: chef_assignments_student_view_submission.vm  -->
 <script type="text/javascript">
 $(document).ready(function(){
@@ -659,6 +659,9 @@ function submitform(id)
 					<h3 style="margin-top:0;margin-bottom:.5em">
 						$tlang.getString("gen.att")
 					</h3>	
+					#if ($assignment.getContent().getAllowReviewService())
+						<p class="instruction"><img alt="$reviewIndicator" title="$reviewIndicator" src="/library/image/silk/rosette.png" /> $reviewIndicator</p>
+					#end
 					#set ($size = 0)
 					#set ($props = false)
 					#foreach ($attachment in $attachments) 

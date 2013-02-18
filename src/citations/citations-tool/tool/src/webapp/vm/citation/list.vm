@@ -1,7 +1,7 @@
 <!--
 #*
  $URL: https://source.sakaiproject.org/svn/citations/trunk/citations-tool/tool/src/webapp/vm/citation/list.vm $
- $Id: list.vm 111481 2012-08-15 17:49:22Z jimeng@umich.edu $
+ $Id: list.vm 119320 2013-01-30 15:15:14Z dgcliff@iu.edu $
 *#
  **********************************************************************************
  *
@@ -192,12 +192,12 @@ function doCitationAction( action ) {
   // do action
   if( action == "exportSelected" ) {
     if( numCitationsSelected() > 0 ) {
-      exportSelectedCitations( "$exportUrlSel", "$collectionId" );
+      exportSelectedCitations( "$exportUrlSel", "$citationCollectionId", "$resourceId" );
     } else {
       alert( "$tlang.getString( "select.warn.list" )" );
     }
   } else if( action == "exportList" ) {
-    exportAllCitations( "$exportUrlAll", "$collectionId" );
+    exportAllCitations( "$exportUrlAll", "$citationCollectionId", "$resourceId" );
   } else if( action == "removeSelected" ) {
     if( numCitationsSelected() > 0 ) {
       removeSelectedCitations( "#contentLink("Main")&sakai_action=doRemoveSelectedCitations&collectionId=$collectionId", "$FORM_NAME" );

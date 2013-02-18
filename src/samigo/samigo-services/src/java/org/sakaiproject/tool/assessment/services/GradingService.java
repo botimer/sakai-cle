@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/sam/trunk/samigo-services/src/java/org/sakaiproject/tool/assessment/services/GradingService.java $
- * $Id: GradingService.java 118702 2013-01-23 23:07:37Z ktsao@stanford.edu $
+ * $Id: GradingService.java 119797 2013-02-08 23:28:38Z ktsao@stanford.edu $
  ***********************************************************************************
  *
  * Copyright (c) 2004, 2005, 2006, 2007, 2008, 2009 The Sakai Foundation
@@ -1389,6 +1389,7 @@ Here are the definition and 12 cases I came up with (lydia, 01/2006):
     String studentanswer = "";
     boolean matchresult = false;
     float totalScore = (float) 0;
+    data.setIsCorrect(Boolean.FALSE);
     
     if (data.getPublishedAnswerId() == null) {
     	return totalScore;
@@ -1451,12 +1452,12 @@ Here are the definition and 12 cases I came up with (lydia, 01/2006):
 
             if (!alreadyused) {
               totalScore += ((AnswerIfc) publishedAnswerHash.get(data.getPublishedAnswerId())).getScore().floatValue();
+              data.setIsCorrect(Boolean.TRUE);
             }
 
             // SAK-3005: quit if answer is correct, e.g. if you answered A for {a|A}, you already scored
             break;
           }
-      
      }
     }
     return totalScore;
@@ -1548,6 +1549,7 @@ Here are the definition and 12 cases I came up with (lydia, 01/2006):
 	  boolean matchresult = getFINResult(data, itemdata, publishedAnswerHash);
 	  if (matchresult){
 		  totalScore += ((AnswerIfc) publishedAnswerHash.get(data.getPublishedAnswerId())).getScore().floatValue();
+		  data.setIsCorrect(Boolean.TRUE);
 	  }	
 	  return totalScore;
 	  
