@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/sam/trunk/samigo-services/src/java/org/sakaiproject/tool/assessment/facade/AssessmentGradingFacadeQueries.java $
- * $Id: AssessmentGradingFacadeQueries.java 118350 2013-01-15 16:27:07Z ktsao@stanford.edu $
+ * $Id: AssessmentGradingFacadeQueries.java 120911 2013-03-07 22:32:47Z ktsao@stanford.edu $
  ***********************************************************************************
  *
  * Copyright (c) 2004, 2005, 2006, 2007, 2008, 2009 The Sakai Foundation
@@ -454,9 +454,14 @@ public class AssessmentGradingFacadeQueries extends HibernateDaoSupport implemen
    */
   public HashMap getStudentGradingData(String assessmentGradingId)
   {
+	  return getStudentGradingData(assessmentGradingId, true);
+  }
+  
+  public HashMap getStudentGradingData(String assessmentGradingId, boolean loadGradingAttachment)
+  {
     try {
       HashMap map = new HashMap();
-      AssessmentGradingData gdata = load(new Long(assessmentGradingId));
+      AssessmentGradingData gdata = load(new Long(assessmentGradingId), loadGradingAttachment);
       log.debug("****#6, gdata="+gdata);
       //log.debug("****#7, item size="+gdata.getItemGradingSet().size());
       Iterator iter = gdata.getItemGradingSet().iterator();
@@ -886,28 +891,39 @@ public class AssessmentGradingFacadeQueries extends HibernateDaoSupport implemen
       return null;
     return (ItemGradingData) itemGradings.get(0);
   }
-
+  
   public AssessmentGradingData load(Long id) {
+	  return load(id, true);
+  }
+
+  public AssessmentGradingData load(Long id, boolean loadGradingAttachment) {
     AssessmentGradingData gdata = (AssessmentGradingData) getHibernateTemplate().load(AssessmentGradingData.class, id);
     Set<ItemGradingData> itemGradingSet = new HashSet();
+
     // Get (ItemGradingId, ItemGradingData) pair
     HashMap<Long, ItemGradingData> itemGradingMap = getItemGradingMap(gdata.getAssessmentGradingId());
     if (itemGradingMap.keySet().size() > 0) {
-    	// Get (ItemGradingId, ItemGradingAttachment) pair
-    	HashMap attachmentMap = getItemGradingAttachmentMap(itemGradingMap.keySet());
     	Collection<ItemGradingData> itemGradingCollection = itemGradingMap.values();
     	
-    	Iterator<ItemGradingData> iter = itemGradingCollection.iterator();
-    	while (iter.hasNext()) {
-    		ItemGradingData itemGradingData = iter.next();
-    		if (attachmentMap.get(itemGradingData.getItemGradingId()) != null) {
-    			itemGradingData.setItemGradingAttachmentList((ArrayList<ItemGradingAttachment>) attachmentMap.get(itemGradingData.getItemGradingId()));
+    	if (loadGradingAttachment) {
+    		// Get (ItemGradingId, ItemGradingAttachment) pair
+    		HashMap attachmentMap = getItemGradingAttachmentMap(itemGradingMap.keySet());
+    		
+    		Iterator<ItemGradingData> iter = itemGradingCollection.iterator();
+    		while (iter.hasNext()) {
+    			ItemGradingData itemGradingData = iter.next();
+    			if (attachmentMap.get(itemGradingData.getItemGradingId()) != null) {
+    				itemGradingData.setItemGradingAttachmentList((ArrayList<ItemGradingAttachment>) attachmentMap.get(itemGradingData.getItemGradingId()));
+    			}
+    			else {
+    				itemGradingData.setItemGradingAttachmentList(new ArrayList<ItemGradingAttachment>());
+    			}
+    			itemGradingSet.add(itemGradingData);
     		}
-    		else {
-    			itemGradingData.setItemGradingAttachmentList(new ArrayList<ItemGradingAttachment>());
-    		}
-    		itemGradingSet.add(itemGradingData);
-    	}
+        }
+        else {
+    			itemGradingSet.addAll(itemGradingCollection);
+        }
     }
     
     gdata.setItemGradingSet(itemGradingSet);
@@ -2160,7 +2176,7 @@ public class AssessmentGradingFacadeQueries extends HibernateDaoSupport implemen
 			  
 			  Long assessmentGradingId = assessmentGradingData.getAssessmentGradingId();
 
-			  HashMap studentGradingMap = getStudentGradingData(assessmentGradingData.getAssessmentGradingId().toString());
+			  HashMap studentGradingMap = getStudentGradingData(assessmentGradingData.getAssessmentGradingId().toString(), false);
 			  ArrayList grades = new ArrayList();
 			  grades.addAll(studentGradingMap.values());
 
@@ -2855,21 +2871,21 @@ public class AssessmentGradingFacadeQueries extends HibernateDaoSupport implemen
 	}
 	
 	public void autoSubmitAssessments() {
-		Object[] values = { 1 };
-
 		List list = getHibernateTemplate()
 				.find("select new AssessmentGradingData(a.assessmentGradingId, a.publishedAssessmentId, " +
 						" a.agentId, a.submittedDate, a.isLate, a.forGrade, a.totalAutoScore, a.totalOverrideScore, " +
 						" a.finalScore, a.comments, a.status, a.gradedBy, a.gradedDate, a.attemptDate, a.timeElapsed) " +
 						" from AssessmentGradingData a, PublishedAccessControl c " +
 						" where a.publishedAssessmentId = c.assessment.publishedAssessmentId " +
-						" and current_timestamp() >= c.retractDate and a.status not in (4, 5) and c.autoSubmit = ? " +
-						" order by a.publishedAssessmentId, a.agentId, a.forGrade desc ", values);
+						" and current_timestamp() >= c.retractDate " +
+						" and a.status not in (4, 5) and (a.hasAutoSubmissionRun = 0 or a.hasAutoSubmissionRun is null) and c.autoSubmit = 1 " +
+						" order by a.publishedAssessmentId, a.agentId, a.forGrade desc ");
 		
 	    Iterator iter = list.iterator();
 	    String lastAgentId = "";
 	    Long lastPublishedAssessmentId = Long.valueOf(0);
 	    ArrayList toBeAutoSubmittedList = new ArrayList();
+	    ArrayList hasAutoSubmisionRunUpdateList = new ArrayList();
 	    HashMap sectionSetMap = new HashMap();
 	    HashMap gradebookMap = new HashMap();
 	    HashMap studentUidsToScores = new HashMap();
@@ -2883,6 +2899,8 @@ public class AssessmentGradingFacadeQueries extends HibernateDaoSupport implemen
 	    
 	    while (iter.hasNext()) {
 	    	AssessmentGradingData adata = (AssessmentGradingData) iter.next();
+	    	adata.setHasAutoSubmissionRun(Boolean.TRUE);
+	    	hasAutoSubmisionRunUpdateList.add(adata);
 	    	if (lastPublishedAssessmentId.equals(adata.getPublishedAssessmentId())) {
 	    		if (!lastAgentId.equals(adata.getAgentId())) {
     				lastAgentId = adata.getAgentId();
@@ -2904,6 +2922,7 @@ public class AssessmentGradingFacadeQueries extends HibernateDaoSupport implemen
 	    				adata.setIsAutoSubmitted(Boolean.TRUE);
 	    				adata.setStatus(Integer.valueOf(1));
 	    				toBeAutoSubmittedList.add(adata);
+	    				hasAutoSubmisionRunUpdateList.remove(adata); // for performance. don't update the same record twice
 	    				completeItemGradingData(adata, sectionSetMap);
 	    				updateGradebookMap(adata, studentUidsToScores, gradebookMap);    			
 	    				    
@@ -2952,6 +2971,7 @@ public class AssessmentGradingFacadeQueries extends HibernateDaoSupport implemen
     				adata.setIsAutoSubmitted(Boolean.TRUE);
 	    			adata.setStatus(Integer.valueOf(1));
 	    			toBeAutoSubmittedList.add(adata);
+	    			hasAutoSubmisionRunUpdateList.remove(adata); // for performance. don't update the same record twice
 	    			completeItemGradingData(adata, sectionSetMap);
 	    			updateGradebookMap(adata, studentUidsToScores, gradebookMap);
 	    			EventTrackingService.post(EventTrackingService.newEvent("sam.auto-submit.job", 
@@ -2978,6 +2998,7 @@ public class AssessmentGradingFacadeQueries extends HibernateDaoSupport implemen
 	    }
 	      
 	    this.saveOrUpdateAll(toBeAutoSubmittedList);
+	    this.saveOrUpdateAll(hasAutoSubmisionRunUpdateList);
 	    notifyGradebook(gradebookMap);
 	}
 
@@ -3249,9 +3270,11 @@ public class AssessmentGradingFacadeQueries extends HibernateDaoSupport implemen
 		  ItemService itemService = new ItemService();
 		  Long itemTextId = itemService.getItemTextId(publishedItemId);
 		  log.debug("itemTextId = " + itemTextId);
-		  itemGradingData.setPublishedItemTextId(itemTextId);
-		  //we're in the DAO su we can use the DAO method directly
-		  saveItemGrading(itemGradingData);
+		  if(itemTextId != -1){
+			  itemGradingData.setPublishedItemTextId(itemTextId);
+			  //we're in the DAO su we can use the DAO method directly
+			  saveItemGrading(itemGradingData);
+		  }
 	  }
 	  
 	  /***

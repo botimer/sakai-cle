@@ -1,6 +1,6 @@
 /**********************************************************************************
 *
-* $Id: GradebookExternalAssessmentServiceImpl.java 118469 2013-01-18 13:47:15Z nbotimer@unicon.net $
+* $Id: GradebookExternalAssessmentServiceImpl.java 120933 2013-03-08 15:03:55Z david.horwitz@uct.ac.za $
 *
 ***********************************************************************************
 *
@@ -487,7 +487,7 @@ public class GradebookExternalAssessmentServiceImpl extends BaseHibernateManager
 	public Map<String, String> getExternalAssignmentsForCurrentUser(String gradebookUid)
 		throws GradebookNotFoundException
 	{
-		final Gradebook gradebook = getGradebook(gradebookUid);
+		
 		Map<String, String> allAssignments = new HashMap<String, String>();
 		for (ExternalAssignmentProvider provider : getExternalAssignmentProviders().values()) {
 			String appKey = provider.getAppKey();
@@ -502,7 +502,7 @@ public class GradebookExternalAssessmentServiceImpl extends BaseHibernateManager
 	public Map<String, List<String>> getVisibleExternalAssignments(String gradebookUid, Collection<String> studentIds)
 		throws GradebookNotFoundException
 	{
-		final Gradebook gradebook = getGradebook(gradebookUid);
+		
 		Map<String, Set<String>> visible = new HashMap<String, Set<String>>();
 		for (String studentId : studentIds) {
 			visible.put(studentId, new HashSet<String>());

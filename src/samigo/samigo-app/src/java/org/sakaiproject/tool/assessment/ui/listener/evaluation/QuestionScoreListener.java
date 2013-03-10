@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/sam/trunk/samigo-app/src/java/org/sakaiproject/tool/assessment/ui/listener/evaluation/QuestionScoreListener.java $
- * $Id: QuestionScoreListener.java 119797 2013-02-08 23:28:38Z ktsao@stanford.edu $
+ * $Id: QuestionScoreListener.java 120977 2013-03-08 22:21:54Z ktsao@stanford.edu $
  ***********************************************************************************
  *
  * Copyright (c) 2004, 2005, 2006, 2007, 2008, 2009 The Sakai Foundation
@@ -60,6 +60,7 @@ import org.sakaiproject.tool.assessment.ui.listener.util.ContextUtil;
 import org.sakaiproject.tool.assessment.util.BeanSort;
 import org.sakaiproject.util.FormattedText;
 import org.sakaiproject.util.ResourceLoader;
+import org.sakaiproject.component.cover.ServerConfigurationService;
 
 // end testing
 
@@ -632,9 +633,24 @@ public class QuestionScoreListener implements ActionListener,
 					// non-abbreviated answers
 					// for essay questions
 
-					// Fix for SAK-6932: Strip out all HTML tags except image
-					// tags
-					if (answerText.length() > 35) {
+					int answerTextLength = 1000;
+					if (!bean.getTypeId().equals("5")) {
+						String s = ServerConfigurationService.getString("samigo.questionScore.answerText.length");
+						if (s != null) {
+							try {
+								answerTextLength = Integer.parseInt(s);
+							}
+							catch (NumberFormatException e) {
+								log.warn("NumberFormatException. Use the default value for answerTextLength");
+							}
+						}
+					}
+					else {
+						answerTextLength = 35;
+					}
+					
+					// Fix for SAK-6932: Strip out all HTML tags except image tags
+ 					if (answerText.length() > answerTextLength) {
 						String noHTMLAnswerText;
 						noHTMLAnswerText = answerText.replaceAll(
 								"<((..?)|([^iI][^mM][^gG].*?))>", "");
@@ -644,8 +660,8 @@ public class QuestionScoreListener implements ActionListener,
 						if (index != -1) {
 							answerText = noHTMLAnswerText;
 						} else {
-							if (noHTMLAnswerText.length() > 35) {
-								answerText = noHTMLAnswerText.substring(0, 35)
+							if (noHTMLAnswerText.length() > answerTextLength) {
+								answerText = noHTMLAnswerText.substring(0, answerTextLength)
 										+ "...";
 							} else {
 								answerText = noHTMLAnswerText;

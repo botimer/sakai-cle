@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/sam/trunk/samigo-app/src/java/org/sakaiproject/tool/assessment/ui/listener/delivery/SubmitToGradingActionListener.java $
- * $Id: SubmitToGradingActionListener.java 107877 2012-05-07 10:03:17Z david.horwitz@uct.ac.za $
+ * $Id: SubmitToGradingActionListener.java 120911 2013-03-07 22:32:47Z ktsao@stanford.edu $
  ***********************************************************************************
  *
  * Copyright (c) 2004, 2005, 2006, 2007, 2008, 2009 The Sakai Foundation
@@ -374,7 +374,7 @@ public class SubmitToGradingActionListener implements ActionListener {
 				itemGradingSet = service.getItemGradingSet(adata
 						.getAssessmentGradingId().toString());
 				log.debug("*** 2ac. load assessmentGarding " + (new Date()));
-				adata = service.load(adata.getAssessmentGradingId().toString());
+				adata = service.load(adata.getAssessmentGradingId().toString(), false);
 
 				Iterator<ItemGradingData> iter = adds.iterator();
 				while (iter.hasNext()) {
@@ -786,8 +786,10 @@ public class SubmitToGradingActionListener implements ActionListener {
 				ItemService itemService = new ItemService();
 				Long itemTextId = itemService.getItemTextId(publishedItemId);
 				log.debug("itemTextId = " + itemTextId);
-				itemGrading.setPublishedItemTextId(itemTextId);
-				adds.add(itemGrading);
+				if(itemTextId != -1){
+					itemGrading.setPublishedItemTextId(itemTextId);
+					adds.add(itemGrading);
+				}
 			}
 			else {
 				// For File Upload question, if user clicks on "Upload", a ItemGradingData will be created. 

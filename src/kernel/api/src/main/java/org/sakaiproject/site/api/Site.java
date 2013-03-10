@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/kernel/trunk/api/src/main/java/org/sakaiproject/site/api/Site.java $
- * $Id: Site.java 107509 2012-04-24 14:59:35Z david.horwitz@uct.ac.za $
+ * $Id: Site.java 120411 2013-02-23 01:14:26Z botimer@umich.edu $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2008 Sakai Foundation
@@ -90,8 +90,14 @@ public interface Site extends Edit, Comparable, Serializable, AuthzGroup
 	/** @return A short text Description of the site. */
 	String getShortDescription();
 
+	/** @return An HTML-safe version of the short Description of the site. */
+	String getHtmlShortDescription();
+
 	/** @return A longer text Description of the site. */
 	String getDescription();
+
+	/** @return An HTML-safe version of the Description of the site. */
+	String getHtmlDescription();
 
 	/** @return The Site's icon URL. */
 	String getIconUrl();
@@ -118,7 +124,7 @@ public interface Site extends Edit, Comparable, Serializable, AuthzGroup
 	List<SitePage> getPages();
 
 	/**
-	 * Make sure pages and tools, groups and properties are loaded, not lazy
+	 * Make sure description, pages, tools, groups, and properties are loaded, not lazy
 	 */
 	void loadAll();
 

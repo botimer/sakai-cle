@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/metaobj/trunk/metaobj-impl/api-impl/src/java/org/sakaiproject/metaobj/shared/model/impl/HibernateStructuredArtifact.java $
- * $Id: HibernateStructuredArtifact.java 105079 2012-02-24 23:08:11Z ottenhoff@longsight.com $
+ * $Id: HibernateStructuredArtifact.java 120216 2013-02-18 19:44:04Z ottenhoff@longsight.com $
  ***********************************************************************************
  *
  * Copyright (c) 2004, 2005, 2006, 2008 The Sakai Foundation
@@ -93,6 +93,7 @@ public class HibernateStructuredArtifact extends StructuredArtifact implements U
       StructuredArtifact artifact = (StructuredArtifact) home.createInstance();
       ByteArrayInputStream in = new ByteArrayInputStream(bytes);
       SAXBuilder saxBuilder = new SAXBuilder();
+      saxBuilder.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true); // SAK-23245
       try {
          Document doc = saxBuilder.build(in);
          artifact.setBaseElement(doc.getRootElement());

@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/kernel/trunk/kernel-impl/src/main/java/org/sakaiproject/site/impl/SiteCacheImpl.java $
- * $Id: SiteCacheImpl.java 105077 2012-02-24 22:54:29Z ottenhoff@longsight.com $
+ * $Id: SiteCacheImpl.java 120411 2013-02-23 01:14:26Z botimer@umich.edu $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008 Sakai Foundation
@@ -21,6 +21,7 @@
 
 package org.sakaiproject.site.impl;
 
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -224,8 +225,23 @@ public class SiteCacheImpl implements DerivedCache, CacheEventListener
 		{
 			Site site = (Site) payload;
 
+			Collection<SitePage> sitePages;
+			Collection<Group> siteGroups;
+			// TODO: If the boolean versions of getPages and getGroups are
+			//       added to the Site interface, this check should be removed.
+			if (site instanceof BaseSite)
+			{
+				sitePages  = ((BaseSite) site).getPages(false);
+				siteGroups = ((BaseSite) site).getGroups(false);
+			}
+			else
+			{
+				sitePages  = site.getPages();
+				siteGroups = site.getGroups();
+			}
+
 			// add the pages and tools to the cache
-			for (Iterator<SitePage> pages = site.getPages().iterator(); pages.hasNext();)
+			for (Iterator<SitePage> pages = sitePages.iterator(); pages.hasNext();)
 			{
 				SitePage page = (SitePage) pages.next();
 				m_pages.put(page.getId(), page);
@@ -237,7 +253,7 @@ public class SiteCacheImpl implements DerivedCache, CacheEventListener
 			}
 
 			// add the groups to the cache
-			for (Iterator<Group> groups = site.getGroups().iterator(); groups.hasNext();)
+			for (Iterator<Group> groups = siteGroups.iterator(); groups.hasNext();)
 			{
 				Group group = (Group) groups.next();
 				m_groups.put(group.getId(), group);

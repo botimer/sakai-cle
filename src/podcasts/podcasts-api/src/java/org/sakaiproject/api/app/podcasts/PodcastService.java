@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/podcasts/trunk/podcasts-api/src/java/org/sakaiproject/api/app/podcasts/PodcastService.java $
- * $Id: PodcastService.java 105079 2012-02-24 23:08:11Z ottenhoff@longsight.com $
+ * $Id: PodcastService.java 120348 2013-02-21 12:48:17Z matthew.buckett@it.ox.ac.uk $
  ***********************************************************************************
  *
  * Copyright (c) 2006, 2007, 2008 The Sakai Foundation
@@ -321,4 +321,11 @@ public interface PodcastService // extends EntityProducer
 	 */
 	public boolean isPodcastFolderHidden(String siteId)
 			throws IdUnusedException, PermissionException;
+	
+	/**
+	 * Check if an option should be presented to the user.
+	 * @see #reviseOptions(boolean)
+	 * @see #getOptions()
+	 */
+	public boolean allowOptions(int option);
 }

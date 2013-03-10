@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/portal/trunk/portal-impl/impl/src/java/org/sakaiproject/portal/charon/handlers/GalleryHandler.java $
- * $Id: GalleryHandler.java 105079 2012-02-24 23:08:11Z ottenhoff@longsight.com $
+ * $Id: GalleryHandler.java 120346 2013-02-21 11:23:02Z a.fish@lancaster.ac.uk $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008 The Sakai Foundation
@@ -40,7 +40,7 @@ import org.sakaiproject.tool.api.ToolException;
  * 
  * @author ieb
  * @since Sakai 2.4
- * @version $Rev: 105079 $
+ * @version $Rev: 120346 $
  * 
  */
 public class GalleryHandler extends SiteHandler
@@ -123,7 +123,7 @@ public class GalleryHandler extends SiteHandler
 		}
 
 		// /Include the site materials
-		doSite(req, res, session, siteId, pageId, req.getContextPath()
+		doSite(req, res, session, siteId, pageId, null, req.getContextPath()
 						+ req.getServletPath());
 	}
 	

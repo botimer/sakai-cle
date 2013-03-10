@@ -186,7 +186,7 @@ public class BasicLTIConstants {
 	 * This field contains the LIS identifier for the user account that is 
 	 * performing this launch.    The example syntax of "school:user" 
 	 * is not the required format – lis_person_sourcedid is simply a
-	 * globally unique identifier (i.e., a normalized string). This field 
+	 * unique identifier (i.e., a normalized string). This field 
 	 * is optional and its content and meaning are defined by LIS.    
 	 */
 	public static final String LIS_PERSON_SOURCEDID = "lis_person_sourcedid";
@@ -381,6 +381,16 @@ public class BasicLTIConstants {
 	 * This parameter is optional and is unique to the Sakai Basic LTI provider.
 	 */
 	public static final String EXT_SAKAI_PROVIDER_EID = "ext_sakai_provider_eid";
+	
+	/**
+	 * ext_sakai_provider_displayid=john.smith
+	 * <p>
+	 * If set, this will indicate to an external application that the user is normally
+	 * known by this ID and when displaying the ID to the user this ID should be used instead of the
+	 * user_id and ext_sakai_provider_eid.
+	 * This parameter is optional and is unique to the Sakai Basic LTI provider.
+	 */
+	public static final String EXT_SAKAI_PROVIDER_DISPLAYID = "ext_sakai_provider_displayid";
 
 	/**
 	 * Utility array useful for validating property names when building launch

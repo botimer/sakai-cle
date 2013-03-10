@@ -1,6 +1,6 @@
 /**********************************************************************************
 *
-* $Id: ConfigurationLoadingTest.java 107118 2012-04-16 14:41:07Z azeckoski@unicon.net $
+* $Id: ConfigurationLoadingTest.java 120844 2013-03-06 15:30:02Z azeckoski@unicon.net $
 *
 ***********************************************************************************
 *
@@ -161,6 +161,18 @@ public class ConfigurationLoadingTest extends SakaiKernelTestBase {
         assertEquals("\"this\",\"is\",\"invalid", invalidStr);
         String[] invalid = serverConfigurationService.getStrings("stringInvalidCsv");
         assertNull(invalid);
+
+        // KNL-1032 - stringCountEmptyList, stringEmptyList
+        String[] stringsEmpty = serverConfigurationService.getStrings("stringCountEmptyList");
+        assertNotNull(stringsEmpty);
+        assertEquals(0, stringsEmpty.length);
+        stringsEmpty = serverConfigurationService.getStrings("stringEmptyList");
+        assertNotNull(stringsEmpty);
+        assertEquals(0, stringsEmpty.length);
+
+        // also quickly verify non-existent works correctly
+        String[] stringsNotExists = serverConfigurationService.getStrings("stringsNotExistsInTheConfigAnywhereXXXXXXXXXXXXXX");
+        assertNull(stringsNotExists);
     }
 	
 	/**

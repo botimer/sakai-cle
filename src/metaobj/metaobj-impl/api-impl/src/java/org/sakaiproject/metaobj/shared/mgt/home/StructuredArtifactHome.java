@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/metaobj/trunk/metaobj-impl/api-impl/src/java/org/sakaiproject/metaobj/shared/mgt/home/StructuredArtifactHome.java $
- * $Id: StructuredArtifactHome.java 105079 2012-02-24 23:08:11Z ottenhoff@longsight.com $
+ * $Id: StructuredArtifactHome.java 120216 2013-02-18 19:44:04Z ottenhoff@longsight.com $
  ***********************************************************************************
  *
  * Copyright (c) 2004, 2005, 2006, 2007, 2008 The Sakai Foundation
@@ -126,6 +126,7 @@ public class StructuredArtifactHome extends XmlElementHome
             resource.getProperties().getProperty(ResourceProperties.PROP_CREATOR));
 
          SAXBuilder builder = new SAXBuilder();
+         builder.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true); // SAK-23245
          Document doc = builder.build(resource.streamContent());
 
          StructuredArtifact xmlObject =

@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/assignment/trunk/assignment-api/api/src/java/org/sakaiproject/assignment/api/AssignmentSubmission.java $
- * $Id: AssignmentSubmission.java 110665 2012-07-24 14:18:50Z azeckoski@unicon.net $
+ * $Id: AssignmentSubmission.java 120595 2013-03-01 20:33:37Z azeckoski@unicon.net $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008, 2009 The Sakai Foundation
@@ -74,6 +74,8 @@ public interface AssignmentSubmission extends Entity
          * @return The LIST of submission log entries.
          */
         public List getSubmissionLog();
+        public List getGrades();
+        public String getGradeForUser(String id);
         
 	/**
 	 * Access the list of Users who submitted this response to the Assignment.

@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/dav/trunk/dav/src/java/org/sakaiproject/dav/DavServlet.java $
- * $Id: DavServlet.java 109339 2012-06-17 14:32:34Z azeckoski@unicon.net $
+ * $Id: DavServlet.java 120352 2013-02-21 15:24:30Z hedrick@rutgers.edu $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008, 2009 The Sakai Foundation
@@ -990,6 +990,9 @@ public class DavServlet extends HttpServlet
 				DocumentBuilderFactory.newInstance();
 			documentBuilderFactory.setNamespaceAware(true);
 			documentBuilderFactory.setExpandEntityReferences(false);
+			documentBuilderFactory.setFeature("http://xml.org/sax/features/external-general-entities", false); 
+			documentBuilderFactory.setFeature("http://xml.org/sax/features/external-parameter-entities", false); 
+
 			documentBuilder =
 				documentBuilderFactory.newDocumentBuilder();
 		}
@@ -2352,6 +2355,9 @@ public class DavServlet extends HttpServlet
 	    try {
 		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 		factory.setNamespaceAware(true);
+		factory.setFeature("http://xml.org/sax/features/external-general-entities", false); 
+		factory.setFeature("http://xml.org/sax/features/external-parameter-entities", false); 
+
 		documentBuilder = factory.newDocumentBuilder();
 	    } catch (Exception e) {
 		resp.sendError(SakaidavStatus.SC_METHOD_FAILURE);

@@ -1,6 +1,6 @@
 /**********************************************************************************
 * $URL: https://source.sakaiproject.org/svn/sam/trunk/samigo-app/src/java/org/sakaiproject/jsf/renderer/RichTextEditArea.java $
-* $Id: RichTextEditArea.java 111938 2012-08-29 15:21:21Z ottenhoff@longsight.com $
+* $Id: RichTextEditArea.java 120342 2013-02-21 04:47:25Z ktsao@stanford.edu $
 ***********************************************************************************
 *
  * Copyright (c) 2005, 2006, 2007, 2008 The Sakai Foundation
@@ -56,7 +56,7 @@ import org.sakaiproject.util.Web;
  * @author cwen@iu.edu
  * @author Ed Smiley esmiley@stanford.edu (modifications)
  * @author Joshua Ryan joshua.ryan@asu.edu (added FCKEditor)
- * @version $Id: RichTextEditArea.java 111938 2012-08-29 15:21:21Z ottenhoff@longsight.com $
+ * @version $Id: RichTextEditArea.java 120342 2013-02-21 04:47:25Z ktsao@stanford.edu $
  */
 public class RichTextEditArea extends Renderer
 {
@@ -448,9 +448,7 @@ public class RichTextEditArea extends Renderer
     writer.write("\n\tif (status.value == \"firsttime\") {");
     if (org.sakaiproject.tool.cover.ToolManager.getCurrentPlacement() != null) {
     	writer.write("\n\t\tsetMainFrameHeight('Main" + org.sakaiproject.tool.cover.ToolManager.getCurrentPlacement().getId().replace("-","x") + "');");
-    } else {
-         writer.write("\n\t\tsetMainFrameHeight('Main" + "');");
-    }
+    } 
     writer.write("\n\t\tstatus.value = \"expaneded\";");
     writer.write("\n\t\tchef_setupformattedtextarea(client_id, true);");
     writer.write("\n\t\tif (typeof setBlockDivs == \"function\" && typeof retainHideUnhideStatus == \"function\") {");

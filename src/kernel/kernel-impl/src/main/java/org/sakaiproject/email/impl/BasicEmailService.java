@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/kernel/trunk/kernel-impl/src/main/java/org/sakaiproject/email/impl/BasicEmailService.java $
- * $Id: BasicEmailService.java 105077 2012-02-24 22:54:29Z ottenhoff@longsight.com $
+ * $Id: BasicEmailService.java 120832 2013-03-06 13:08:07Z azeckoski@unicon.net $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008 Sakai Foundation
@@ -38,7 +38,7 @@ import java.util.StringTokenizer;
 import java.util.Map.Entry;
 
 import javax.activation.DataHandler;
-import javax.activation.FileDataSource;
+import javax.activation.DataSource;
 import javax.mail.Address;
 import javax.mail.Message;
 import javax.mail.MessagingException;
@@ -1232,7 +1232,7 @@ public class BasicEmailService implements EmailService
 	 */
 	private MimeBodyPart createAttachmentPart(Attachment attachment) throws MessagingException
 	{
-		FileDataSource source = new FileDataSource(attachment.getFile());
+		DataSource source = attachment.getDataSource();
 		MimeBodyPart attachPart = new MimeBodyPart();
 		attachPart.setDataHandler(new DataHandler(source));
 		attachPart.setFileName(attachment.getFilename());

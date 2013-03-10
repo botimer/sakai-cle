@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/basiclti/trunk/basiclti-api/src/java/org/sakaiproject/lti/api/LTIService.java $
- * $Id: LTIService.java 119890 2013-02-12 20:23:03Z zqian@umich.edu $
+ * $Id: LTIService.java 120996 2013-03-09 19:56:04Z csev@umich.edu $
  ***********************************************************************************
  *
  * Copyright (c) 2011 The Sakai Foundation
@@ -413,15 +413,15 @@ public interface LTIService {
 		"id:key", 
 		"tool_id:integer:hidden=true",
 		"SITE_ID:text:label=bl_content_site_id:required=true:maxlength=99:role=admin",
-		"title:text:label=bl_title:required=true:hidden=true:maxlength=255",
-		"pagetitle:text:label=bl_pagetitle:required=true:hidden=true:maxlength=255",
+		"title:text:label=bl_title:required=true:allowed=true:maxlength=255",
+		"pagetitle:text:label=bl_pagetitle:required=true:allowed=true:maxlength=255",
 		"frameheight:integer:label=bl_frameheight",
 		"newpage:checkbox:label=bl_newpage",
 		"debug:checkbox:label=bl_debug",
 		"custom:textarea:label=bl_custom:rows=5:cols=25:maxlength=1024",
-		"launch:url:hidden=true:maxlength=1024",
-		"consumerkey:text:hidden=true:maxlength=255",
-		"secret:text:hidden=true:maxlength=255",
+		"launch:url:allowed=true:maxlength=1024",
+		"consumerkey:text:allowed=true:maxlength=255",
+		"secret:text:allowed=true:maxlength=255",
 		"xmlimport:text:hidden=true:maxlength=16384",
 		"settings:text:hidden=true:maxlength=8096",
 		"placement:text:hidden=true:maxlength=256", 

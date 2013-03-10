@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/sam/trunk/samigo-app/src/java/org/sakaiproject/tool/assessment/ui/listener/evaluation/StudentScoreListener.java $
- * $Id: StudentScoreListener.java 106463 2012-04-02 12:20:09Z david.horwitz@uct.ac.za $
+ * $Id: StudentScoreListener.java 120911 2013-03-07 22:32:47Z ktsao@stanford.edu $
  ***********************************************************************************
  *
  * Copyright (c) 2004, 2005, 2006, 2007, 2008 The Sakai Foundation
@@ -57,7 +57,7 @@ import org.sakaiproject.util.FormattedText;
  * <p>Copyright: Copyright (c) 2004</p>
  * <p>Organization: Sakai Project</p>
  * @author Rachel Gollub
- * @version $Id: StudentScoreListener.java 106463 2012-04-02 12:20:09Z david.horwitz@uct.ac.za $
+ * @version $Id: StudentScoreListener.java 120911 2013-03-07 22:32:47Z ktsao@stanford.edu $
  */
 
 public class StudentScoreListener
@@ -121,9 +121,6 @@ public class StudentScoreListener
       DeliveryBean dbean = (DeliveryBean) ContextUtil.lookupBean("delivery");
       dbean.setActionString("gradeAssessment");
 
-      GradingService service = new GradingService();
-      AssessmentGradingData adata= (AssessmentGradingData) service.load(bean.getAssessmentGradingId());
-
       DeliveryActionListener listener = new DeliveryActionListener();
       listener.processAction(null);
       
@@ -144,6 +141,8 @@ public class StudentScoreListener
           }
       } // End of SAK-13930
 
+      GradingService service = new GradingService();
+      AssessmentGradingData adata= (AssessmentGradingData) service.load(bean.getAssessmentGradingId(), false);
       bean.setComments(FormattedText.convertFormattedTextToPlaintext(adata.getComments()));
       buildItemContentsMap(dbean);
 

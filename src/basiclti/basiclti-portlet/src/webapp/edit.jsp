@@ -42,14 +42,15 @@ launchURL.setParameter("sakai.action","edit.save");
 
 PortletURL actionURL = rResp.createActionURL();
 
-String errorOutput = (String) pSession.getAttribute("error.output");
-if ( errorOutput != null ) out.println(errorOutput);
+String errorMsg = (String) rReq.getAttribute("error.message");
 
 Properties ov = (Properties) rReq.getAttribute("imsti.oldvalues");
 
 Properties sp = (Properties) rReq.getAttribute("imsti.properties");
 
 List<String> assignments = (List<String>) rReq.getAttribute("assignments");
+
+Boolean allowOutcomes = (Boolean) rReq.getAttribute("allowOutcomes");
 
 Boolean allowSettings = (Boolean) rReq.getAttribute("allowSettings");
 
@@ -62,20 +63,25 @@ Boolean allowContentLink = (Boolean) rReq.getAttribute("allowContentLink");
 %>
 <portlet:defineObjects/>
 <div class="portletBody">
-<ul role="menu" class="navIntraTool actionToolBar">
-	<li role="menuitem" class="firstToolBarItem">
+<ul class="navIntraTool actionToolBar">
+	<li class="firstToolBarItem">
 		<span>
 			<a href="<%=viewURL.toString()%>"><%=rb.getString("edit.exit")%></a>
 		</span>
 	</li>	
 ri
-	<li role="menuitem">
+	<li>
 		<span>
 			<a href="<%=resetURL.toString()%>"><%=rb.getString("edit.clear.prefs")%></a>
 		</span>
 	</li>
 </ul>	
-<% if ( allow(sp,"launch") || allow(sp,"key") || allow(sp,"secret") || 
+<% 
+    if ( errorMsg != null ) { %>
+		<div class="alertMessage"><%= errorMsg %></div>
+	<% }
+
+    if ( allow(sp,"launch") || allow(sp,"key") || allow(sp,"secret") || 
         allow(sp,"xml") ||
         allow(sp,"pagetitle") || allow(sp,"tooltitle") ||
         allow(sp,"resource") || allow(sp,"preferwidget") || 
@@ -168,7 +174,7 @@ if ( document.getElementById("UISwitcher") ) switchui();
 
 <% } %>
 
-<% if ( allow(sp,"gradable") ) { %>
+<% if ( allowOutcomes && allow(sp,"gradable") ) { %>
 <h3><%=rb.getString("gradable.information") %></h3>
 <p  class="shorttext" style="clear:none;">
 <label for="imsti.newassignment"><%=rb.getString("gradable.newassignment") %></label>
@@ -178,7 +184,7 @@ if ( document.getElementById("UISwitcher") ) switchui();
 
 <% } %>
 
-<% if ( allow(sp,"gradable") && assignments != null ) { %>
+<% if ( allowOutcomes && allow(sp,"gradable") && assignments != null ) { %>
 <p  class="shorttext" style="clear:none;">
 <%=rb.getString("gradable.title") %>
 <select name="imsti.assignment">

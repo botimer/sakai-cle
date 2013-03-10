@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/sam/trunk/samigo-services/src/java/org/sakaiproject/tool/assessment/facade/AssessmentGradingFacadeQueriesAPI.java $
- * $Id: AssessmentGradingFacadeQueriesAPI.java 118338 2013-01-14 19:16:05Z ktsao@stanford.edu $
+ * $Id: AssessmentGradingFacadeQueriesAPI.java 120911 2013-03-07 22:32:47Z ktsao@stanford.edu $
  ***********************************************************************************
  *
  * Copyright (c) 2004, 2005, 2006, 2007, 2008, 2009 The Sakai Foundation
@@ -132,6 +132,8 @@ public interface AssessmentGradingFacadeQueriesAPI
       Long publishedItemId);
 
   public AssessmentGradingData load(Long id);
+  
+  public AssessmentGradingData load(Long id, boolean loadGradingAttachment);
 
   public ItemGradingData getItemGrading(Long id);
 

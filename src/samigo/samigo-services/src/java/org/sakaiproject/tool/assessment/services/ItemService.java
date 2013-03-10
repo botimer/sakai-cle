@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/sam/trunk/samigo-services/src/java/org/sakaiproject/tool/assessment/services/ItemService.java $
- * $Id: ItemService.java 106521 2012-04-04 08:14:42Z david.horwitz@uct.ac.za $
+ * $Id: ItemService.java 120471 2013-02-26 19:27:57Z ktsao@stanford.edu $
  ***********************************************************************************
  *
  * Copyright (c) 2004, 2005, 2006, 2008 The Sakai Foundation
@@ -226,7 +226,8 @@ public class ItemService
 	    }
 	    catch(Exception e)
 	    {
-	      log.error(e); throw new RuntimeException(e);
+	      log.error(e);
+	      return -1l;
 	    }
   }
 

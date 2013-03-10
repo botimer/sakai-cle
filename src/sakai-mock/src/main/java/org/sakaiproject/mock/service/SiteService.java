@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/sakai-mock/trunk/src/main/java/org/sakaiproject/mock/service/SiteService.java $
- * $Id: SiteService.java 119929 2013-02-13 13:55:43Z bkirschn@umich.edu $
+ * $Id: SiteService.java 120413 2013-02-23 01:14:34Z botimer@umich.edu $
  ***********************************************************************************
  *
  * Copyright (c) 2007, 2008 The Sakai Foundation
@@ -184,8 +184,24 @@ public class SiteService implements org.sakaiproject.site.api.SiteService {
 		return null;
 	}
 
+	public List getUserSites() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public List getUserSites(boolean requireDescription) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 	public List getSites(SelectionType type, Object ofType, String criteria,
 			Map propertyCriteria, SortType sort, PagingPosition page) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public List getSites(SelectionType type, Object ofType, String criteria,
+			Map propertyCriteria, SortType sort, PagingPosition page, boolean requireDescription) {
 		// TODO Auto-generated method stub
 		return null;
 	}

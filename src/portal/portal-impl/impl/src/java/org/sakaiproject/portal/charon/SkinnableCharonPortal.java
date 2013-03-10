@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/portal/trunk/portal-impl/impl/src/java/org/sakaiproject/portal/charon/SkinnableCharonPortal.java $
- * $Id: SkinnableCharonPortal.java 117617 2012-12-12 16:13:37Z bkirschn@umich.edu $
+ * $Id: SkinnableCharonPortal.java 120346 2013-02-21 11:23:02Z a.fish@lancaster.ac.uk $
  ***********************************************************************************
  *
  * Copyright (c) 2005, 2006, 2007, 2008 The Sakai Foundation
@@ -136,7 +136,7 @@ import au.com.flyingkite.mobiledetect.UAgentInfo;
  * </p>
  * 
  * @since Sakai 2.4
- * @version $Rev: 117617 $
+ * @version $Rev: 120346 $
  * 
  */
 @SuppressWarnings("deprecation")
@@ -256,7 +256,7 @@ public class SkinnableCharonPortal extends HttpServlet implements Portal
 			{
 			case ERROR_SITE:
 			{
-				siteHandler.doSite(req, res, session, "!error", null, req
+				siteHandler.doSite(req, res, session, "!error", null, null, req
 						.getContextPath()
 						+ req.getServletPath());
 				break;

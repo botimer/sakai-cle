@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/sakai-mock/trunk/src/main/java/org/sakaiproject/mock/domain/Site.java $
- * $Id: Site.java 105077 2012-02-24 22:54:29Z ottenhoff@longsight.com $
+ * $Id: Site.java 120413 2013-02-23 01:14:34Z botimer@umich.edu $
  ***********************************************************************************
  *
  * Copyright (c) 2007, 2008 The Sakai Foundation
@@ -252,8 +252,16 @@ public class Site extends AuthzGroup implements org.sakaiproject.site.api.Site {
 		return shortDescription;
 	}
 
+	public String getHtmlShortDescription() {
+		return shortDescription;
+	}
+
 	public void setShortDescription(String shortDescription) {
 		this.shortDescription = shortDescription;
+	}
+
+	public String getHtmlDescription() {
+		return description;
 	}
 
 	public String getSkin() {

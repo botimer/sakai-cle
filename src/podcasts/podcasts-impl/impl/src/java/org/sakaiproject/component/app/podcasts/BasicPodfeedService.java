@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/podcasts/trunk/podcasts-impl/impl/src/java/org/sakaiproject/component/app/podcasts/BasicPodfeedService.java $
- * $Id: BasicPodfeedService.java 105079 2012-02-24 23:08:11Z ottenhoff@longsight.com $
+ * $Id: BasicPodfeedService.java 120353 2013-02-21 15:58:11Z matthew.buckett@it.ox.ac.uk $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008 The Sakai Foundation
@@ -20,6 +20,8 @@
  **********************************************************************************/
 
 package org.sakaiproject.component.app.podcasts;
+
+import static org.sakaiproject.component.app.podcasts.Utilities.checkSet;
 
 import java.text.MessageFormat;
 import java.util.ArrayList;
@@ -49,7 +51,7 @@ import org.sakaiproject.entity.api.ResourceProperties;
 import org.sakaiproject.entity.api.ResourcePropertiesEdit;
 import org.sakaiproject.exception.IdUnusedException;
 import org.sakaiproject.exception.PermissionException;
-import org.sakaiproject.site.cover.SiteService;
+import org.sakaiproject.site.api.SiteService;
 import org.sakaiproject.util.ResourceLoader;
 
 import com.sun.syndication.feed.WireFeed;
@@ -112,6 +114,7 @@ public class BasicPodfeedService implements PodfeedService {
 	private PodcastService podcastService;
 	private PodcastPermissionsService podcastPermissionsService;
 	private SecurityService securityService;
+	private SiteService siteService;
 
 	/**
 	 * @param securityService
@@ -129,8 +132,23 @@ public class BasicPodfeedService implements PodfeedService {
 		this.podcastService = podcastService;
 	}
 
+	/**
+	 * @param siteService
+	 *            The siteService to set.
+	 */
+	public void setSiteService(SiteService siteService) {
+		this.siteService = siteService;
+	}
+
 	public void setPodcastPermissionsService(PodcastPermissionsService podcastPermissionsService) {
 		this.podcastPermissionsService = podcastPermissionsService;
+	}
+
+	public void init() {
+		checkSet(podcastService, "podcastService");
+		checkSet(podcastPermissionsService, "podcastPermissionsService");
+		checkSet(securityService, "securityService");
+		checkSet(siteService, "siteService");
 	}
 
 	/**
@@ -197,7 +215,7 @@ public class BasicPodfeedService implements PodfeedService {
 			/* For site where not added to folder upon creation
 			 * and has not been revised/updated */
 			if (feedTitle == null) {
-				feedTitle = SiteService.getSite(siteId).getTitle() + getMessageBundleString(FEED_TITLE_STRING);
+				feedTitle = siteService.getSite(siteId).getTitle() + getMessageBundleString(FEED_TITLE_STRING);
 				LOG.info("No saved feed title found for site: " + siteId + ". Using " + feedTitle);
 
 			}
@@ -263,7 +281,7 @@ public class BasicPodfeedService implements PodfeedService {
 			/* For site where not added to folder upon creation
 			 * and has not been revised/updated */
 			if (feedDescription == null) {
-				feedDescription =  SiteService.getSite(siteId).getTitle()
+				feedDescription =  siteService.getSite(siteId).getTitle()
 									+ getMessageBundleString(FEED_DESC1_STRING)
 									+ getMessageBundleString(FEED_DESC2_STRING);
 				LOG.info("No feed description found for site: " + siteId + ". Using " + feedDescription);

@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/sam/trunk/samigo-qti/src/java/org/sakaiproject/tool/assessment/qti/util/XmlUtil.java $
- * $Id: XmlUtil.java 118312 2013-01-14 14:55:38Z ottenhoff@longsight.com $
+ * $Id: XmlUtil.java 120835 2013-03-06 13:29:53Z azeckoski@unicon.net $
  ***********************************************************************************
  *
  * Copyright (c) 2005, 2006, 2007, 2008, 2009 The Sakai Foundation
@@ -62,7 +62,7 @@ import java.io.ByteArrayInputStream;
  * mods:
  * @author Rachel Gollub rgollub@stanford.edu
  * @author Ed Smiley esmiley@stanford.edu
- * @version $Id: XmlUtil.java 118312 2013-01-14 14:55:38Z ottenhoff@longsight.com $
+ * @version $Id: XmlUtil.java 120835 2013-03-06 13:29:53Z azeckoski@unicon.net $
  */
 
 public final class XmlUtil
@@ -147,8 +147,6 @@ public final class XmlUtil
       log.debug("readDocument(String " + path + ")");
     }
 
-      log.debug("readDocument(String " + path + ")");
-
     Document document = null;
     InputStream inputStream = context.getResourceAsStream(path);
     String fullpath = context.getRealPath(path);
@@ -192,8 +190,6 @@ public final class XmlUtil
     {
       log.debug("readDocument(String " + path + ")");
     }
-
-      log.debug("readDocument(String " + path + ")");
 
     Document document = null;
     DocumentBuilderFactory builderFactory =
@@ -485,9 +481,6 @@ public final class XmlUtil
         "Document transformDocument(Document " + document + ", Document " +
         stylesheet + ")");
     }
-      log.debug(
-        "Document transformDocument(Document " + document + ", Document " +
-        stylesheet + ")");
 
     Document transformedDoc = createDocument();
     DOMSource docSource = new DOMSource(document);
@@ -505,7 +498,8 @@ public final class XmlUtil
   public static Document transformDocument(Document document, Transformer transformer)
   {
 
-    log.debug("Document transformDocument(Document " + document + ", Trasformer " + transformer);
+    if(log.isDebugEnabled()) log.debug("Document transformDocument(Document " + document + ", Trasformer " + transformer);
+
     Document transformedDoc = createDocument();
     DOMSource docSource = new DOMSource(document);
     DOMResult docResult = new DOMResult(transformedDoc);

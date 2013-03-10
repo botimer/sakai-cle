@@ -1,4 +1,4 @@
-<!-- $Id: chef_assignments_student_view_submission.vm 119960 2013-02-14 15:57:00Z holladay@longsight.com $ -->
+<!-- $Id: chef_assignments_student_view_submission.vm 120595 2013-03-01 20:33:37Z azeckoski@unicon.net $ -->
 <!-- start: chef_assignments_student_view_submission.vm  -->
 <script type="text/javascript">
 $(document).ready(function(){
@@ -245,7 +245,7 @@ function submitform(id)
 							<td class="highlight">
 								<strong>
 									#if ($assignment.getContent().TypeOfGrade != 1)
-										$submission.GradeDisplay
+                                                                               #if($!override)$override#else$submission.GradeDisplay#end
 									#else
 										$tlang.getString("gen.nograd")
 									#end

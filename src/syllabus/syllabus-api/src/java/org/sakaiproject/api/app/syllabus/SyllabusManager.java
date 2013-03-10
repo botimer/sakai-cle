@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/syllabus/trunk/syllabus-api/src/java/org/sakaiproject/api/app/syllabus/SyllabusManager.java $
- * $Id: SyllabusManager.java 105080 2012-02-24 23:10:31Z ottenhoff@longsight.com $
+ * $Id: SyllabusManager.java 120625 2013-03-04 14:51:03Z holladay@longsight.com $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2008 The Sakai Foundation
@@ -20,6 +20,8 @@
  **********************************************************************************/
 package org.sakaiproject.api.app.syllabus;
 
+import java.util.Date;
+import java.util.List;
 import java.util.Set;
 
 public interface SyllabusManager
@@ -73,6 +75,16 @@ public interface SyllabusManager
   public Set<SyllabusData> findPublicSyllabusData();
 
   public void updateSyllabusAttachmentsViewState(final SyllabusData syllabusData);
+  
+  public void updateAllCalendarEvents(long syllabusId);
+
+  public void addCalendarAttachments(String siteId, String calendarEventId, List<SyllabusAttachment> attachments);
+  
+  public boolean removeCalendarEvents(SyllabusData data);
+  
+  public void removeCalendarAttachments(String siteId, String calendarEventId, SyllabusAttachment attachment);
+
+  public SyllabusData createSyllabusDataObject(String title, Integer position, String asset, String view, String status, String emailNotification, Date startDate, Date endDate, boolean linkCalendar);
   
   //public SyllabusAttachment creatSyllabusAttachmentResource(String attachId, String name);
 }

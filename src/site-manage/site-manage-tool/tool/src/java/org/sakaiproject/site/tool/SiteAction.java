@@ -1,7 +1,7 @@
 /**********************************************************************************
 
  * $URL: https://source.sakaiproject.org/svn/site-manage/trunk/site-manage-tool/tool/src/java/org/sakaiproject/site/tool/SiteAction.java $
- * $Id: SiteAction.java 119500 2013-02-05 05:44:54Z zqian@umich.edu $
+ * $Id: SiteAction.java 120450 2013-02-25 20:22:00Z gsilver@umich.edu $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008, 2009 The Sakai Foundation
@@ -1497,7 +1497,8 @@ public class SiteAction extends PagedResourceActionII {
 				types.addAll(mTypes);
 			}
 			context.put("siteTypes", types);
-
+			context.put("courseSiteTypeStrings", SiteService.getSiteTypeStrings("course"));
+            context.put("templateControls", ServerConfigurationService.getString("templateControls", ""));
 			// put selected/default site type into context
 			String typeSelected = (String) state.getAttribute(STATE_TYPE_SELECTED);
 			context.put("typeSelected", state.getAttribute(STATE_TYPE_SELECTED) != null?state.getAttribute(STATE_TYPE_SELECTED):types.get(0));

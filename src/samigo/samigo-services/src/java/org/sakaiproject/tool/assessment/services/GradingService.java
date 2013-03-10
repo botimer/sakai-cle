@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/sam/trunk/samigo-services/src/java/org/sakaiproject/tool/assessment/services/GradingService.java $
- * $Id: GradingService.java 119797 2013-02-08 23:28:38Z ktsao@stanford.edu $
+ * $Id: GradingService.java 120911 2013-03-07 22:32:47Z ktsao@stanford.edu $
  ***********************************************************************************
  *
  * Copyright (c) 2004, 2005, 2006, 2007, 2008, 2009 The Sakai Foundation
@@ -508,9 +508,13 @@ public class GradingService
   }
 
   public AssessmentGradingData load(String assessmentGradingId) {
+	    return load(assessmentGradingId, true);
+  }
+  
+  public AssessmentGradingData load(String assessmentGradingId, boolean loadGradingAttachment) {
     try{
       return PersistenceService.getInstance().getAssessmentGradingFacadeQueries().
-          load(Long.valueOf(assessmentGradingId));
+          load(Long.valueOf(assessmentGradingId), loadGradingAttachment);
     }
     catch(Exception e)
     {

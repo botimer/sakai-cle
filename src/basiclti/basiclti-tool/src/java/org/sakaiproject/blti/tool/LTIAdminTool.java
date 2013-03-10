@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/basiclti/trunk/basiclti-tool/src/java/org/sakaiproject/blti/tool/LTIAdminTool.java $
- * $Id: LTIAdminTool.java 119499 2013-02-05 05:43:39Z zqian@umich.edu $
+ * $Id: LTIAdminTool.java 120423 2013-02-24 01:36:55Z csev@umich.edu $
  ***********************************************************************************
  *
  * Copyright (c) 2011 The Sakai Foundation
@@ -63,6 +63,7 @@ import org.sakaiproject.component.api.ServerConfigurationService;
 import org.sakaiproject.tool.cover.SessionManager;
 
 import org.sakaiproject.lti.api.LTIService;
+import org.sakaiproject.basiclti.util.SakaiBLTIUtil;
 // import org.sakaiproject.lti.impl.DBLTIService; // HACK
 
 import org.sakaiproject.util.foorm.SakaiFoorm;
@@ -514,13 +515,17 @@ public class LTIAdminTool extends VelocityPortletPaneledAction
 		String id = data.getParameters().getString(LTIService.LTI_ID);
 		Object retval = null;
 		String success = null;
+		String newSecret = reqProps.getProperty(LTIService.LTI_SECRET);
+		if ( newSecret != null ) {
+			newSecret = SakaiBLTIUtil.encryptSecret(newSecret.trim());
+			reqProps.setProperty(LTIService.LTI_SECRET, newSecret);
+		}
+
 		if ( id == null ) 
 		{
 			retval = ltiService.insertTool(reqProps);
 			success = rb.getString("success.created");
 		} else {
-			String newSecret = reqProps.getProperty(LTIService.LTI_SECRET);
-			if ( newSecret != null ) newSecret = newSecret.trim();
 			if ( SECRET_HIDDEN.equals(newSecret) ) reqProps.remove(LTIService.LTI_SECRET);
 			Long key = new Long(id);
 			retval = ltiService.updateTool(key, reqProps);
