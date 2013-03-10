@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/content/trunk/content-tool/tool/src/java/org/sakaiproject/content/tool/ListItem.java $
- * $Id: ListItem.java 120126 2013-02-15 16:46:10Z matthew.buckett@it.ox.ac.uk $
+ * $Id: ListItem.java 120870 2013-03-06 23:12:47Z azeckoski@unicon.net $
  ***********************************************************************************
  *
  * Copyright (c) 2007, 2008, 2009 The Sakai Foundation
@@ -1358,6 +1358,12 @@ public class ListItem
 	{
 		return isPermitted(ContentPermissions.READ);
 	}
+
+        public boolean getCanRevise()
+        {
+                return isPermitted(ContentPermissions.REVISE);
+        } 
+
 
 	/**
      * @return

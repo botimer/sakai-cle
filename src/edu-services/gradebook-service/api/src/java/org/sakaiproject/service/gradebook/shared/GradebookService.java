@@ -1,6 +1,6 @@
 /**********************************************************************************
  *
- * $Id: GradebookService.java 105077 2012-02-24 22:54:29Z ottenhoff@longsight.com $
+ * $Id: GradebookService.java 120890 2013-03-07 17:57:52Z azeckoski@unicon.net $
  *
  ***********************************************************************************
  *
@@ -556,7 +556,7 @@ public interface GradebookService {
 	 * @param gradebookUid
 	 * @return
 	 * 
-	 * @Deprecated see {@link  #checkStudentsNotSubmitted(String)}
+	 * @deprecated see {@link  #checkStudentsNotSubmitted(String)}
 	 */
 	public boolean checkStuendsNotSubmitted(String gradebookUid);
 	

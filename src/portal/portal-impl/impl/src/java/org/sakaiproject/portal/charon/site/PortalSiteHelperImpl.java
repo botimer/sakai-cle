@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/portal/trunk/portal-impl/impl/src/java/org/sakaiproject/portal/charon/site/PortalSiteHelperImpl.java $
- * $Id: PortalSiteHelperImpl.java 115117 2012-10-25 15:15:30Z matthew.buckett@it.ox.ac.uk $
+ * $Id: PortalSiteHelperImpl.java 120416 2013-02-23 01:14:40Z botimer@umich.edu $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008, 2009 The Sakai Foundation
@@ -81,7 +81,7 @@ import org.sakaiproject.util.Web;
 /**
  * @author ieb
  * @since Sakai 2.4
- * @version $Rev: 115117 $
+ * @version $Rev: 120416 $
  */
 @SuppressWarnings("deprecation")
 public class PortalSiteHelperImpl implements PortalSiteHelper
@@ -215,6 +215,8 @@ public class PortalSiteHelperImpl implements PortalSiteHelper
 		if (site == null) return null;
 		Map<String, String> propMap = new HashMap<String, String>();
 		propMap.put(PROP_PARENT_ID, site.getId());
+
+		// This should not call getUserSites(boolean) because the property is variable, while the call is cacheable otherwise
 		List<Site> mySites = SiteService.getSites(
 				org.sakaiproject.site.api.SiteService.SelectionType.ACCESS, null, null,
 				propMap, org.sakaiproject.site.api.SiteService.SortType.TITLE_ASC, null);
@@ -357,8 +359,8 @@ public class PortalSiteHelperImpl implements PortalSiteHelper
 		}
 		m.put("siteTitle", Web.escapeHtml(titleStr));
 		m.put("fullTitle", Web.escapeHtml(fullTitle));
-		m.put("siteDescription", Web.escapeHtml(s.getDescription()));
-		m.put("shortDescription", Web.escapeHtml(s.getShortDescription()));
+		m.put("siteDescription", s.getHtmlDescription());
+		m.put("shortDescription", s.getHtmlShortDescription());
 		String siteUrl = Web.serverUrl(req)
 				+ ServerConfigurationService.getString("portalPath") + "/";
 		if (prefix != null) siteUrl = siteUrl + prefix + "/";

@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/sam/trunk/samigo-app/src/java/org/sakaiproject/tool/assessment/ui/listener/evaluation/QuestionScoreUpdateListener.java $
- * $Id: QuestionScoreUpdateListener.java 119797 2013-02-08 23:28:38Z ktsao@stanford.edu $
+ * $Id: QuestionScoreUpdateListener.java 120911 2013-03-07 22:32:47Z ktsao@stanford.edu $
  ***********************************************************************************
  *
  * Copyright (c) 2004, 2005, 2006, 2007, 2008, 2009 The Sakai Foundation
@@ -61,7 +61,7 @@ import org.sakaiproject.tool.assessment.util.TextFormat;
  * <p>Copyright: Copyright (c) 2004</p>
  * <p>Organization: Sakai Project</p>
  * @author Ed Smiley
- * @version $Id: QuestionScoreUpdateListener.java 119797 2013-02-08 23:28:38Z ktsao@stanford.edu $
+ * @version $Id: QuestionScoreUpdateListener.java 120911 2013-03-07 22:32:47Z ktsao@stanford.edu $
  */
 
 public class QuestionScoreUpdateListener
@@ -139,6 +139,7 @@ public class QuestionScoreUpdateListener
         	}
         }
         
+        boolean hasUpdateAttachment = false;
         Iterator iter2 = datas.iterator();
         while (iter2.hasNext()){
           Object obj = iter2.next();
@@ -208,7 +209,10 @@ public class QuestionScoreUpdateListener
             delegate.updateItemScore(data, newAutoScore-oldAutoScore, tbean.getPublishedAssessment());
           }
           
-          updateAttachment(data, ar, bean);
+          if (!hasUpdateAttachment) {
+        	  hasUpdateAttachment = true;
+        	  updateAttachment(data, ar, bean);
+          }
         }
       }
 

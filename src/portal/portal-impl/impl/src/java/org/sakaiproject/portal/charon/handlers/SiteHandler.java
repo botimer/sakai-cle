@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/portal/trunk/portal-impl/impl/src/java/org/sakaiproject/portal/charon/handlers/SiteHandler.java $
- * $Id: SiteHandler.java 118049 2013-01-02 23:46:38Z a.fish@lancaster.ac.uk $
+ * $Id: SiteHandler.java 120416 2013-02-23 01:14:40Z botimer@umich.edu $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008 The Sakai Foundation
@@ -43,6 +43,8 @@ import org.sakaiproject.component.cover.ServerConfigurationService;
 import org.sakaiproject.entity.api.ResourceProperties;
 import org.sakaiproject.entity.api.ResourcePropertiesEdit;
 import org.sakaiproject.entity.cover.EntityManager;
+import org.sakaiproject.event.api.Event;
+import org.sakaiproject.event.cover.EventTrackingService;
 import org.sakaiproject.exception.IdUnusedException;
 import org.sakaiproject.exception.PermissionException;
 import org.sakaiproject.portal.api.Portal;
@@ -67,7 +69,7 @@ import org.sakaiproject.util.ResourceLoader;
 /**
  * @author ieb
  * @since Sakai 2.4
- * @version $Rev: 118049 $
+ * @version $Rev: 120416 $
  */
 public class SiteHandler extends WorksiteHandler
 {
@@ -131,8 +133,15 @@ public class SiteHandler extends WorksiteHandler
 				{
 					siteId = parts[2];
 				}
+				
+				String commonToolId = null;
+				
+				if(parts.length == 4)
+				{
+					commonToolId = parts[3];
+				}
 
-				doSite(req, res, session, siteId, pageId, req.getContextPath()
+				doSite(req, res, session, siteId, pageId, commonToolId, req.getContextPath()
 						+ req.getServletPath());
 				return END;
 			}
@@ -148,7 +157,7 @@ public class SiteHandler extends WorksiteHandler
 	}
 
 	public void doSite(HttpServletRequest req, HttpServletResponse res, Session session,
-			String siteId, String pageId, String toolContextPath) throws ToolException,
+			String siteId, String pageId, String commonToolId, String toolContextPath) throws ToolException,
 			IOException
 	{		
 				
@@ -200,6 +209,7 @@ public class SiteHandler extends WorksiteHandler
 		}
 
 		// find the site, for visiting
+		boolean siteDenied = false;
 		Site site = null;
 		try
 		{
@@ -222,7 +232,6 @@ public class SiteHandler extends WorksiteHandler
 		}
 		catch (PermissionException e)
 		{
-			
 			if (ServerConfigurationService.getBoolean("portal.redirectJoin", true) &&
 					userId != null && portal.getSiteHelper().isJoinable(siteId, userId))
 			{
@@ -230,6 +239,8 @@ public class SiteHandler extends WorksiteHandler
 				res.sendRedirect(redirectUrl);
 				return;
 			}
+
+			siteDenied = true;
 		}
 
 		if (site == null)
@@ -245,9 +256,39 @@ public class SiteHandler extends WorksiteHandler
 			}
 			else
 			{
+				// Post an event for denied site visits by known users.
+				// This can be picked up to check the user state and refresh it if stale,
+				// such as showing links to sites that are no longer accessible.
+				// It is also helpful for event log analysis for user trouble or bad behavior.
+				if (siteDenied)
+				{
+					Event event = EventTrackingService.newEvent(SiteService.EVENT_SITE_VISIT_DENIED, siteId, false);
+					EventTrackingService.post(event);
+				}
 				portal.doError(req, res, session, Portal.ERROR_SITE);
 			}
 			return;
+		}
+		
+		// Supports urls like: /portal/site/{SITEID}/sakai.announcements
+		if(site != null && commonToolId != null)
+		{
+			ToolConfiguration tc = null;
+			if(!commonToolId.startsWith("sakai."))
+			{
+				// Try the most likely case first, that of common tool ids starting with 'sakai.'
+				tc = site.getToolForCommonId("sakai." + commonToolId);
+				if(tc == null)
+				{
+					// That failed, try the supplied tool id
+					tc = site.getToolForCommonId(commonToolId);
+				}
+			}
+			
+			if(tc != null)
+			{
+				pageId = tc.getPageId();
+			}
 		}
 
 		// If the page is the mutable page name then look up the 

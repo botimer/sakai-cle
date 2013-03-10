@@ -1,6 +1,6 @@
 /**
  * $URL: https://source.sakaiproject.org/svn/basiclti/trunk/basiclti-blis/src/java/org/sakaiproject/blti/ServiceServlet.java $
- * $Id: ServiceServlet.java 119588 2013-02-07 00:34:27Z csev@umich.edu $
+ * $Id: ServiceServlet.java 120423 2013-02-24 01:36:55Z csev@umich.edu $
  *
  * Copyright (c) 2009 The Sakai Foundation
  *
@@ -111,10 +111,6 @@ import org.sakaiproject.blti.LessonsFacade;
  * This program is directly exposed as a URL to receive IMS Basic LTI messages
  * so it must be carefully reviewed and any changes must be looked at carefully.
  * Here are some issues:
- * 
- * - This uses the RemoteHostFilter so by default it only accepts local IP
- * addresses. This configuration can be changed in web.xml or using the
- * webservices.allow, etc (see RemoteHostFilter)
  * 
  * - This will only function when it is enabled via sakai.properties
  * 
@@ -450,6 +446,9 @@ public class ServiceServlet extends HttpServlet {
 
 			// Check the message signature using OAuth
 			String oauth_secret = pitch.getProperty(LTIService.LTI_SECRET);
+			M_log.debug("oauth_secret: "+oauth_secret);
+			oauth_secret = SakaiBLTIUtil.decryptSecret(oauth_secret);
+			M_log.debug("oauth_secret (decrypted): "+oauth_secret);
 
 			OAuthMessage oam = OAuthServlet.getMessage(request, null);
 			OAuthValidator oav = new SimpleOAuthValidator();
@@ -927,6 +926,9 @@ public class ServiceServlet extends HttpServlet {
 			// Check the message signature using OAuth
 			String oauth_consumer_key = pox.getOAuthConsumerKey();
 			String oauth_secret = pitch.getProperty(LTIService.LTI_SECRET);
+			M_log.debug("oauth_secret: "+oauth_secret);
+			oauth_secret = SakaiBLTIUtil.decryptSecret(oauth_secret);
+			M_log.debug("oauth_secret (decrypted): "+oauth_secret);
 
 			pox.validateRequest(oauth_consumer_key, oauth_secret, request);
 			if ( ! pox.valid ) {
@@ -942,6 +944,7 @@ public class ServiceServlet extends HttpServlet {
 
 			// Send a generic message back to the caller
 			if ( placement_secret ==null ) {
+				M_log.debug("placement_secret is null");
 				doErrorXML(request, response, pox, "outcomes.sourcedid", "sourcedid", null);
 				return;
 			}
@@ -1001,12 +1004,12 @@ public class ServiceServlet extends HttpServlet {
             List<Map<String,Object>> structureMap = iteratePagesXML(sitePages,structureList,0);
 
 			response.setContentType("application/xml");
-			String output = pox.getResponseUnsupported("YO");
+			String output = pox.getResponseUnsupported("No Lessons content found in site");
 			if ( structureMap.size() > 0 ) {
 				Map<String,Object> theMap = new TreeMap<String,Object>();
 				theMap.put("/getCourseStructureResponse/resources/resource",structureMap);
 				String theXml = XMLMap.getXMLFragment(theMap, true);
-				output = pox.getResponseSuccess("Cool", theXml);
+				output = pox.getResponseSuccess("processCourseStructureXml", theXml);
 			}
 
 			PrintWriter out = response.getWriter();

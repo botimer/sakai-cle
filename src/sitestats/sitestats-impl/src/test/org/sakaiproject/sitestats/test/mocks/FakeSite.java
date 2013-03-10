@@ -1,6 +1,6 @@
 /**
  * $URL: https://source.sakaiproject.org/svn/sitestats/trunk/sitestats-impl/src/test/org/sakaiproject/sitestats/test/mocks/FakeSite.java $
- * $Id: FakeSite.java 105078 2012-02-24 23:00:38Z ottenhoff@longsight.com $
+ * $Id: FakeSite.java 120415 2013-02-23 01:14:37Z botimer@umich.edu $
  *
  * Copyright (c) 2006-2009 The Sakai Foundation
  *
@@ -105,6 +105,11 @@ public class FakeSite implements Site {
 		return null;
 	}
 
+	public String getHtmlDescription() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 	public Group getGroup(String arg0) {
 		// TODO Auto-generated method stub
 		return null;
@@ -180,6 +185,11 @@ public class FakeSite implements Site {
 	}
 
 	public String getShortDescription() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public String getHtmlShortDescription() {
 		// TODO Auto-generated method stub
 		return null;
 	}

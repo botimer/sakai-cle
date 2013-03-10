@@ -1,4 +1,4 @@
-<!-- $Id: chef_assignments_student_view_grade.vm 113077 2012-09-18 16:42:38Z gsilver@umich.edu $ -->
+<!-- $Id: chef_assignments_student_view_grade.vm 120595 2013-03-01 20:33:37Z azeckoski@unicon.net $ -->
 <!-- start: chef_assignments_student_view_grade.vm  -->
 ##<!-- $Header: /cvs/sakai2/legacy/tools/src/webapp/vm/assignment/chef_assignments_student_view_grade.vm,v 1.2 2005/05/19 19:39:49 gsilver.umich.edu Exp $ -->
 <script type="text/javascript">
@@ -109,7 +109,7 @@
 							<td class="highlight">
 								<strong>
 									#if ($assignment.getContent().TypeOfGrade != 1)
-										$submission.GradeDisplay
+                                                                               #if($!override)$override#else$submission.GradeDisplay#end
 									#else
 										$tlang.getString("gen.nograd")
 									#end

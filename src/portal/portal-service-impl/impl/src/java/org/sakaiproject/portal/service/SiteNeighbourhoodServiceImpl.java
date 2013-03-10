@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/portal/trunk/portal-service-impl/impl/src/java/org/sakaiproject/portal/service/SiteNeighbourhoodServiceImpl.java $
- * $Id: SiteNeighbourhoodServiceImpl.java 105079 2012-02-24 23:08:11Z ottenhoff@longsight.com $
+ * $Id: SiteNeighbourhoodServiceImpl.java 120416 2013-02-23 01:14:40Z botimer@umich.edu $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008 The Sakai Foundation
@@ -124,10 +124,8 @@ public class SiteNeighbourhoodServiceImpl implements SiteNeighbourhoodService
 			return mySites;
 		}
 
-		// collect the user's sites
-		mySites = siteService.getSites(
-				org.sakaiproject.site.api.SiteService.SelectionType.ACCESS, null, null,
-				null, org.sakaiproject.site.api.SiteService.SortType.TITLE_ASC, null);
+		// collect the user's sites - don't care whether long descriptions are loaded
+		mySites = siteService.getUserSites(false);
 
 		// collect the user's preferences
 		List prefExclude = new ArrayList();

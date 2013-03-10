@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/site/trunk/mergedlist-util/util/src/java/org/sakaiproject/util/MergedList.java $
- * $Id: MergedList.java 105080 2012-02-24 23:10:31Z ottenhoff@longsight.com $
+ * $Id: MergedList.java 120414 2013-02-23 01:14:36Z botimer@umich.edu $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008 The Sakai Foundation
@@ -449,8 +449,8 @@ public class MergedList extends ArrayList
 		 List finalList = new ArrayList();
 		 String [] returnArray = null;
 
-		List siteList = SiteService.getSites(org.sakaiproject.site.api.SiteService.SelectionType.ACCESS,
-						null, null, null, org.sakaiproject.site.api.SiteService.SortType.TITLE_ASC, null);
+		 // Get all accessible sites for the current user, not requiring descriptions
+		 List siteList = SiteService.getUserSites(false);
 		 
 		 Iterator it = siteList.iterator();
 		 

@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/sam/trunk/samigo-app/src/java/org/sakaiproject/tool/assessment/ui/listener/author/ItemAddListener.java $
- * $Id: ItemAddListener.java 118504 2013-01-18 23:12:25Z ktsao@stanford.edu $
+ * $Id: ItemAddListener.java 120766 2013-03-05 21:54:23Z ktsao@stanford.edu $
  ***********************************************************************************
  *
  * Copyright (c) 2004, 2005, 2006, 2007, 2008, 2009 The Sakai Foundation
@@ -439,7 +439,7 @@ public class ItemAddListener
 		    break;
 		}
 		else{
-		    if((notEmpty==true)&&(index+1 !=index)&&(!(text.substring(indexOfOpen+1,index).equals("</p><p>")))){
+		    if((notEmpty==true)&&(indexOfOpen+1 !=index)&&(!(text.substring(indexOfOpen+1,index).equals("</p><p>")))){
 		       hasOpen=false;
                        notEmpty=false;
 		    }
@@ -502,7 +502,7 @@ public class ItemAddListener
     		    break;
     		}
     		else{
-    		    if((notEmpty==true)&&(index+1 !=index)&&(!(text.substring(indexOfOpen+1,index).equals("</p><p>")))){
+    		    if((notEmpty==true)&&(indexOfOpen+1 !=index)&&(!(text.substring(indexOfOpen+1,index).equals("</p><p>")))){
     		       hasOpen=false;
                            notEmpty=false;
     		    }

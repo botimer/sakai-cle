@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/sam/trunk/samigo-app/src/java/org/sakaiproject/tool/assessment/ui/bean/delivery/DeliveryBean.java $
- * $Id: DeliveryBean.java 114375 2012-10-15 21:06:59Z ktsao@stanford.edu $
+ * $Id: DeliveryBean.java 120911 2013-03-07 22:32:47Z ktsao@stanford.edu $
  ***********************************************************************************
  *
  * Copyright (c) 2004, 2005, 2006, 2007, 2008, 2009 The Sakai Foundation
@@ -104,7 +104,7 @@ import uk.org.ponder.rsf.state.support.TMLFixer;
  *
  * @author casong
  * @author esmiley@stanford.edu added agentState
- * $Id: DeliveryBean.java 114375 2012-10-15 21:06:59Z ktsao@stanford.edu $
+ * $Id: DeliveryBean.java 120911 2013-03-07 22:32:47Z ktsao@stanford.edu $
  *
  * Used to be org.navigoproject.ui.web.asi.delivery.XmlDeliveryForm.java
  */
@@ -3067,7 +3067,7 @@ public class DeliveryBean
     GradingService service = new GradingService();
     AssessmentGradingData assessmentGrading=null;
     if (adata!=null){
-      assessmentGrading = service.load(adata.getAssessmentGradingId().toString());
+      assessmentGrading = service.load(adata.getAssessmentGradingId().toString(), false);
     }
     PublishedAssessmentService pubService = new PublishedAssessmentService();
     int totalSubmitted = (pubService.getTotalSubmission(AgentFacade.getAgentString(), 

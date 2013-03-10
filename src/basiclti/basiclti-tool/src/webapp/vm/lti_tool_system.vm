@@ -109,9 +109,9 @@
 	});
 </script>
 <div class="portletBody">
-	<ul class="navIntraTool actionToolBar" role="menu">
-		<li  class="firstToolBarItem" role="menuitem"><span><a href="" title="$tlang.getString("tool.in.site")" onclick="location = '$sakai_ActionURL.setPanel("ToolSite")';return false;"> $tlang.getString("tool.in.site")</a></span></li>
-		<li role="menuitem" aria-disabled="true"><span class="current">$tlang.getString("tool.in.system")</span></li>
+	<ul class="navIntraTool actionToolBar">
+		<li class="firstToolBarItem"><span><a href="" title="$tlang.getString("tool.in.site")" onclick="location = '$sakai_ActionURL.setPanel("ToolSite")';return false;"> $tlang.getString("tool.in.site")</a></span></li>
+		<li><span class="current">$tlang.getString("tool.in.system")</span></li>
 	</ul>
 	#if ($messageSuccess)<div class="messageSuccess">$tlang.getString("gen.success") $validator.escapeHtml($messageSuccess)</div><div class="clear"></div>#end
 	#if ($alertMessage)<div class="alertMessage">$tlang.getString("gen.alert") $validator.escapeHtml($alertMessage)</div><div class="clear"></div>#end
@@ -149,7 +149,7 @@
 				#set($toolId=$tool.getKey())
 				#set($toolValues=$tool.getValue())
 				<tr>
-	                <td headers="title"><a href="$sakai_ActionURL.setPanel("ToolView")&id=$toolValues.get("id")">$toolValues.get("title")</td>
+	                <td headers="title"><a href="$sakai_ActionURL.setPanel("ToolView")&id=$toolValues.get("id")">$validator.escapeHtml($toolValues.get("title"))</td>
 	                <td headers="launch">$toolValues.get("launch")</td>
 	                <td headers="site_id">
 	                	#set($siteId="<span style='display:none;'>zzzz</span>")

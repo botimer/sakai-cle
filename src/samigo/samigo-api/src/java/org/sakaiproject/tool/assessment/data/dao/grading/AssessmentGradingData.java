@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/sam/trunk/samigo-api/src/java/org/sakaiproject/tool/assessment/data/dao/grading/AssessmentGradingData.java $
- * $Id: AssessmentGradingData.java 106463 2012-04-02 12:20:09Z david.horwitz@uct.ac.za $
+ * $Id: AssessmentGradingData.java 120468 2013-02-26 19:19:53Z ktsao@stanford.edu $
  ***********************************************************************************
  *
  * Copyright (c) 2004, 2005, 2006, 2008, 2009 The Sakai Foundation
@@ -58,6 +58,7 @@ public class AssessmentGradingData implements java.io.Serializable
 	private Boolean isAutoSubmitted;
 	private Integer lastVisitedPart = 0;
 	private Integer lastVisitedQuestion = 0;
+	private Boolean hasAutoSubmissionRun = false;
 
 	// Because of SAK-16456, we no longer need to show the auto/human graded
 	// status per submission, I don't think we
@@ -396,6 +397,14 @@ public class AssessmentGradingData implements java.io.Serializable
 	public void setIsRecorded(boolean isRecorded) {
 		this.isRecorded = isRecorded;
 	}
+
+	public Boolean getHasAutoSubmissionRun() {
+		  return hasAutoSubmissionRun;
+	  }
+
+	  public void setHasAutoSubmissionRun(Boolean hasAutoSubmissionRun) {
+		  this.hasAutoSubmissionRun = hasAutoSubmissionRun;
+	  }
 
 	@Override
 	public int hashCode() {

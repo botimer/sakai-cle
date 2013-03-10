@@ -1,6 +1,6 @@
 /**
  * $URL: https://source.sakaiproject.org/svn/basiclti/trunk/basiclti-common/src/java/org/sakaiproject/basiclti/util/SakaiBLTIUtil.java $
- * $Id: SakaiBLTIUtil.java 119588 2013-02-07 00:34:27Z csev@umich.edu $
+ * $Id: SakaiBLTIUtil.java 120424 2013-02-24 02:02:51Z csev@umich.edu $
  *
  * Copyright (c) 2006-2009 The Sakai Foundation
  *
@@ -36,12 +36,14 @@ import org.sakaiproject.tool.api.Placement;
 import org.sakaiproject.authz.cover.SecurityService;
 import org.sakaiproject.site.api.Site;
 import org.sakaiproject.site.cover.SiteService;
+import org.sakaiproject.api.privacy.PrivacyManager;
 import org.sakaiproject.authz.cover.AuthzGroupService;
 import org.sakaiproject.authz.api.AuthzGroup;
 import org.sakaiproject.authz.api.Role;
 import org.sakaiproject.authz.api.GroupNotDefinedException;
 import org.sakaiproject.entity.api.ResourceProperties;
 import org.sakaiproject.component.cover.ServerConfigurationService;
+import org.sakaiproject.component.cover.ComponentManager;
 import org.sakaiproject.util.ResourceLoader;
 import org.sakaiproject.util.Web;
 
@@ -61,6 +63,7 @@ public class SakaiBLTIUtil {
 	public static final String BASICLTI_LORI_ENABLED = "basiclti.lori.enabled";
 	public static final String BASICLTI_CONTENTLINK_ENABLED = "basiclti.contentlink.enabled";
 	public static final String BASICLTI_CONSUMER_USERIMAGE_ENABLED = "basiclti.consumer.userimage.enabled";
+	public static final String BASICLTI_ENCRYPTION_KEY = "basiclti.encryption.key";
 
 	public static void dPrint(String str)
 	{
@@ -110,7 +113,19 @@ public class SakaiBLTIUtil {
 			if ( xml == null ) return false;
 			BasicLTIUtil.parseDescriptor(info, launch, xml);
 		}
-		setProperty(info, "secret", getCorrectProperty(config,"secret", placement) );
+
+		String secret = getCorrectProperty(config,"secret", placement);
+
+		// BLTI-195 - Compatibility mode for old-style encrypted secrets
+		if ( secret == null || secret.trim().length() < 1 ) {
+			String eSecret = getCorrectProperty(config,"encryptedsecret", placement);
+			if ( eSecret != null && eSecret.trim().length() > 0 ) {
+				secret = eSecret.trim() + ":" + SimpleEncryption.CIPHER;
+			}
+		}
+
+		setProperty(info, "secret", secret );
+
 		setProperty(info, "key", getCorrectProperty(config,"key", placement) );
 		setProperty(info, "debug", getCorrectProperty(config,"debug", placement) );
 		setProperty(info, "frameheight", getCorrectProperty(config,"frameheight", placement) );
@@ -147,6 +162,31 @@ public class SakaiBLTIUtil {
 				if ( value.length() < 1 ) continue;
 				setProperty(info, "custom_"+key, value);
 			}
+		}
+	}
+
+	public static String encryptSecret(String orig)
+	{
+		if ( orig == null || orig.trim().length() < 1 ) return orig;
+		String encryptionKey = ServerConfigurationService.getString(BASICLTI_ENCRYPTION_KEY, null);
+		if ( encryptionKey == null ) return orig;
+	
+		// May throw runtime exception - just let it log as this is abnormal...
+		String newsecret = SimpleEncryption.encrypt(encryptionKey, orig);
+		return newsecret;
+	}
+
+	public static String decryptSecret(String orig)
+	{
+		if ( orig == null || orig.trim().length() < 1 ) return orig;
+		String encryptionKey = ServerConfigurationService.getString(BASICLTI_ENCRYPTION_KEY, null);
+		if ( encryptionKey == null ) return orig;
+		try {
+			String newsecret = SimpleEncryption.decrypt(encryptionKey, orig);
+			return newsecret;
+		} catch (RuntimeException re) {
+			dPrint("Exception when decrypting secret - this is normal if the secret is unencrypted");      
+			return orig;
 		}
 	}
 
@@ -266,9 +306,16 @@ public class SakaiBLTIUtil {
 
 		User user = UserDirectoryService.getCurrentUser();
 
+        PrivacyManager pm = (PrivacyManager) 
+                ComponentManager.get("org.sakaiproject.api.privacy.PrivacyManager");
+
 		// TODO: Think about anonymus
 		if ( user != null )
 		{
+		    String context = placement.getContext();
+            boolean isViewable = pm.isViewable("/site/" + context, user.getId());
+            setProperty(props,"ext_sakai_privacy", isViewable ? "visible" : "hidden");
+
 			setProperty(props,BasicLTIConstants.USER_ID,user.getId());
 
 			if(ServerConfigurationService.getBoolean(SakaiBLTIUtil.BASICLTI_CONSUMER_USERIMAGE_ENABLED, true)) {
@@ -362,6 +409,18 @@ public class SakaiBLTIUtil {
 		String contentlink = toNull(getCorrectProperty(config,"contentlink", placement));
 		if ( contentlink != null ) setProperty(props,"ext_resource_link_content",contentlink);
 
+		// Send along the signed session if requested
+		String sendsession = toNull(getCorrectProperty(config,"ext_sakai_session", placement));
+		if ( "true".equals(sendsession) ) {
+			Session s = SessionManager.getCurrentSession();
+			if (s != null) {
+				String sessionid = s.getId();
+				if (sessionid != null) {
+					sessionid = LinkToolUtil.encrypt(sessionid);
+					setProperty(props,"ext_sakai_session",sessionid);
+				}
+			}
+		}
 	} 
 
 	public static void addGlobalData(Properties props, ResourceLoader rb)
@@ -392,15 +451,6 @@ public class SakaiBLTIUtil {
 		setProperty(props,BasicLTIConstants.TOOL_CONSUMER_INFO_PRODUCT_FAMILY_CODE, 
 			sakaiVersion);  
 		setProperty(props,BasicLTIConstants.TOOL_CONSUMER_INFO_VERSION, sakaiVersion);  
-		// Sakai-Unique fields - compatible with LinkTool
-		Session s = SessionManager.getCurrentSession();
-		if (s != null) {
-			String sessionid = s.getId();
-			if (sessionid != null) {
-				sessionid = LinkToolUtil.encrypt(sessionid);
-				setProperty(props,"ext_sakai_session",sessionid);
-			}
-		}
 
 		// We pass this along in the Sakai world - it might
 		// might be useful to the external tool
@@ -522,6 +572,10 @@ public class SakaiBLTIUtil {
 			if ( releaseemail == 1 ) {
 				setProperty(ltiProps,BasicLTIConstants.LIS_PERSON_CONTACT_EMAIL_PRIMARY,user.getEmail());
 				setProperty(ltiProps,BasicLTIConstants.LIS_PERSON_SOURCEDID,user.getEid());
+				// Only send the display ID if it's different to the EID.
+				if (!user.getEid().equals(user.getDisplayId())) {
+					setProperty(ltiProps,BasicLTIConstants.EXT_SAKAI_PROVIDER_DISPLAYID,user.getDisplayId());
+				}
 			}
 		}
 
@@ -634,6 +688,9 @@ public class SakaiBLTIUtil {
 			secret = toNull(toolProps.getProperty("secret"));
 			key = toNull(toolProps.getProperty("key"));
 		}
+
+		// If secret is encrypted, decrypt it
+		secret = decryptSecret(secret);
 
 		// Pull in all of the custom parameters
 		for(Object okey : toolProps.keySet() ) {

@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/assignment/trunk/assignment-impl/impl/src/java/org/sakaiproject/assignment/impl/conversion/api/SerializableSubmissionAccess.java $
- * $Id: SerializableSubmissionAccess.java 110665 2012-07-24 14:18:50Z azeckoski@unicon.net $
+ * $Id: SerializableSubmissionAccess.java 120595 2013-03-01 20:33:37Z azeckoski@unicon.net $
  ***********************************************************************************
  *
  * Copyright (c) 2007, 2008 The Sakai Foundation
@@ -279,7 +279,9 @@ public interface SerializableSubmissionAccess
 	public void setSubmitterId(String id);
         public void setSubmissionLog(List<String> log);
         public List<String> getSubmissionLog();
-        
+        public void setGrades(List<String> grades);
+        public List<String> getGrades();
+
 	/**
 	 * @param submitters the submitters to set
 	 */

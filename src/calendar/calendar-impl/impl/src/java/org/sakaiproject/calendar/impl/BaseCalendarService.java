@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/calendar/trunk/calendar-impl/impl/src/java/org/sakaiproject/calendar/impl/BaseCalendarService.java $
- * $Id: BaseCalendarService.java 118096 2013-01-04 17:42:01Z holladay@longsight.com $
+ * $Id: BaseCalendarService.java 120846 2013-03-06 15:46:33Z holladay@longsight.com $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008, 2009 The Sakai Foundation
@@ -159,7 +159,7 @@ import org.sakaiproject.util.SAXEntityReader;
 import org.sakaiproject.util.Validator;
 import org.sakaiproject.util.Web;
 import org.sakaiproject.util.Xml;
-import org.sakaiproject.util.LinkMigrationHelper;
+import org.sakaiproject.util.cover.LinkMigrationHelper;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -2302,9 +2302,7 @@ public abstract class BaseCalendarService implements CalendarService, DoubleStor
 						}	
 */
 						StringBuffer msgBodyPreMigrate = new StringBuffer(msgBodyFormatted);
-						msgBodyFormatted = LinkMigrationHelper.editLinks(msgBodyFormatted, "sam_pub");
-						msgBodyFormatted = LinkMigrationHelper.editLinks(msgBodyFormatted, "/posts/");
-						msgBodyFormatted = LinkMigrationHelper.miagrateAllLinks(entrySet, msgBodyFormatted);
+						msgBodyFormatted = LinkMigrationHelper.migrateAllLinks(entrySet, msgBodyFormatted);
 						if(!msgBodyFormatted.equals(msgBodyPreMigrate.toString())){
 						
 //						if(updated){

@@ -1,6 +1,6 @@
 /**
  * $URL: https://source.sakaiproject.org/svn/basiclti/trunk/basiclti-common/src/java/org/sakaiproject/basiclti/util/ShaUtil.java $
- * $Id: ShaUtil.java 105077 2012-02-24 22:54:29Z ottenhoff@longsight.com $
+ * $Id: ShaUtil.java 120423 2013-02-24 01:36:55Z csev@umich.edu $
  *
  * Copyright (c) 2010 The Sakai Foundation
  *
@@ -69,6 +69,22 @@ public class ShaUtil {
 		} else {
 			return null;
 		}
+	}
+	
+
+	public static byte[] hexToByte(String hex) {
+		if (hex == null) {
+			return null;
+		}
+		byte[] base = new byte[hex.length() / 2];
+		int i = 0;
+		for (int j = 0; j < base.length; j++) {
+			int digit = -128;
+			digit += Character.digit(hex.charAt(i++), 16) * 0x10;
+			digit += Character.digit(hex.charAt(i++), 16) % 0x10;
+			base[j] = (byte) digit;
+		}
+		return base;
 	}
 
 	public static void main(String[] args) {

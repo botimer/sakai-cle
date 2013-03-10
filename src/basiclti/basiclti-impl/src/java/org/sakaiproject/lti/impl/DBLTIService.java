@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/basiclti/trunk/basiclti-impl/src/java/org/sakaiproject/lti/impl/DBLTIService.java $
- * $Id: DBLTIService.java 119499 2013-02-05 05:43:39Z zqian@umich.edu $
+ * $Id: DBLTIService.java 120996 2013-03-09 19:56:04Z csev@umich.edu $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008 The Sakai Foundation
@@ -278,33 +278,23 @@ public class DBLTIService extends BaseLTIService implements LTIService {
 
 		String[] contentModel = getContentModelDao(tool, siteId, isMaintainRole);
 		
-		//check to see whether the contentModel contains title or page title
+		// Since page title and title are both required and dynamically hideable, 
+		// They may not be in the model.  If they are not there, add them for the purpose
+		// of the insert, and then copy the values from the tool.
 		List<String> contentModelList = new ArrayList<String>(Arrays.asList(contentModel));
 		if (!contentModelList.contains(LTI_TITLE) || !contentModelList.contains(LTI_PAGETITLE))
 		{
 			if (!contentModelList.contains(LTI_TITLE))
 			{
-				// add title
 				contentModelList.add(LTI_TITLE + ":text");
-				
+				newProps.put(LTI_TITLE, tool.get(LTI_TITLE));
 			}
 			if (!contentModelList.contains(LTI_PAGETITLE))
 			{
-				// add page title
 				contentModelList.add(LTI_PAGETITLE + ":text");
-			}
-			contentModel = contentModelList.toArray(new String[contentModelList.size()]);
-		
-			if (!newProps.containsKey(LTI_TITLE))
-			{
-				// update the 
-				newProps.put(LTI_TITLE, tool.get(LTI_TITLE));
-			}
-			
-			if (!newProps.containsKey(LTI_PAGETITLE))
-			{
 				newProps.put(LTI_PAGETITLE, tool.get(LTI_PAGETITLE));
 			}
+			contentModel = contentModelList.toArray(new String[contentModelList.size()]);
 		}
 		
 		if (contentModel == null)
@@ -352,17 +342,18 @@ public class DBLTIService extends BaseLTIService implements LTIService {
 		}
 		Long oldToolKey = foorm.getLongNull(content.get(LTIService.LTI_TOOL_ID));
 
-		// Make sure we like the proposed tool_id
-		String newToolId = (String) foorm.getField(newProps, LTIService.LTI_TOOL_ID);
+		Object oToolId = (Object) foorm.getField(newProps, LTIService.LTI_TOOL_ID);
 		Long newToolKey = null;
-		if ( newToolId != null ) {
+		if ( oToolId != null && oToolId instanceof Number ) {
+			newToolKey = new Long( ((Number) oToolId).longValue());
+		} else if ( oToolId != null ) {
 			try {
-				newToolKey = new Long(newToolId);
+				newToolKey = new Long((String) oToolId);
 			} catch (Exception e) {
 				return rb.getString("error.invalid.toolid");
 			}
 		}
-		if ( newToolKey == null ) newToolKey = oldToolKey;
+		if ( newToolKey == null || newToolKey < 0 ) newToolKey = oldToolKey;
 
 		// Load the tool we are aiming for
 		Map<String, Object> tool = getToolDao(newToolKey, siteId, isMaintainRole);

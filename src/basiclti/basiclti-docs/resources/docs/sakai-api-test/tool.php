@@ -82,20 +82,20 @@ if ( $context->valid ) {
 		$found = true;
     }
     if ( ! $found ) {
-		echo("<p>This launch did not include the necessary settings for ay of the ");
+		echo("<p>This launch did not include the necessary settings for any of the ");
 		echo("Sakai External Tool API such as:\n<pre>\n");
 		echo("ext_ims_lis_memberships_url\next_ims_lis_basic_outcome_url\next_ims_lti_tool_setting_url\n");
 		echo("</pre>\n</p>\n");
 	}
     print "<pre>\n";
     print "Context Information:\n\n";
-    print $context->dump();
+    print htmlentities($context->dump());
     print "</pre>\n";
 } else {
     print "<p style=\"color:red\">Could not establish context: ".$context->message."<p>\n";
 }
 print "<p>Base String:<br/>\n";
-print $context->basestring;
+print htmlentities($context->basestring);
 print "<br/></p>\n";
 
 print "<pre>\n";
@@ -103,14 +103,14 @@ print "Raw POST Parameters:\n\n";
 ksort($_POST);
 foreach($_POST as $key => $value ) {
     if (get_magic_quotes_gpc()) $value = stripslashes($value);
-    print "$key=$value (".mb_detect_encoding($value).")\n";
+    print htmlentities($key) . "=" . htmlentities($value) . " (".mb_detect_encoding($value).")\n";
 }
 
 print "\nRaw GET Parameters:\n\n";
 ksort($_GET);
 foreach($_GET as $key => $value ) {
     if (get_magic_quotes_gpc()) $value = stripslashes($value);
-    print "$key=$value (".mb_detect_encoding($value).")\n";
+    print htmlentities($key) . "=" . htmlentities($value) . " (".mb_detect_encoding($value).")\n";
 }
 print "</pre>";
 

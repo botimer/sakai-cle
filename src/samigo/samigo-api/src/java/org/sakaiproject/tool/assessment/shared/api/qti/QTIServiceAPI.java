@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/sam/trunk/samigo-api/src/java/org/sakaiproject/tool/assessment/shared/api/qti/QTIServiceAPI.java $
- * $Id: QTIServiceAPI.java 106463 2012-04-02 12:20:09Z david.horwitz@uct.ac.za $
+ * $Id: QTIServiceAPI.java 120835 2013-03-06 13:29:53Z azeckoski@unicon.net $
  ***********************************************************************************
  *
  * Copyright (c) 2004, 2005, 2006, 2008 The Sakai Foundation
@@ -40,6 +40,15 @@ public interface QTIServiceAPI
                                                 int qtiVersion);
 
   /**
+   * Import an assessment XML document in QTI format, extract & persist the data.
+   * @param documentPath the pathname to a file with the assessment XML document in QTI format
+   * @param qtiVersion either 1=QTI VERSION 1.2  or 2=QTI Version 2.0
+   * @param siteId the site the assessment will be associated with
+   * @return a persisted assessment
+   */
+  public AssessmentIfc createImportedAssessment(String documentPath, int qtiVersion, String siteId);
+
+  /**
    * Import an item XML document in QTI format, extract & persist the data.
    * @param document the item XML document in QTI format
    * @param qtiVersion either 1=QTI VERSION 1.2  or 2=QTI Version 2.0
@@ -57,6 +66,17 @@ public interface QTIServiceAPI
    * @return the Document with the assessment data
    */
   public Document getExportedAssessment(String assessmentId, int qtiVersion);
+
+  /**
+   * Get an assessment in String form.
+   *
+   * Note:  this service requires a Faces context.
+   *
+   * @param assessmentId the assessment's Id
+   * @param qtiVersion either 1=QTI VERSION 1.2  or 2=QTI Version 2.0
+   * @return the Document with the assessment data
+   */
+  public String getExportedAssessmentAsString(String assessmentId, int qtiVersion);
 
   /**
    * Get an item in Document form.

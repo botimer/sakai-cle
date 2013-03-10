@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/sam/trunk/samigo-app/src/java/org/sakaiproject/tool/assessment/ui/bean/evaluation/ExportResponsesBean.java $
- * $Id: ExportResponsesBean.java 115326 2012-10-30 23:47:00Z ktsao@stanford.edu $
+ * $Id: ExportResponsesBean.java 120646 2013-03-04 22:29:15Z ktsao@stanford.edu $
  ***********************************************************************************
  *
  * Copyright (c) 2007, 2008, 2009 The Sakai Foundation
@@ -48,6 +48,7 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.sakaiproject.component.cover.ServerConfigurationService;
 import org.sakaiproject.jsf.model.PhaseAware;
 import org.sakaiproject.tool.assessment.jsf.convert.AnswerSurveyConverter;
 import org.sakaiproject.tool.assessment.services.GradingService;
@@ -371,8 +372,20 @@ public class ExportResponsesBean implements Serializable, PhaseAware {
 		CellStyle boldStyle = wb.createCellStyle();
 		Font font = wb.createFont();
 		font.setBoldweight(Font.BOLDWEIGHT_BOLD);
+		String fontName = ServerConfigurationService.getString("spreadsheet.font");
+		if (fontName != null) {
+			font.setFontName(fontName);
+		}
 		boldStyle.setFont(font);
 		CellStyle headerStyle = boldStyle;
+
+		CellStyle cellStyle = null;
+		if (fontName != null) {
+			font = wb.createFont();
+			font.setFontName(fontName);
+			cellStyle = wb.createCellStyle();
+			cellStyle.setFont(font);
+		}
 		
 		Sheet sheet = null;
 
@@ -418,7 +431,7 @@ public class ExportResponsesBean implements Serializable, PhaseAware {
 							data = colIter.next();
 						}
 						else {
-							cell = createCell(row, colPos++, null);
+							cell = createCell(row, colPos++, cellStyle);
 						}
 						if (data != null) {
 							if (data instanceof Double) {

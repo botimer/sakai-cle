@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/assignment/trunk/assignment-api/api/src/java/org/sakaiproject/assignment/api/AssignmentSubmissionEdit.java $
- * $Id: AssignmentSubmissionEdit.java 110665 2012-07-24 14:18:50Z azeckoski@unicon.net $
+ * $Id: AssignmentSubmissionEdit.java 120595 2013-03-01 20:33:37Z azeckoski@unicon.net $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008 The Sakai Foundation
@@ -74,7 +74,8 @@ public interface AssignmentSubmissionEdit extends AssignmentSubmission, Edit
          */
         public void addSubmissionLogEntry(String entry);
         
-        
+        public void addGradeForUser(String id, String grade);
+
 	/**
 	 * Remove an User from the submitter list
 	 * 

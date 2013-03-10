@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/sam/trunk/samigo-app/src/java/org/sakaiproject/tool/assessment/ui/queue/delivery/SubmitTimedAssessmentThread.java $
- * $Id: SubmitTimedAssessmentThread.java 113856 2012-10-01 18:52:04Z holladay@longsight.com $
+ * $Id: SubmitTimedAssessmentThread.java 120911 2013-03-07 22:32:47Z ktsao@stanford.edu $
  ***********************************************************************************
  *
  * Copyright (c) 2004, 2005, 2006, 2007, 2008, 2009 The Sakai Foundation
@@ -49,7 +49,7 @@ import java.util.ResourceBundle;
 /**
  * <p>Title: Samigo</p>
  * <p>Description: Sakai Assessment Manager</p>
- * @version $Id: SubmitTimedAssessmentThread.java 113856 2012-10-01 18:52:04Z holladay@longsight.com $
+ * @version $Id: SubmitTimedAssessmentThread.java 120911 2013-03-07 22:32:47Z ktsao@stanford.edu $
  */
 
 public class SubmitTimedAssessmentThread extends TimerTask
@@ -82,7 +82,7 @@ public class SubmitTimedAssessmentThread extends TimerTask
           timedAG.setSubmittedForGrade(true);
           // set all the properties right and persist status to DB
           GradingService service = new GradingService();
-          AssessmentGradingData ag = service.load(timedAG.getAssessmentGradingId().toString());
+          AssessmentGradingData ag = service.load(timedAG.getAssessmentGradingId().toString(), false);
           if (!ag.getForGrade().booleanValue()) {
             ag.setForGrade(Boolean.TRUE);
             ag.setTimeElapsed(Integer.valueOf(timedAG.getTimeLimit()));

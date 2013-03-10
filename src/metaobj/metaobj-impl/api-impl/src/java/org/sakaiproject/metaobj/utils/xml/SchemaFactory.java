@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/metaobj/trunk/metaobj-impl/api-impl/src/java/org/sakaiproject/metaobj/utils/xml/SchemaFactory.java $
- * $Id: SchemaFactory.java 105079 2012-02-24 23:08:11Z ottenhoff@longsight.com $
+ * $Id: SchemaFactory.java 120216 2013-02-18 19:44:04Z ottenhoff@longsight.com $
  ***********************************************************************************
  *
  * Copyright (c) 2004, 2005, 2006, 2008 The Sakai Foundation
@@ -47,6 +47,7 @@ public class SchemaFactory {
       }
 
       SAXBuilder builder = new SAXBuilder();
+      builder.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true); // SAK-23245
       try {
          Document doc = builder.build(in);
          SchemaNode node = new SchemaNodeImpl(doc, this, in);
@@ -61,6 +62,7 @@ public class SchemaFactory {
    public SchemaNode getSchema(java.io.InputStream in) {
 
       SAXBuilder builder = new SAXBuilder();
+      builder.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true); // SAK-23245
       try {
          Document doc = builder.build(in);
          SchemaNode node = new SchemaNodeImpl(doc, this, in);
@@ -77,6 +79,7 @@ public class SchemaFactory {
       }
 
       SAXBuilder builder = new SAXBuilder();
+      builder.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true); // SAK-23245
       try {
          Document doc = builder.build(in, systemId);
          SchemaNode node = new SchemaNodeImpl(doc, this, in);
@@ -94,6 +97,7 @@ public class SchemaFactory {
       }
 
       SAXBuilder builder = new SAXBuilder();
+      builder.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true); // SAK-23245
       try {
          Document doc = builder.build(characterStream, systemId);
          SchemaNode node = new SchemaNodeImpl(doc, this, systemId);
@@ -111,6 +115,7 @@ public class SchemaFactory {
       }
 
       SAXBuilder builder = new SAXBuilder();
+      builder.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true); // SAK-23245
       try {
          Document doc = builder.build(systemId);
          SchemaNode node = new SchemaNodeImpl(doc, this, systemId);
@@ -128,6 +133,7 @@ public class SchemaFactory {
       }
 
       SAXBuilder builder = new SAXBuilder();
+      builder.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true); // SAK-23245
       try {
          Document doc = builder.build(url);
          SchemaNode node = new SchemaNodeImpl(doc, this, url);
