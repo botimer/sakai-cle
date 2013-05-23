@@ -1,4 +1,4 @@
-<!-- $Id: chef_assignments_student_preview_submission.vm 110665 2012-07-24 14:18:50Z azeckoski@unicon.net $ -->
+<!-- $Id: chef_assignments_student_preview_submission.vm 122725 2013-04-12 21:05:51Z ottenhoff@longsight.com $ -->
 <!-- start: chef_assignments_student_preview_submission.vm -->
 <div class="portletBody">
 
@@ -6,7 +6,7 @@
 		$tlang.getString("gen.assig")<span class="highlight"> - $tlang.getString("gen.pre")</span>
 	</h3>	
 
-	#if ($alertMessage)<div class="alertMessage">$tlang.getString("gen.alert") $validator.escapeHtml($alertMessage)</div><div class="clear"></div>#end
+	#if ($alertMessage)<div class="alertMessage">$tlang.getString("gen.alert") $alertMessage</div><div class="clear"></div>#end
 	<table class="itemSummary" summary="$tlang.getString("gen.assdet")" border="0">
 		 <tr>
 			<th>

@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/kernel/trunk/kernel-impl/src/main/java/org/sakaiproject/content/impl/BaseContentService.java $
- * $Id: BaseContentService.java 120846 2013-03-06 15:46:33Z holladay@longsight.com $
+ * $Id: BaseContentService.java 124821 2013-05-22 12:17:07Z steve.swinsburg@gmail.com $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008 Sakai Foundation
@@ -31,7 +31,9 @@ import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.SocketException;
 import java.net.URI;
+import java.net.URLDecoder;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -159,6 +161,7 @@ import org.sakaiproject.util.StringUtil;
 import org.sakaiproject.util.Validator;
 import org.sakaiproject.util.Web;
 import org.sakaiproject.util.Xml;
+import org.sakaiproject.util.api.LinkMigrationHelper;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -169,7 +172,6 @@ import org.xml.sax.SAXException;
 
 import com.ibm.icu.text.CharsetDetector;
 import com.ibm.icu.text.CharsetMatch;
-import org.sakaiproject.util.cover.LinkMigrationHelper;
 
 /**
  * <p>
@@ -291,9 +293,11 @@ SiteContentAdvisorProvider, SiteContentAdvisorTypeRegistry, EntityTransferrerRef
 		m_siteService = service;
 	}
 
+	protected LinkMigrationHelper linkMigrationHelper;
 	
-
-	
+	public void setLinkMigrationHelper(LinkMigrationHelper linkMigrationHelper) {
+		this.linkMigrationHelper = linkMigrationHelper;
+	}
 	
 	/** Dependency: NotificationService. */
 	protected NotificationService m_notificationService = null;
@@ -792,7 +796,9 @@ SiteContentAdvisorProvider, SiteContentAdvisorTypeRegistry, EntityTransferrerRef
 			// %%% is this the best we can do? -ggolden
 
 			// set the action
-			edit.setAction(new SiteEmailNotificationContent());
+			SiteEmailNotificationContent siteEmailNotificationContent = new SiteEmailNotificationContent(m_securityService,
+					m_serverConfigurationService, this, m_entityManager, m_siteService);
+			edit.setAction(siteEmailNotificationContent);
 
 			NotificationEdit dbNoti = m_notificationService.addTransientNotification();
 
@@ -805,7 +811,9 @@ SiteContentAdvisorProvider, SiteContentAdvisorTypeRegistry, EntityTransferrerRef
 			// %%% is this the best we can do? -ggolden
 
 			// set the action
-			dbNoti.setAction(new DropboxNotification());
+			DropboxNotification dropboxNotification = new DropboxNotification(m_securityService, this, m_entityManager, m_siteService,
+					userDirectoryService, m_serverConfigurationService);
+			dbNoti.setAction(dropboxNotification);
 
 
 			StringBuilder buf = new StringBuilder();
@@ -6381,7 +6389,12 @@ SiteContentAdvisorProvider, SiteContentAdvisorTypeRegistry, EntityTransferrerRef
 					// An invalid URI format will get caught by the outermost catch block 
 					URI uri = new URI(new String(content, "UTF-8"));
 					eventTrackingService.post(eventTrackingService.newEvent(EVENT_RESOURCE_READ, resource.getReference(null), false));
-					res.sendRedirect(uri.toASCIIString());
+					
+					//SAK-23587 process any macros present in this URL
+					String decodedUrl = URLDecoder.decode(uri.toString(), "UTF-8");
+					decodedUrl = expandMacros(decodedUrl);
+					
+					res.sendRedirect(decodedUrl);
 					
 				} else {
 					// we have a text/url mime type, but the body is too long to issue as a redirect
@@ -6751,7 +6764,8 @@ SiteContentAdvisorProvider, SiteContentAdvisorTypeRegistry, EntityTransferrerRef
 		try
 		{
 			// use the helper
-			CollectionAccessFormatter.format(collection, ref, req, res, rb, getAccessPoint(true), getAccessPoint(false));
+			CollectionAccessFormatter.format(collection, ref, req, res, rb, getAccessPoint(true), getAccessPoint(false), this,
+					m_siteService);
 
 			// track event
 			// eventTrackingService.post(eventTrackingService.newEvent(EVENT_RESOURCE_READ, collection.getReference(), false));
@@ -7467,12 +7481,12 @@ SiteContentAdvisorProvider, SiteContentAdvisorTypeRegistry, EntityTransferrerRef
 							newValue = (String) transversalMap.get(oldValue);
 							targetId = (String) transversalMap.get(oldValue);
 							if(newValue.length()>0){
-								rContent = LinkMigrationHelper.migrateOneLink(oldValue, newValue, rContent);
+								rContent = linkMigrationHelper.migrateOneLink(oldValue, newValue, rContent);
 								}
 								}
 							}
 					try {
-						rContent = LinkMigrationHelper.bracketAndNullifySelectedLinks(rContent);
+						rContent = linkMigrationHelper.bracketAndNullifySelectedLinks(rContent);
 					} catch (Exception e) {
 						// TODO Auto-generated catch block
 						M_log.debug ("Forums LinkMigrationHelper.editLinks failed" + e);
@@ -7683,6 +7697,8 @@ SiteContentAdvisorProvider, SiteContentAdvisorTypeRegistry, EntityTransferrerRef
 								p.clear();
 								p.addAll(oProperties);
 								edit.setAvailability(((ContentCollection) oResource).isHidden(), ((ContentCollection) oResource).getReleaseDate(), ((ContentCollection) oResource).getRetractDate());
+								// SAK-23305
+								hideImportedContent(edit);
 								// complete the edit
 								m_storage.commitCollection(edit);
 								((BaseCollectionEdit) edit).closeEdit();
@@ -7719,6 +7735,8 @@ SiteContentAdvisorProvider, SiteContentAdvisorTypeRegistry, EntityTransferrerRef
 								ResourcePropertiesEdit p = edit.getPropertiesEdit();
 								p.clear();
 								p.addAll(oProperties);
+								// SAK-23305
+								hideImportedContent(edit);
 								// complete the edit
 								m_storage.commitResource(edit);
 								((BaseResourceEdit) edit).closeEdit();
@@ -7758,6 +7776,50 @@ SiteContentAdvisorProvider, SiteContentAdvisorTypeRegistry, EntityTransferrerRef
 		transversalMap.put("/fromContext", fromContext);
 		return transversalMap;
 	} // importResources
+
+	/**
+	 * Hide imported content -- SAK-23305
+	 * @param edit Object either a ContentResourceEdit or ContentCollectionEdit object
+	 */
+	private void hideImportedContent(Object edit)
+	{
+		if (m_serverConfigurationService.getBoolean("content.import.hidden", false))
+		{
+			ContentResourceEdit resource = null;
+			ContentCollectionEdit collection = null;
+			String containingCollectionId = null;
+			if (edit instanceof ContentResourceEdit) 
+			{
+				resource = (ContentResourceEdit) edit;
+				containingCollectionId = resource.getContainingCollection().getId();
+			}
+			else if (edit instanceof ContentCollectionEdit)
+			{
+				collection = (ContentCollectionEdit) edit;
+				containingCollectionId = collection.getContainingCollection().getId();
+			}
+			if (resource != null || collection != null)
+			{
+				/*
+				 * If this is "reuse content" during worksite setup, the site collection at this time is
+				 * /group/!admin/ for all content including ones in the folders, so count how many "/" in
+				 * the collection ID. If <= 3, then it's a top-level item and needs to be hidden.
+				 */
+				int slashcount = StringUtils.countMatches(containingCollectionId, "/");
+				if (slashcount <= 3)
+				{
+					if (resource != null)
+					{
+						resource.setHidden();
+					}
+					else if (collection != null)
+					{
+						collection.setHidden();
+					}
+				}
+			}
+		}
+	}
 
 	/**
 	 * {@inheritDoc}
@@ -13414,7 +13476,7 @@ SiteContentAdvisorProvider, SiteContentAdvisorTypeRegistry, EntityTransferrerRef
         ZipContentUtil extractZipArchive = new ZipContentUtil();
 
         // KNL-900 Total size of files should be checked before unzipping (KNL-273)
-        Map <String, Long> zipManifest = extractZipArchive.getZipManifest(resourceId);
+		Map<String, Long> zipManifest = extractZipArchive.getZipManifest(resourceId);
         if (zipManifest == null) {
             M_log.error("Zip file for resource ("+resourceId+") has no zip manifest, cannot extract");
         } else if (zipManifest.size() >= maxZipExtractSize) {
@@ -13437,9 +13499,92 @@ SiteContentAdvisorProvider, SiteContentAdvisorTypeRegistry, EntityTransferrerRef
                 throw new OverQuotaException(resource.getReference());
             }
             // zip files are not too large to extract so do the extract
-            extractZipArchive.extractArchive(resourceId);
+			extractZipArchive.extractArchive(resourceId);
         }
     }
+    
+    
+	private static final String MACRO_USER_ID             = "${USER_ID}";
+	private static final String MACRO_USER_EID            = "${USER_EID}";
+	private static final String MACRO_USER_FIRST_NAME     = "${USER_FIRST_NAME}";
+	private static final String MACRO_USER_LAST_NAME      = "${USER_LAST_NAME}";
+	private static final String MACRO_SESSION_ID          = "${SESSION_ID}";
+
+	private static final String MACRO_DEFAULT_ALLOWED = "${USER_ID},${USER_EID},${USER_FIRST_NAME},${USER_LAST_NAME}";
+
+	/**
+     * Expands a URL that may contain a set of predefined macros, into the full URL. 
+     * This should only ever happen when its about to be redirected to, ie never stored and never displayed
+     * so that people dont accidentally send an expanded URL containing personally identifying information to someone else, for example.
+     * @param url original url that may contain macros
+     * @return url with macros expanded
+     * 
+     * Note that much of this is from the web content tool though site related properties have been removed. This is actually called from /access/ which has no site context so
+     * any lookups of site_id or user role (which infers a site) will not work. The site_id may be able to be passed in, as the original resource does have context,
+     * however that needs to be more fully explored for security reasons and as such, has not been included.
+     * 
+     * See SAK-23587
+     */
+    private String expandMacros(String url) {
+    	
+    	if(M_log.isDebugEnabled()){
+    		M_log.debug("Original url: " + url);
+    	}
+    	
+    	if (!StringUtils.contains(url, "${")) {
+			return url;
+		}
+    	
+    	//handled explicitly like this for backwards compatibility since comma separated strings from SCS are not supported in all versions of Sakai yet.
+    	String allowedMacros = m_serverConfigurationService.getString("content.allowed.macros", MACRO_DEFAULT_ALLOWED);
+    	List<String> macros = new ArrayList<String>();
+    	if(StringUtils.isNotBlank(allowedMacros)) {
+    		macros = Arrays.asList(StringUtils.split(allowedMacros, ','));
+    	}
+    	
+    	for(String macro: macros) {
+    		url = StringUtils.replace(url, macro, getMacroValue(macro));
+    	}
+    	
+    	if(M_log.isDebugEnabled()){
+    		M_log.debug("Expanded url: " + url);
+    	}
+    	
+    	return url;
+    }
+    
+    /**
+     * Helper to get the value for a given macro.
+     * @param macroName
+     * @return
+     */
+    private String getMacroValue(String macroName) {
+		try {
+			if (macroName.equals(MACRO_USER_ID)) {
+				return userDirectoryService.getCurrentUser().getId();
+			}
+			if (macroName.equals(MACRO_USER_EID)) {
+				return userDirectoryService.getCurrentUser().getEid();
+			}
+			if (macroName.equals(MACRO_USER_FIRST_NAME)) {
+				return userDirectoryService.getCurrentUser().getFirstName();
+			}
+			if (macroName.equals(MACRO_USER_LAST_NAME)) {
+				return userDirectoryService.getCurrentUser().getLastName();
+			}
+			if (macroName.equals(MACRO_SESSION_ID)) {
+				return sessionManager.getCurrentSession().getId();
+			}
+
+		}
+		catch (Exception e) {
+			M_log.error("Error resolving macro:" + macroName + ": " + e.getClass() + ": " + e.getCause());
+			return "";
+		}
+		
+		//unsupported, use macro name as is.
+		return macroName;
+	}
 
 } // BaseContentService
 

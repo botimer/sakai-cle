@@ -39,6 +39,10 @@
 	font-size: .92em;
 	line-height: 1.5em;
 }
+.toggle .textPanel {
+    -ms-word-break: break-all;
+     word-break: break-all;
+}
 .topicBloc{
 	/*inner container topic metadata in forum list view, or single topic view*/
 	margin: .5em 0 1em 1em;
@@ -65,6 +69,8 @@
 	display: block;
 	margin: .5em 0;
     font-size:.85em;
+    -ms-word-break: break-all;
+     word-break: break-all;
 }
 .messageNew{
 	color: #000;
@@ -80,9 +86,18 @@
 	font-size:87%;
 	font-weight:bold;
 	padding: 1px 2px;
-	margin: 5px;
+	margin-left: 5px;
 	/*	display:none; - uncomment to hide the message associated with parents of new messages*/
 }
+
+
+.childrenNewZero {
+    color: #555555;
+    font-size: 85%;
+    font-weight: normal;
+    margin-left: 5px;
+}
+
 #messNavHolder{
 	float:none;
 	display:block;
@@ -158,6 +173,8 @@
 .messagesThreaded tbody tr td div.hierItemBlock .textPanel{
 	clear: both;
 	width: 60%;
+    -ms-word-break: break-all;
+     word-break: break-all;
 }
 .titleBarBorder{
 	/*create an underline under message title + metadata in view body thread view*/
@@ -598,4 +615,16 @@ img.authorImage {
 }
 .navIntraTool li span a img,.navIntraTool li {
     vertical-align: middle;
+}
+
+#buttonBlocker,.buttonBlocker {
+    z-index:2;
+    display:none;
+    padding:0 8px;
+    background: transparent url(../images/trans.gif) top left repeat;
+    opacity:0;
+    position:absolute
+}
+#buttonBlocker:hover, .buttonBlocker:hover {
+    cursor:progress;
 }

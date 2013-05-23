@@ -9,7 +9,7 @@
      "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
 <!--
-$Id: gradeStudentResult.jsp 115704 2012-11-05 12:37:08Z steve.swinsburg@gmail.com $
+$Id: gradeStudentResult.jsp 122132 2013-04-03 17:42:44Z ottenhoff@longsight.com $
 <%--
 ***********************************************************************************
 *
@@ -48,7 +48,7 @@ $Id: gradeStudentResult.jsp 115704 2012-11-05 12:37:08Z steve.swinsburg@gmail.co
     <samigo:script path="/jsf/widget/hideDivision/hideDivision.js" />
 
       </head>
-  <body onload="hideUnhideAllDivsExceptFirst('none');;<%= request.getAttribute("html.body.onload") %>">
+  <body onload="<%= request.getAttribute("html.body.onload") %>">
 <!-- $Id:  -->
 <!-- content... -->
 <script type="text/javascript">

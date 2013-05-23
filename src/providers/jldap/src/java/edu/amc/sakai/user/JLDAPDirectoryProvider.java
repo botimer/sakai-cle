@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/providers/trunk/jldap/src/java/edu/amc/sakai/user/JLDAPDirectoryProvider.java $
- * $Id: JLDAPDirectoryProvider.java 109333 2012-06-17 02:42:00Z azeckoski@unicon.net $
+ * $Id: JLDAPDirectoryProvider.java 121256 2013-03-15 14:16:36Z ottenhoff@longsight.com $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008, 2009 The Sakai Foundation
@@ -655,6 +655,14 @@ public class JLDAPDirectoryProvider implements UserDirectoryProvider, LdapConnec
 				
 					for (LdapUserData ldapUserData : ldapUsers) {
 						String ldapEid = ldapUserData.getEid();
+
+						if (StringUtils.isEmpty(ldapEid)) {
+							continue;
+						}
+						if (!(caseSensitiveCacheKeys)) {
+							ldapEid = ldapEid.toLowerCase();
+						}
+
 						UserEdit ue = usersToSearchInLDAP.get(ldapEid);
 						mapUserDataOntoUserEdit(ldapUserData, ue);
 						usersToSearchInLDAP.remove(ldapEid);

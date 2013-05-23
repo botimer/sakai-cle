@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/sam/trunk/samigo-services/src/java/org/sakaiproject/tool/assessment/facade/PublishedAssessmentFacadeQueries.java $
- * $Id: PublishedAssessmentFacadeQueries.java 114110 2012-10-08 23:18:38Z ktsao@stanford.edu $
+ * $Id: PublishedAssessmentFacadeQueries.java 121508 2013-03-20 22:29:31Z ktsao@stanford.edu $
  ***********************************************************************************
  *
  * Copyright (c) 2004, 2005, 2006, 2007, 2008, 2009 The Sakai Foundation
@@ -1226,7 +1226,7 @@ public class PublishedAssessmentFacadeQueries extends HibernateDaoSupport
 
 			agent = new AgentFacade(p.getLastModifiedBy());
 			if (agent != null) {
-				lastModifiedBy = agent.getFirstName() + " " + agent.getLastName();
+				lastModifiedBy = agent.getDisplayName();
 			}
 
 			PublishedAssessmentFacade f = new PublishedAssessmentFacade(p
@@ -1305,7 +1305,7 @@ public class PublishedAssessmentFacadeQueries extends HibernateDaoSupport
 
 			agent = new AgentFacade(p.getLastModifiedBy());
 			if (agent != null) {
-				lastModifiedBy = agent.getFirstName() + " " + agent.getLastName();
+				lastModifiedBy = agent.getDisplayName();
 			}
 			PublishedAssessmentFacade f = new PublishedAssessmentFacade(p
 					.getPublishedAssessmentId(), p.getTitle(),
@@ -1503,7 +1503,7 @@ public class PublishedAssessmentFacadeQueries extends HibernateDaoSupport
 
 			agent = new AgentFacade(p.getLastModifiedBy());
 			if (agent != null) {
-				lastModifiedBy = agent.getFirstName() + " " + agent.getLastName();
+				lastModifiedBy = agent.getDisplayName();
 			}
 
 			PublishedAssessmentFacade f = new PublishedAssessmentFacade(p

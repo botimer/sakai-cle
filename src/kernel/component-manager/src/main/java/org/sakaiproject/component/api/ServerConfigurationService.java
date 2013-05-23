@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/kernel/trunk/component-manager/src/main/java/org/sakaiproject/component/api/ServerConfigurationService.java $
- * $Id: ServerConfigurationService.java 120844 2013-03-06 15:30:02Z azeckoski@unicon.net $
+ * $Id: ServerConfigurationService.java 122219 2013-04-04 21:01:10Z azeckoski@unicon.net $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008 Sakai Foundation
@@ -22,7 +22,10 @@
 package org.sakaiproject.component.api;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+
+import org.sakaiproject.component.locales.SakaiLocales;
 
 /**
  * <p>
@@ -142,21 +145,24 @@ public interface ServerConfigurationService
 
 	/**
 	 * Access some named configuration value as a string.
+	 * 1) IF "name=value" THEN this will return "value"
+	 * 2) IF "name=" THEN this will return null
+	 * 3) IF name is not defined in the config THEN this will return "" (empty string)
 	 * 
-	 * @param name
-	 *        The configuration value name.
-	 * @return The configuration value with this name, or "" if not found.
+	 * @param name The configuration value name (or key).
+	 * @return The configuration value for this name OR null if defined as 'blank' OR "" (empty string) if not defined.
 	 */
 	String getString(String name);
 
 	/**
 	 * Access some named configuration value as a string.
+	 * 1) IF "name=value" THEN this will return "value"
+	 * 2) IF "name=" THEN this will return null
+	 * 3) IF name is not defined in the config THEN this will return the provided default value
 	 * 
-	 * @param name
-	 *        The configuration value name.
-	 * @param dflt
-	 *        The value to return if not found.
-	 * @return The configuration value with this name, or the default value if not found.
+	 * @param name The configuration value name (or key).
+	 * @param dflt The value to return if not found in the config.
+	 * @return The configuration value for this name OR null if defined as 'blank' OR default value if not defined.
 	 */
 	String getString(String name, String dflt);
 
@@ -230,16 +236,50 @@ public interface ServerConfigurationService
 	 *   is implementation dependent.
 	 */
 	String getRawProperty(String name);
-	
-	/**
-	 * Access the list of tool ids in order for this category, to impose on the displays of many tools
+
+	/** 
+	 * KNL-989
+	 * Access the list of tools by group
 	 * 
 	 * @param category
 	 *        The tool category
-	 * @return An ordered list of tool ids (String) indicating the desired tool display order, or an empty list if there are none for this category.
+	 * @return An unordered list of tool ids (String) in selected group, or an empty list if there are none for this category.
+	 */
+	List<String> getToolGroup(String category);
+
+	/** 
+	 * KNL-989
+	 * Access the list of tool ids in order for this category, to impose on the displays of many tools
+	 * 
+	 * @param category	Site type
+	 * @return An unordered list of group names (String), or an empty list if there are none for this category.
 	 */
 	List<String> getToolOrder(String category);
 
+	/** 
+	 * KNL-989
+	 * Returns true if selected tool is contained in pre-initialized list of selected items
+	 * @parms toolId id of the selected tool
+	 */
+	public boolean toolGroupIsSelected(String groupName, String toolId) ;
+
+	/** 
+	 * KNL-989
+	 * Returns true if selected tool is contained in pre-initialized list of required items
+	 * @parms toolId id of the selected tool
+	 */
+	public boolean toolGroupIsRequired(String groupName, String toolId);
+	 
+	/** 
+	 * KNL-989
+	 * Access the list of groups by category (site type)
+	 * 
+	 * @param category
+	 *			 The tool category
+	 * @return An ordered list of tool ids (String) indicating the desired tool display order, or an empty list if there are none for this category.
+	 */
+	List<String> getCategoryGroups(String category);
+	
 	/**
 	 * Access the list of tool ids that are required for this category.
 	 * 
@@ -279,6 +319,20 @@ public interface ServerConfigurationService
     * @return map with tool id as key and category id as value
     */
    Map<String, String> getToolToCategoryMap(String category);
+
+   /**
+    * Get the list of allowed locales as controlled by config params for "locales" and "locales.more"
+    * Defaults when nothing is specified in the config files come from {@link SakaiLocales#SAKAI_LOCALES_DEFAULT}
+    * @return an array of all allowed Locales for this installation
+    * @see SakaiLocales
+    */
+   public Locale[] getSakaiLocales();
+
+   /**
+    * Parse a string into a Locale
+    * @return Locale based on its string representation (language_region) OR default Locale if the string cannot be parsed
+    */
+   public Locale getLocaleFromString(String localeString);
 
 
    // improved methods

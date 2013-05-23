@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/sam/trunk/samigo-app/src/java/org/sakaiproject/tool/assessment/ui/listener/util/TimeUtil.java $
- * $Id: TimeUtil.java 109553 2012-06-25 10:11:54Z david.horwitz@uct.ac.za $
+ * $Id: TimeUtil.java 121763 2013-03-26 08:25:33Z david.horwitz@uct.ac.za $
  ***********************************************************************************
  *
  * Copyright (c) 2006, 2008 The Sakai Foundation
@@ -124,6 +124,11 @@ public class TimeUtil
 
   public String getDisplayDateTime(SimpleDateFormat ndf, Date serverDate ){
     String displayDate = "";
+     //we can't format a null date
+    if (serverDate == null) {
+    	return displayDate;
+    }
+    
     try {
       if ((m_client_timezone !=null) && (m_server_timezone!=null) 
 	&& (!m_client_timezone.hasSameRules(m_server_timezone))) {

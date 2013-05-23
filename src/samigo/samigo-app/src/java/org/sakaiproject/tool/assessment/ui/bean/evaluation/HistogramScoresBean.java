@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/sam/trunk/samigo-app/src/java/org/sakaiproject/tool/assessment/ui/bean/evaluation/HistogramScoresBean.java $
- * $Id: HistogramScoresBean.java 106523 2012-04-04 12:13:19Z david.horwitz@uct.ac.za $
+ * $Id: HistogramScoresBean.java 121258 2013-03-15 15:03:36Z ottenhoff@longsight.com $
  ***********************************************************************************
  *
  * Copyright (c) 2004, 2005, 2006, 2008 The Sakai Foundation
@@ -972,7 +972,7 @@ publishedId = ppublishedId;
               if(String.valueOf(EvaluationModelIfc.ALL_SCORE).equals(allSubmissions)){
                   return false;
               }
-              return getTotalScore() == null ? false : Float.parseFloat(getTotalScore())!=0.0f;
+              return getTotalScore() == null ? false : Double.parseDouble(getTotalScore())!=0.0d;
 	  }
 	  catch (NumberFormatException ex) {
 		  return false;
@@ -981,7 +981,7 @@ publishedId = ppublishedId;
   
   public boolean getShowPartAndTotalScoreSpreadsheetColumns() {
 	  try {
-		  return getTotalScore() == null ? false : Float.parseFloat(getTotalScore())!=0.0f;
+		  return getTotalScore() == null ? false : Double.parseDouble(getTotalScore())!=0.0d;
 	  }
 	  catch (NumberFormatException ex) {
 		  return false;

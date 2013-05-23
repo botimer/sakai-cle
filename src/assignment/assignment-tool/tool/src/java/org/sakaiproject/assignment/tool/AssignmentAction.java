@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/assignment/trunk/assignment-tool/tool/src/java/org/sakaiproject/assignment/tool/AssignmentAction.java $
- * $Id: AssignmentAction.java 120595 2013-03-01 20:33:37Z azeckoski@unicon.net $
+ * $Id: AssignmentAction.java 124121 2013-05-15 18:14:42Z ottenhoff@longsight.com $
  ***********************************************************************************
  *
  *
@@ -113,7 +113,14 @@ import org.sakaiproject.entity.api.Reference;
 import org.sakaiproject.entity.api.ResourceProperties;
 import org.sakaiproject.entity.api.ResourcePropertiesEdit;
 import org.sakaiproject.entity.cover.EntityManager;
+import org.sakaiproject.event.api.Event;
 import org.sakaiproject.event.api.EventTrackingService;
+import org.sakaiproject.event.api.LearningResourceStoreService;
+import org.sakaiproject.event.api.LearningResourceStoreService.LRS_Actor;
+import org.sakaiproject.event.api.LearningResourceStoreService.LRS_Object;
+import org.sakaiproject.event.api.LearningResourceStoreService.LRS_Statement;
+import org.sakaiproject.event.api.LearningResourceStoreService.LRS_Verb;
+import org.sakaiproject.event.api.LearningResourceStoreService.LRS_Verb.SAKAI_VERB;
 import org.sakaiproject.event.api.NotificationService;
 import org.sakaiproject.event.api.SessionState;
 import org.sakaiproject.exception.IdInvalidException;
@@ -2188,6 +2195,7 @@ public class AssignmentAction extends PagedResourceActionII
 		
 		// Keep the use review service setting
 		context.put("value_UseReviewService", state.getAttribute(NEW_ASSIGNMENT_USE_REVIEW_SERVICE));
+		context.put("turnitin_forceSingleAttachment", ServerConfigurationService.getBoolean("turnitin.forceSingleAttachment", false));
 		context.put("value_AllowStudentView", state.getAttribute(NEW_ASSIGNMENT_ALLOW_STUDENT_VIEW) == null ? Boolean.toString(ServerConfigurationService.getBoolean("turnitin.allowStudentView.default", false)) : state.getAttribute(NEW_ASSIGNMENT_ALLOW_STUDENT_VIEW));
 		
 		List<String> subOptions = getSubmissionRepositoryOptions();
@@ -3246,16 +3254,18 @@ public class AssignmentAction extends PagedResourceActionII
 			    Iterator<SubmitterSubmission> _ssubmits = userSubmissions.iterator();
 			    while (_ssubmits.hasNext()) {
 			        SubmitterSubmission _ss = _ssubmits.next();
-			        User[] _users = _ss.getSubmission().getSubmitters();
-			        for (int i=0; _users != null && i < _users.length; i ++) {
-			            String _agrade = _ss.getSubmission().getGradeForUser(_users[i].getId());
-			            if (_agrade != null) {
-			                _ugrades.put(
-			                        _users[i].getId(),
-			                        assignment.getContent() != null && assignment.getContent().getTypeOfGrade() == 3 ?
-			                                displayGrade(state, _agrade): _agrade);
-			            }
-			        }
+				if (_ss != null && _ss.getSubmission() != null) {
+			        	User[] _users = _ss.getSubmission().getSubmitters();
+			        	for (int i=0; _users != null && i < _users.length; i ++) {
+			            		String _agrade = _ss.getSubmission().getGradeForUser(_users[i].getId());
+			            		if (_agrade != null) {
+			                		_ugrades.put(
+			                        	_users[i].getId(),
+			                        	assignment.getContent() != null && assignment.getContent().getTypeOfGrade() == 3 ?
+			                                	displayGrade(state, _agrade): _agrade);
+			            		}	
+			        	}
+				}
 			    }
 
 			    context.put("value_grades", _ugrades);
@@ -4052,13 +4062,26 @@ public class AssignmentAction extends PagedResourceActionII
 
 			if (submission != null)
 			{
-				// submission read event
-				m_eventTrackingService.post(m_eventTrackingService.newEvent(AssignmentConstants.EVENT_ACCESS_ASSIGNMENT_SUBMISSION, submission.getId(), false));
+                // submission read event
+                Event event = m_eventTrackingService.newEvent(AssignmentConstants.EVENT_ACCESS_ASSIGNMENT_SUBMISSION, submission.getId(),
+                        false);
+                m_eventTrackingService.post(event);
+                LearningResourceStoreService lrss = (LearningResourceStoreService) ComponentManager
+                        .get("org.sakaiproject.event.api.LearningResourceStoreService");
+                if (null != lrss) {
+                    lrss.registerStatement(getStatementForViewSubmittedAssignment(lrss.getEventActor(event), event, a.getTitle()), "assignment");
+                }
 			}
 			else
 			{
-				// otherwise, the student just read assignment description and prepare for submission
-				m_eventTrackingService.post(m_eventTrackingService.newEvent(AssignmentConstants.EVENT_ACCESS_ASSIGNMENT, a.getId(), false));
+                // otherwise, the student just read assignment description and prepare for submission
+                Event event = m_eventTrackingService.newEvent(AssignmentConstants.EVENT_ACCESS_ASSIGNMENT, a.getId(), false);
+                m_eventTrackingService.post(event);
+                LearningResourceStoreService lrss = (LearningResourceStoreService) ComponentManager
+                        .get("org.sakaiproject.event.api.LearningResourceStoreService");
+                if (null != lrss) {
+                    lrss.registerStatement(getStatementForViewAssignment(lrss.getEventActor(event), event, a.getTitle()), "assignment");
+                }
 			}
 		}
 
@@ -4567,6 +4590,10 @@ public class AssignmentAction extends PagedResourceActionII
 			if (feedbackCommentString != null)
 			{
 				sEdit.setFeedbackComment(feedbackCommentString);
+			} 
+			else 
+			{
+				sEdit.setFeedbackComment("");
 			}
 
 			// the instructor inline feedback
@@ -5055,7 +5082,14 @@ public class AssignmentAction extends PagedResourceActionII
 			{
 				state.setAttribute(STATE_MODE, MODE_STUDENT_VIEW_SUBMISSION_CONFIRMATION);
 			}
-			
+            LearningResourceStoreService lrss = (LearningResourceStoreService) ComponentManager
+                    .get("org.sakaiproject.event.api.LearningResourceStoreService");
+            if (null != lrss) {
+                Event event = m_eventTrackingService.newEvent(AssignmentConstants.EVENT_SUBMIT_ASSIGNMENT_SUBMISSION, assignmentId, false);
+                lrss.registerStatement(
+                        getStatementForSubmitAssignment(lrss.getEventActor(event), event, ServerConfigurationService.getAccessUrl(),
+                                a.getTitle()), "sakai.assignment");
+            }
 		}	// if
 
 	} // post_save_submission
@@ -10411,7 +10445,7 @@ public class AssignmentAction extends PagedResourceActionII
 	 */
 	private class AssignmentComparator implements Comparator
 	{
-		Collator collator = Collator.getInstance();
+		Collator collator = null;
 		
 		/**
 		 * the SessionState object
@@ -10445,9 +10479,7 @@ public class AssignmentAction extends PagedResourceActionII
 		 */
 		public AssignmentComparator(SessionState state, String criteria, String asc)
 		{
-			m_state = state;
-			m_criteria = criteria;
-			m_asc = asc;
+			this(state, criteria, asc, null);
 
 		} // constructor
 
@@ -10469,6 +10501,17 @@ public class AssignmentAction extends PagedResourceActionII
 			m_criteria = criteria;
 			m_asc = asc;
 			m_user = user;
+			try
+			{
+				collator= new RuleBasedCollator(((RuleBasedCollator)Collator.getInstance()).getRules().replaceAll("<'\u005f'", "<' '<'\u005f'"));
+			}
+			catch (ParseException e)
+			{
+				// error with init RuleBasedCollator with rules
+				// use the default Collator
+				collator = Collator.getInstance();
+				M_log.warn(this + " AssignmentComparator cannot init RuleBasedCollator. Will use the default Collator instead. " + e);
+			}
 		} // constructor
 
 		/**
@@ -11259,12 +11302,7 @@ public class AssignmentAction extends PagedResourceActionII
 			} else if (s1 == null) {
 				result = -1;
 			} else {
-				try{
-					RuleBasedCollator r_collator= new RuleBasedCollator(((RuleBasedCollator)Collator.getInstance()).getRules().replaceAll("<'\u005f'", "<' '<'\u005f'"));
-					result = r_collator.compare(s1.toLowerCase(), s2.toLowerCase());
-				}catch(ParseException e){
-					result = collator.compare(s1.toLowerCase(), s2.toLowerCase());
-				}
+				result = collator.compare(s1.toLowerCase(), s2.toLowerCase());
 			}
 			return result;
 		}
@@ -14350,4 +14388,44 @@ public class AssignmentAction extends PagedResourceActionII
 		String lOptions = ServerConfigurationService.getString("assignment.letterGradeOptions", "A+,A,A-,B+,B,B-,C+,C,C-,D+,D,D-,E,F");
 		context.put("letterGradeOptions", StringUtils.split(lOptions, ","));
 	}
+
+    private LRS_Statement getStatementForViewSubmittedAssignment(LRS_Actor actor, Event event, String assignmentName) {
+        String url = ServerConfigurationService.getPortalUrl();
+        LRS_Verb verb = new LRS_Verb(SAKAI_VERB.interacted);
+        LRS_Object lrsObject = new LRS_Object(url + event.getResource(), "view-submitted-assignment");
+        HashMap<String, String> nameMap = new HashMap<String, String>();
+        nameMap.put("en-US", "User reviewed a submitted assignment");
+        lrsObject.setActivityName(nameMap);
+        // Add description
+        HashMap<String, String> descMap = new HashMap<String, String>();
+        descMap.put("en-US", "User reviewed a submitted assignment: " + assignmentName);
+        lrsObject.setDescription(descMap);
+        return new LRS_Statement(actor, verb, lrsObject);
+    }
+
+    private LRS_Statement getStatementForViewAssignment(LRS_Actor actor, Event event, String assignmentName) {
+        String url = ServerConfigurationService.getPortalUrl();
+        LRS_Verb verb = new LRS_Verb(SAKAI_VERB.interacted);
+        LRS_Object lrsObject = new LRS_Object(url + event.getResource(), "view-assignment");
+        HashMap<String, String> nameMap = new HashMap<String, String>();
+        nameMap.put("en-US", "User viewed an assignment");
+        lrsObject.setActivityName(nameMap);
+        HashMap<String, String> descMap = new HashMap<String, String>();
+        descMap.put("en-US", "User viewed assignment: " + assignmentName);
+        lrsObject.setDescription(descMap);
+        return new LRS_Statement(actor, verb, lrsObject);
+    }
+
+    private LRS_Statement getStatementForSubmitAssignment(LRS_Actor actor, Event event, String accessUrl, String assignmentName) {
+        LRS_Verb verb = new LRS_Verb(SAKAI_VERB.attempted);
+        LRS_Object lrsObject = new LRS_Object(accessUrl + event.getResource(), "submit-assignment");
+        HashMap<String, String> nameMap = new HashMap<String, String>();
+        nameMap.put("en-US", "User submitted an assignment");
+        lrsObject.setActivityName(nameMap);
+        // Add description
+        HashMap<String, String> descMap = new HashMap<String, String>();
+        descMap.put("en-US", "User submitted an assignment: " + assignmentName);
+        lrsObject.setDescription(descMap);
+        return new LRS_Statement(actor, verb, lrsObject);
+    }
 }	

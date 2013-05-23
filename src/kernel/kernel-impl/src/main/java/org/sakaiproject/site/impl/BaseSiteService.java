@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/kernel/trunk/kernel-impl/src/main/java/org/sakaiproject/site/impl/BaseSiteService.java $
- * $Id: BaseSiteService.java 120433 2013-02-25 02:23:36Z botimer@umich.edu $
+ * $Id: BaseSiteService.java 124677 2013-05-20 16:23:56Z botimer@umich.edu $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008 Sakai Foundation
@@ -39,6 +39,7 @@ import java.util.Vector;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.sakaiproject.authz.api.AuthzGroup;
@@ -52,7 +53,6 @@ import org.sakaiproject.authz.api.SecurityAdvisor;
 import org.sakaiproject.authz.api.SecurityService;
 import org.sakaiproject.component.api.ServerConfigurationService;
 import org.sakaiproject.entity.api.ContextObserver;
-import org.sakaiproject.entity.api.Edit;
 import org.sakaiproject.entity.api.Entity;
 import org.sakaiproject.entity.api.EntityAccessOverloadException;
 import org.sakaiproject.entity.api.EntityCopyrightException;
@@ -128,6 +128,10 @@ public abstract class BaseSiteService implements SiteService, Observer
 	private static final String DEFAULT_RESOURCEBUNDLE = "org.sakaiproject.localization.bundle.siteimpl.site-impl";
 	private static final String RESOURCECLASS = "resource.class.siteimpl";
 	private static final String RESOURCEBUNDLE = "resource.bundle.siteimpl";
+	private static final String PORTAL_SKIN_NEOPREFIX_PROPERTY = "portal.neoprefix";
+	private static final String PORTAL_SKIN_NEOPREFIX_DEFAULT = "neo-";
+	private static String portalSkinPrefix;
+
 	private ResourceLoader rb = null;
 	// protected ResourceLoader rb = new ResourceLoader("site-impl");
 
@@ -514,6 +518,8 @@ public abstract class BaseSiteService implements SiteService, Observer
 			functionManager().registerFunction(SITE_VISIT_SOFTLY_DELETED);
 			functionManager().registerFunction(SECURE_REMOVE_SOFTLY_DELETED_SITE);
 			functionManager().registerFunction(SECURE_ADD_PROJECT_SITE);
+			
+			portalSkinPrefix = serverConfigurationService().getString(PORTAL_SKIN_NEOPREFIX_PROPERTY, PORTAL_SKIN_NEOPREFIX_DEFAULT);
 
 		}
 		catch (Exception t)
@@ -648,7 +654,6 @@ public abstract class BaseSiteService implements SiteService, Observer
 		{
 			String ref = siteReference(site.getId());
 			Site copy = new BaseSite(this, site, true);
-			clearUserCacheForSite(site);
 			m_siteCache.put(ref, copy, m_cacheSeconds);
 			return true;
 		}
@@ -984,8 +989,19 @@ public abstract class BaseSiteService implements SiteService, Observer
 			iter.next().update(site);
 		}
 
+		site.setFullyLoaded(true);
+
 		// complete the edit
 		storage().save(site);
+		
+		// Check to see if an this is an interesting enough change to invalidate the user-site cache.
+		// For now, we just check if the title changed because that persists in the portal navigation.
+		// As with other areas, if the main and user-site caches were more integrated (keeping references
+		// for users rather than copies), we would not have to synchronize explicitly here.
+		Site cached = getCachedSite(site.getId());
+		if (cached != null && site.getTitle() != null && !site.getTitle().equals(cached.getTitle())) {
+			clearUserCacheForSite(site);
+		}
 		cacheSite(site);
 
 		// save any modified azgs
@@ -1532,7 +1548,7 @@ public abstract class BaseSiteService implements SiteService, Observer
 			{
 			}
 
-			rv = "\"" + userName + "'s site\" " + rv;
+			rv = "\"" + rb.getFormattedMessage("sitdis.usr", new Object[]{userName}) + "\" " + rv;
 		}
 
 		else
@@ -2126,15 +2142,16 @@ public abstract class BaseSiteService implements SiteService, Observer
 		// double check that it's mine
 		if (!APPLICATION_ID.equals(ref.getType())) return null;
 
-		String rv = "Site: " + ref.getReference();
+		String rv = rb.getFormattedMessage("entdsc.sit", new Object[]{ref.getReference()});
 
 		try
 		{
 			Site site = getSite(ref.getId());
-			rv = "Site: " + site.getTitle() + " (" + site.getId() + ")" + " Created: "
-					+ site.getCreatedTime().toStringLocalFull() + " by " + site.getCreatedBy().getDisplayName() + " ("
-					+ site.getCreatedBy().getDisplayId() + ") "
-					+ StringUtil.limit((site.getDescription() == null ? "" : site.getDescription()), 30);
+			rv = rb.getFormattedMessage("entdsc.sit_usr", new Object[]{
+					site.getTitle() + " (" + site.getId() + ")",
+					site.getCreatedTime().toStringLocalFull(),
+					site.getCreatedBy().getDisplayName() + " (" + site.getCreatedBy().getDisplayId() + ")",
+					StringUtil.limit((site.getDescription() == null ? "" : site.getDescription()), 30)});
 		}
 		catch (IdUnusedException e)
 		{
@@ -2219,9 +2236,21 @@ public abstract class BaseSiteService implements SiteService, Observer
 	/**
 	 * {@inheritDoc}
 	 */
-	public String getEntityUrl(Reference ref)
-	{
-		return null;
+	public String getEntityUrl(Reference ref) {
+		String url = null;
+		if (ref != null) {
+		    try {
+		        Site site = getSite(ref.getId());
+		        url = site.getUrl();
+		    } catch (IdUnusedException e) {
+		        // this could happen if the site reference is invalid
+		        if (M_log.isDebugEnabled()) M_log.debug("getEntityUrl(): " + e);
+		    } catch (Exception e) {
+		        // this is a real failure
+		        M_log.error("getEntityUrl(): "+e.getClass().getName()+": " + e, e);
+		    }
+		}
+		return url;
 	}
 
 	/**
@@ -2898,15 +2927,16 @@ public abstract class BaseSiteService implements SiteService, Observer
 	protected String adjustSkin(String skin, boolean published)
 	{
 		// return the skin as just a name, no ".css", and not dependent on the published status, or a null if not defined
-		if (skin == null) {
-			skin = serverConfigurationService().getString("skin.default");
+		if (StringUtils.isEmpty(skin)) {
+			skin = serverConfigurationService().getString("skin.default", "default");
 		}
 
 		String templates = serverConfigurationService().getString("portal.templates", "neoskin");
 		if("neoskin".equals(templates))
 		{
-			String prefix = serverConfigurationService().getString("portal.neoprefix", "neo-");
-			skin = prefix + skin;
+			if (StringUtils.isNotEmpty(portalSkinPrefix)) {
+				skin = portalSkinPrefix + skin;
+			}
 		}
 
 		if (!skin.endsWith(".css")) return skin;
@@ -2952,7 +2982,7 @@ public abstract class BaseSiteService implements SiteService, Observer
 					}
 
 					// assign source site's attributes to the target site
-					((BaseSite) site).set(new BaseSite(this,el), false);
+					((BaseSite) site).set(new BaseSite(this, el, timeService()), false);
 
 					try
 					{

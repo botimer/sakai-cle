@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/citations/trunk/citations-impl/impl/src/java/org/sakaiproject/citation/impl/CitationListAccessServlet.java $
- * $Id: CitationListAccessServlet.java 119320 2013-01-30 15:15:14Z dgcliff@iu.edu $
+ * $Id: CitationListAccessServlet.java 124219 2013-05-17 21:10:51Z a.fish@lancaster.ac.uk $
  ***********************************************************************************
  *
  * Copyright (c) 2006, 2007, 2008 The Sakai Foundation
@@ -369,8 +369,10 @@ public class CitationListAccessServlet implements HttpAccess
     	    			out.println("\t\t\t\t |");
     	    		}
     				}
+    			} else {
+    				// We only want to show the open url if no custom urls have been specified.
+    				out.println("\t\t\t\t<a href=\"" + citation.getOpenurl() + "\" target=\"_blank\">" + ConfigurationService.getSiteConfigOpenUrlLabel() + "</a>");
     			}
-    			out.println("\t\t\t\t<a href=\"" + citation.getOpenurl() + "\" target=\"_blank\">" + ConfigurationService.getSiteConfigOpenUrlLabel() + "</a>");
     			/* not using view citation link - using toggle triangle
     			out.println("\t\t\t\t<a id=\"link_" + escapedId + "\" href=\"#\" onclick=\"viewFullCitation('" + escapedId + "'); return false;\">"
     					+ rb.getString( "action.view" ) + "</a>" );

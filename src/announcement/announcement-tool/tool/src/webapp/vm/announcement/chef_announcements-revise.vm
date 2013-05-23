@@ -50,7 +50,7 @@
 				#if($minute == 55) <option selected="selected" value="55">55</option> #else <option value="55">55</option> #end
 			</select>
 		    <label for="${prefix}_ampm" class="skip">$tlang.getString("dateselectionwidget.ampm")</label>
-			<select name="${prefix}_ampm" id="${prefix}_ampm" onchange="ampmChange('${prefix}_ampm'); $!onChangeAction return false;">
+			<select name="${prefix}_ampm" id="${prefix}_ampm" onchange="$!onChangeAction return false;">
 				#if($timeType =="am") <option selected="selected">am</option> #else <option>am</option> #end
 				#if($timeType =="pm") <option selected="selected">pm</option> #else <option>pm</option> #end
 			</select>
@@ -164,7 +164,7 @@ function resizeFrame(){
 			$tlang.getString("revise.revise")
 		#end
 	</h3>
-	#if ($alertMessage)<div class="alertMessage">$tlang.getFormattedMessage("gen.alert.message", $validator.escapeHtml($alertMessage))</div><div class="clear"></div>#end
+	#if ($alertMessage)<div class="alertMessage">$tlang.getFormattedMessage("gen.alert.message", $alertMessage)</div><div class="clear"></div>#end
 	<div class="indnt1">
 		<p class="instruction">
 				#if ( $newAnn =="true")
@@ -223,7 +223,15 @@ function resizeFrame(){
 			<input type="hidden" name="announceTo" id="pubview" value="pubview" checked="checked" />
 		#elseif (($!publicDisable && ($show_group =="false")) || $pubviewset)
 			## no show this selection, but set default to site
-			<input type="hidden" name="announceTo" id="site" value="site" checked="checked" />
+			<input type="radio" name="announceToDisabled" id="site" value="site" checked="checked" disabled="true"/>
+			<input type="hidden" name="announceTo" value="site" checked="checked"/>
+			#if ($pubviewset)
+				## If the channel is public save it as site view, but show that we will display to public.
+				## This means if channel is un-made public announcement will revert to site access (correctly).
+				<label for="site">$tlang.getString("displayto.public")</label>
+			#else
+				<label for="site">$tlang.getString("displayto.site")</label>
+			#end
 		#else
 			#if ($allowAddChannelMessage)
 				<p class="checkbox">

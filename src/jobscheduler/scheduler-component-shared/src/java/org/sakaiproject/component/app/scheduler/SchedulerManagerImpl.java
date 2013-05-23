@@ -22,6 +22,8 @@
 package org.sakaiproject.component.app.scheduler;
 
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -55,34 +57,42 @@ import org.sakaiproject.api.app.scheduler.ConfigurableJobPropertyValidationExcep
 import org.sakaiproject.api.app.scheduler.ConfigurableJobPropertyValidator;
 import org.sakaiproject.api.app.scheduler.JobBeanWrapper;
 import org.sakaiproject.api.app.scheduler.SchedulerManager;
+import org.sakaiproject.component.api.ServerConfigurationService;
 import org.sakaiproject.component.app.scheduler.jobs.SpringConfigurableJobBeanWrapper;
 import org.sakaiproject.component.app.scheduler.jobs.SpringInitialJobSchedule;
 import org.sakaiproject.component.app.scheduler.jobs.SpringJobBeanWrapper;
-import org.sakaiproject.component.cover.ServerConfigurationService;
 import org.sakaiproject.db.api.SqlService;
 
 public class SchedulerManagerImpl implements SchedulerManager
 {
 
+  private static final Log LOG = LogFactory.getLog(SchedulerManagerImpl.class);
   public final static String
         SCHEDULER_LOADJOBS      = "scheduler.loadjobs";
   private DataSource dataSource;
   private String serverId;
   private Set<String> qrtzJobs;
   private Map<String, String> qrtzQualifiedJobs = new TreeMap<String, String>(); // map for SelectItems
+  /** The properties file from the classpath */
   private String qrtzPropFile;
+  /** The properties file from sakai.home */
+  private String qrtzPropFileSakai;
   private Properties qrtzProperties;
   private TriggerListener globalTriggerListener;
   private Boolean autoDdl;
+  private boolean startScheduler = true;
   private Map<String, JobBeanWrapper> beanJobs = new Hashtable<String, JobBeanWrapper>();
 
   private static final String JOB_INTERFACE = "org.quartz.Job";
   private static final String STATEFULJOB_INTERFACE = "org.quartz.StatefulJob";
   
 
+  // Service dependencies
+  private ServerConfigurationService serverConfigurationService;
   private SchedulerFactory schedFactory;
   private Scheduler scheduler;
-  private static final Log LOG = LogFactory.getLog(SchedulerManagerImpl.class);
+  private SqlService sqlService;
+
 
   private LinkedList<TriggerListener>
       globalTriggerListeners = new LinkedList<TriggerListener>();
@@ -94,44 +104,11 @@ public class SchedulerManagerImpl implements SchedulerManager
 
 public void init()
   {
-
-	InputStream propertiesInputStream = null;
     try
     {
+      qrtzProperties = initQuartzConfiguration();
 
-      SqlService sqlService = org.sakaiproject.db.cover.SqlService
-      .getInstance();
-
-      // load quartz properties file
-      propertiesInputStream = this.getClass().getResourceAsStream(
-          qrtzPropFile);
-      qrtzProperties = new Properties();
-      qrtzProperties.load(propertiesInputStream);
-
-
-      // now replace properties from those loaded in from components.xml
-//      qrtzProperties.setProperty("org.quartz.dataSource.myDS.driver",
-//          dataSource.getDriverClassName());
-//      qrtzProperties.setProperty("org.quartz.dataSource.myDS.URL", dataSource
-//          .getUrl());
-//      qrtzProperties.setProperty("org.quartz.dataSource.myDS.user", dataSource
-//          .getUsername());
-//      qrtzProperties.setProperty("org.quartz.dataSource.myDS.password",
-//          dataSource.getPassword());
-        qrtzProperties.setProperty("org.quartz.scheduler.instanceId", serverId);
-
-//      if ("hsqldb".equalsIgnoreCase(sqlService.getVendor())){
-//        qrtzProperties.setProperty("org.quartz.jobStore.driverDelegateClass", "org.quartz.impl.jdbcjobstore.HSQLDBDelegate"); 
-//      }
-//      else if ("mysql".equalsIgnoreCase(sqlService.getVendor())){
-//        qrtzProperties.setProperty("org.quartz.jobStore.driverDelegateClass", "org.quartz.impl.jdbcjobstore.StdJDBCDelegate");
-//      }
-//      else if ("oracle".equalsIgnoreCase(sqlService.getVendor())){
-//        qrtzProperties.setProperty("org.quartz.jobStore.driverDelegateClass", "org.quartz.impl.jdbcjobstore.oracle.OracleDelegate");
-//      }
-//      else{
-//        LOG.warn("sakai vendor not supported");
-//      }
+      qrtzProperties.setProperty("org.quartz.scheduler.instanceId", serverId);
 
       // note: becuase job classes are jarred , it is impossible to iterate
       // through a directory by calling listFiles on a file object.
@@ -192,7 +169,7 @@ public void init()
          "scheduler.loadjobs" is set to "init" by default
        */
       String
-          loadJobs = ServerConfigurationService.getString(SCHEDULER_LOADJOBS, "init").trim();
+          loadJobs = serverConfigurationService.getString(SCHEDULER_LOADJOBS, "init").trim();
 
       List<SpringInitialJobSchedule>
           initSchedules = getInitialJobSchedules();
@@ -249,25 +226,85 @@ public void init()
       }
 
       //scheduler.addGlobalTriggerListener(globalTriggerListener);
-      scheduler.start();
+      if (isStartScheduler()) {
+          scheduler.start();
+      } else {
+          LOG.info("Not Started Scheduler, startScheduler=false");
+      }
     }
     catch (Exception e)
     {
-      e.printStackTrace();
-      throw new Error("Scheduler cannot start!");
+      LOG.error("Failed to start scheduler.", e);
+      throw new IllegalStateException("Scheduler cannot start!", e);
     }
-    finally {
-    	if (propertiesInputStream != null) {
-    		try {
-				propertiesInputStream.close();
-			} catch (IOException e) {
-				LOG.debug("exception in finaly block closing input stream");
 
-			}
-    	}
-    }
     
 
+  }
+
+  /**
+   * This loads the configurations for quartz.
+   * It loads the defaults from the classpath and then loads override values from
+   * sakai.home.
+   * @return The quartz properties.
+   * @throws IOException When we can't load the default values.
+   */
+  private Properties initQuartzConfiguration() throws IOException
+  {
+    InputStream propertiesInputStream = null;
+    Properties properties = new Properties();
+    // load the default quartz properties file
+    // if this fails we want to propogate the error to stop startup.
+    try
+    {
+      propertiesInputStream = this.getClass().getResourceAsStream(qrtzPropFile);
+      properties.load(propertiesInputStream);
+    }
+    finally
+    {
+      if (propertiesInputStream != null)
+      {
+        try
+        {
+          propertiesInputStream.close();
+        }
+        catch (IOException e)
+        {
+          LOG.debug("Failed to close stream.", e);
+        }
+      }
+    }
+  
+    // load the configuration out of sakai home
+    // any failures here shouldn't result in startup failing.
+    File file = new File(serverConfigurationService.getSakaiHomePath(), qrtzPropFileSakai);
+    if (file.exists() && file.isFile()) {
+      try
+      {
+        propertiesInputStream = new FileInputStream(file);
+        properties.load(propertiesInputStream);
+        LOG.info("Loaded extra configuration from: "+ file.getAbsolutePath());
+      }
+      catch (IOException e)
+      {
+        LOG.warn("Failed to load file: "+ file, e);
+      }
+      finally
+      {
+        if (propertiesInputStream != null)
+        {
+          try
+          {
+            propertiesInputStream.close();
+          }
+          catch (IOException e)
+          {
+            LOG.debug("Failed to close stream.", e);
+          }
+        }
+      }
+    }
+    return properties;
   }
 
   private boolean doesImplementJobInterface(Class cl)
@@ -578,6 +615,11 @@ public void init()
     this.dataSource = dataSource;
   }
 
+  public void setSqlService(SqlService sqlService)
+  {
+    this.sqlService = sqlService;
+  }
+
   /**
    * @return Returns the qrtzQualifiedJobs.
    */
@@ -626,6 +668,11 @@ public void init()
     this.qrtzPropFile = qrtzPropFile;
   }
 
+  public void setQrtzPropFileSakai(String qrtzPropFileSakai)
+  {
+    this.qrtzPropFileSakai = qrtzPropFileSakai;
+  }
+
   /**
    * @return Returns the scheduler.
    */
@@ -640,6 +687,14 @@ public void init()
   public void setScheduler(Scheduler scheduler)
   {
     this.scheduler = scheduler;
+  }
+
+  /**
+   * @param serverConfigurationService The ServerConfigurationService to get our configuation from.
+   */
+  public void setServerConfigurationService(ServerConfigurationService serverConfigurationService)
+  {
+    this.serverConfigurationService = serverConfigurationService;
   }
 
   /**
@@ -661,5 +716,12 @@ public void init()
    public JobBeanWrapper getJobBeanWrapper(String beanWrapperId) {
       return (JobBeanWrapper) getBeanJobs().get(beanWrapperId);
    }
-   
+
+   public boolean isStartScheduler() {
+       return startScheduler;
+   }
+
+   public void setStartScheduler(boolean startScheduler) {
+       this.startScheduler = startScheduler;
+   }
 }

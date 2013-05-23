@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/site-manage/trunk/site-manage-tool/tool/src/java/org/sakaiproject/site/tool/SiteBrowserAction.java $
- * $Id: SiteBrowserAction.java 118427 2013-01-17 16:44:03Z ottenhoff@longsight.com $
+ * $Id: SiteBrowserAction.java 121426 2013-03-19 01:00:07Z matthew@longsight.com $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008, 2009 The Sakai Foundation
@@ -331,6 +331,17 @@ public class SiteBrowserAction extends PagedResourceActionII implements SiteHelp
 		// inform the observing courier that we just updated the page...
 		// if there are pending requests to do so they can be cleared
 		// justDelivered(state);
+        if (cms != null) 
+        {
+            Map<String, String> smap =new HashMap<String, String>();
+            Collection<AcademicSession> sessions = cms.getAcademicSessions();
+            for (AcademicSession s: sessions) {
+                smap.put(s.getEid(),s.getTitle());
+            } 
+
+            context.put("termsmap", smap );
+        }
+
 
 		return "_list";
 
@@ -381,7 +392,7 @@ public class SiteBrowserAction extends PagedResourceActionII implements SiteHelp
 			context.put("termSearchSiteType", termSearchSiteType);
 			if (cms != null) 
 			{
-				context.put("terms", sortAcademicSessions( cms.getAcademicSessions() ));
+                context.put("terms", sortAcademicSessions( cms.getAcademicSessions()));
 			}
 		}
 

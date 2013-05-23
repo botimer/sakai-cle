@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/sam/trunk/samigo-audio/src/java/org/sakaiproject/tool/assessment/audio/AudioRecorder.java $
- * $Id: AudioRecorder.java 112214 2012-09-07 16:02:36Z azeckoski@unicon.net $
+ * $Id: AudioRecorder.java 121287 2013-03-15 22:02:56Z ottenhoff@longsight.com $
  ***********************************************************************************
  *
  * Copyright (c) 2005, 2006, 2007, 2008, 2009 The Sakai Foundation

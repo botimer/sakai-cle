@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/polls/trunk/api/src/java/org/sakaiproject/poll/logic/ExternalLogic.java $
- * $Id: ExternalLogic.java 105078 2012-02-24 23:00:38Z ottenhoff@longsight.com $
+ * $Id: ExternalLogic.java 123679 2013-05-07 00:40:37Z azeckoski@unicon.net $
  ***********************************************************************************
  *
  * Copyright (c) 2006, 2007 The Sakai Foundation
@@ -25,7 +25,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
 
+import org.sakaiproject.event.api.LearningResourceStoreService.LRS_Actor;
 import org.sakaiproject.poll.model.PollRolePerms;
+import org.sakaiproject.poll.model.Vote;
 import org.sakaiproject.tool.api.ToolSession;
 
 public interface ExternalLogic {
@@ -213,5 +215,14 @@ public interface ExternalLogic {
 	 * @return
 	 */
 	public List<String> getPermissionKeys();
-	
+
+    /**
+     * Register a statement with the system LearningResourceStoreService
+     */
+    public void registerStatement(String pollText, Vote vote);
+
+    /**
+     * Register a statement with the system LearningResourceStoreService
+     */
+    public void registerStatement(String pollText, boolean newPoll);
 }

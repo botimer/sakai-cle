@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/calendar/trunk/calendar-impl/impl/src/java/org/sakaiproject/calendar/impl/BaseCalendarService.java $
- * $Id: BaseCalendarService.java 120846 2013-03-06 15:46:33Z holladay@longsight.com $
+ * $Id: BaseCalendarService.java 122995 2013-04-18 17:44:58Z ottenhoff@longsight.com $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008, 2009 The Sakai Foundation
@@ -295,7 +295,7 @@ public abstract class BaseCalendarService implements CalendarService, DoubleStor
 		return getAccessPoint(true) + Entity.SEPARATOR + REF_TYPE_CALENDAR_PDF + Entity.SEPARATOR + context + Entity.SEPARATOR + id
 				+ "?" + SCHEDULE_TYPE_PARAMETER_NAME + "=" + Validator.escapeHtml(Integer.valueOf(scheduleType).toString()) + "&"
 				+ TIME_RANGE_PARAMETER_NAME + "=" + timeRangeString + "&"
-				+ Validator.escapeHtml(USER_NAME_PARAMETER_NAME) + "=" + Validator.escapeHtml(userName) + "&"
+				+ Validator.escapeHtml(USER_NAME_PARAMETER_NAME) + "=" + Validator.escapeUrl(userName) + "&"
 				+ DAILY_START_TIME_PARAMETER_NAME + "=" + Validator.escapeHtml(dailyTimeRange.toString());
 	}
 

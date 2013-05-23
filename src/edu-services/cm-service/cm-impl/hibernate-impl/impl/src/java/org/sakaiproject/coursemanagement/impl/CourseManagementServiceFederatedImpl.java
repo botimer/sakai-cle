@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/edu-services/trunk/cm-service/cm-impl/hibernate-impl/impl/src/java/org/sakaiproject/coursemanagement/impl/CourseManagementServiceFederatedImpl.java $
- * $Id: CourseManagementServiceFederatedImpl.java 105077 2012-02-24 22:54:29Z ottenhoff@longsight.com $
+ * $Id: CourseManagementServiceFederatedImpl.java 123788 2013-05-07 19:06:04Z matthew@longsight.com $
  ***********************************************************************************
  *
  * Copyright (c) 2006, 2007, 2008 The Sakai Foundation
@@ -223,8 +223,7 @@ public class CourseManagementServiceFederatedImpl implements
 				resultSet.addAll(list);
 			}
 		}
-		// The federated list should be sorted by start date.
-		Collections.sort(resultSet, startDateComparator);
+		// The federated list uses the sort provided by the db
 		return resultSet;
 	}
 
@@ -423,8 +422,7 @@ public class CourseManagementServiceFederatedImpl implements
 				resultSet.addAll(list);
 			}
 		}
-		// Sort the academic sessions by start date
-		Collections.sort(resultSet, startDateComparator);
+		// The federated list uses the sort provided by the db
 		return resultSet;
 	}
 
@@ -656,21 +654,6 @@ public class CourseManagementServiceFederatedImpl implements
 		}
 		return false;
 	}
-
-	protected static Comparator<AcademicSession> startDateComparator = new Comparator<AcademicSession>() {
-		public int compare(AcademicSession as1, AcademicSession as2) {
-			if(as1.getStartDate() == null && as2.getStartDate() == null) {
-				return 0;
-			}
-			if(as1.getStartDate() == null && as2.getStartDate() != null) {
-				return -1;
-			}
-			if(as1.getStartDate() != null && as2.getStartDate() == null) {
-				return 1;
-			}
-			return as1.getStartDate().compareTo(as2.getStartDate());
-		}
-	};
 
 	public Set<Section> findEnrolledSections(String userId) {
 		Set<Section> resultSet = new HashSet<Section>();

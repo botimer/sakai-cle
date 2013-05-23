@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/kernel/trunk/api/src/main/java/org/sakaiproject/tool/cover/ToolManager.java $
- * $Id: ToolManager.java 105077 2012-02-24 22:54:29Z ottenhoff@longsight.com $
+ * $Id: ToolManager.java 121987 2013-04-01 13:15:46Z bkirschn@umich.edu $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2008 Sakai Foundation
@@ -130,5 +130,12 @@ public class ToolManager
 		org.sakaiproject.tool.api.ToolManager manager = getInstance();
 		return manager.isVisible (site, config);
 	}
+	
+	public static String getLocalizedToolProperty(String toolId, String key){
+		org.sakaiproject.tool.api.ToolManager manager = getInstance();
+		if (manager == null) return null;
+
+		return manager.getLocalizedToolProperty(toolId, key);
+	}	
 	
 }

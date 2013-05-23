@@ -38,7 +38,8 @@ function checkgroups(elt, groups) {
 	    inp.attr('checked', 'checked');
     }
 }
-    
+
+var blankRubricTemplate, blankRubricRow;
 
 $(function() {
 	// This is called in comments.js as well, however this may be faster.
@@ -131,6 +132,14 @@ $(function() {
 			draggable: false
 		});
 	
+		$('#export-cc-dialog').dialog({
+			autoOpen: false,
+			width: 600,
+			modal: false,
+			resizable: false,
+			draggable: false
+		});
+
 		$('#comments-dialog').dialog({
 			autoOpen: false,
 			width: 600,
@@ -154,7 +163,29 @@ $(function() {
 			resizable: false,
 			draggable: false
 		});
-	
+		
+		/* RU Rubrics ********************************************* */
+		$("#rubric-title").append($("#peer-eval-title-cloneable input"));
+		blankRubricTemplate=$(".peer-eval-create-form").html();
+		blankRubricRow=$("#peer-eval-input-cloneable").html();
+		
+		$peerButtons=$("#peer-review-buttonset").clone();
+		$("#peer-review-buttonset").remove();
+				
+		$('#peer-eval-create-dialog').dialog({
+			autoOpen: false,
+			width: 600,
+			height: 400,
+			modal: false,
+			resizable: false,
+			draggable: false
+		});
+		
+		$('#peer-eval-create-dialog').parent().append($peerButtons);
+		
+		$("#peer-eval-input-cloneable").html("").remove();
+		$(".peer-eval-create-form").submit(function(e){e.preventDefault();});
+		
 		$("#select-resource-group").hide();
 
 		$('.subpage-link').click(function(){
@@ -199,6 +230,28 @@ $(function() {
 			return false;
 		});
 		
+		$('#export-cc').click(function(){
+			closeDropdown();
+			var position =  $(this).position();
+			$("#export-cc-dialog").dialog("option", "position", [position.left, position.top]);
+			oldloc = $(".dropdown a");
+			$('#export-cc-dialog').dialog('open');
+			checksize($('#export-cc-dialog'));
+			return false;
+		});
+
+		$('#export-cc-submit').click(function(){
+			// jquery click doesn't actually click, so get the js object and do a native click call
+                        if ($('#export-cc-v11').attr('checked') == 'checked') {
+                            $("#export-cc-link").attr('href', $("#export-cc-link").attr('href').replace(/version=[0-9.]*/, "version=1.1"));
+                        } else {
+                            $("#export-cc-link").attr('href', $("#export-cc-link").attr('href').replace(/version=[0-9.]*/, "version=1.2"));
+                        }
+			$("#export-cc-link").get(0).click();
+			closeExportCcDialog();
+			return false;
+		    });
+
 		$('#import-cc-submit').click(function() {
 			// prevent double clicks
 			if (!importccactive)
@@ -260,6 +313,7 @@ $(function() {
 			$("#add-multimedia-dialog").dialog("option", "width", outerWidth-10);
 			$("#edit-title-dialog").dialog("option", "width", outerWidth-10);
 			$("#import-cc-dialog").dialog("option", "width", outerWidth-10);
+			$("#export-cc-dialog").dialog("option", "width", outerWidth-10);
 			$("#new-page-dialog").dialog("option", "width", outerWidth-10);
 			$("#remove-page-dialog").dialog("option", "width", outerWidth-10);
 			$("#youtube-dialog").dialog("option", "width", outerWidth-10);
@@ -473,6 +527,40 @@ $(function() {
 				$("#student-comments").attr("checked", false);
 			}
 			
+			/* RU Rubrics ********************************************* */
+			//Because all Student Content boxes use the same dialog, the settings are applied when Edit is clicked. 
+			//The following decides whether to have the box already checked when it is first opened.
+			var peerReview = row.find(".peer-eval").text();
+			if(peerReview == "true") {
+				$("#peer-eval-check").attr("checked", true);
+				$("#peer-eval-check").attr("defaultChecked", true);
+			}else {
+				$("#peer-eval-check").attr("checked", false);
+			}
+			
+			$("#available-rubrics-container").html("");//Add sample rubric			
+			var peerEvalSample = new Object();
+			peerEvalSample.rows=new Array();
+			row.find(".peer-eval-sample-data").each(function(){
+				var categoryId = $(".peer-eval-sample-id" , $(this)).text();
+				var categoryText = $(".peer-eval-sample-text" , $(this)).text();
+				peerEvalSample.rows.push({"id":categoryId , "text":categoryText});
+			});
+			peerEvalSample.title= row.find(".peer-eval-sample-title").text();
+			buildExistingRubrics(peerEvalSample);
+			console.log(peerEvalSample);
+			
+			var rubric = new Object();
+			rubric.rows=new Array();
+			row.find(".peer-eval-row").each(function(){
+				var categoryId = $(".peerReviewId" , $(this)).text();
+				var categoryText = $(".peerReviewText" , $(this)).text();
+				rubric.rows.push({"id":categoryId , "text":categoryText});
+			});
+			rubric.title= row.find(".peer-eval-title").text();
+			buildExistingRubrics(rubric);
+			//console.log(rubric);
+			
 			var forcedAnon = row.find(".forcedAnon").text();
 			if(forcedAnon == "true") {
 				$("#student-comments-anon").attr("checked", true);
@@ -504,6 +592,43 @@ $(function() {
 				$("#student-comments-max").removeAttr("disabled");
 			}
 			
+			/* RU Rubrics ********************************************* */
+			var peerEvalOpenDate = row.find(".peer-eval-open-date").text();
+			if (peerEvalOpenDate!=undefined) {
+				console.log("testing");
+				var peerEvalOpenTime = row.find(".peer-eval-open-time").text();
+				$("#peer-eval-open-date input:nth(0)").val(peerEvalOpenDate).change();
+				$("#peer-eval-open-date input:nth(4)").val(peerEvalOpenTime).change();
+				
+				var peerEvalDueDate = row.find(".peer-eval-due-date").text();
+				var peerEvalDueTime = row.find(".peer-eval-due-time").text();
+				$("#peer-eval-due-date input:nth(0)").val(peerEvalDueDate).change();
+				$("#peer-eval-due-date input:nth(4)").val(peerEvalDueTime).change();
+			}else console.log("peerEvalOpenDate is undefined!!!!");
+			
+			if(!$("#peer-eval-check").attr("checked")) {
+				$("#available-rubrics-container input").attr("disabled", true).removeAttr("checked");
+				$(".student-peer-review-selected").val("");
+				
+				$("#peer-eval-open-date").hide();
+				$("#peer-eval-due-date").hide();
+				$("#peer-eval-allow-self-div").hide();
+			}else {
+				$("#available-rubrics-container input").removeAttr("disabled");
+				
+				$("#peer-eval-open-date").show();
+				$("#peer-eval-due-date").show();
+				$("#peer-eval-allow-self-div").show();
+				$("#peer-eval-allow-selfgrade").attr("Checked", false);
+			}
+			var selfEval = row.find(".peer-eval-allow-self").text();
+			
+			if(selfEval == "true") {
+				$("#peer-eval-allow-selfgrade").attr("checked", true);
+	 			$("#peer-eval-allow-selfgrade").attr("defaultChecked", true);
+			}else {
+				$("#peer-eval-allow-selfgrade").attr("checked", false);
+			}
 			var grade = row.find(".studentGrade").text();
 			if(grade == "true") {
 				$("#student-graded").attr("checked", true);
@@ -561,6 +686,37 @@ $(function() {
 				$("#student-comments-graded").removeAttr("disabled");
 				$("#student-comments-max").removeAttr("disabled");
 			}
+		});
+		
+		/* RU Rubrics ********************************************* */
+		$("#peer-eval-check").change(function() {
+			if(!$("#peer-eval-check").attr("checked")) {
+				$("#available-rubrics-container input").attr("disabled", true).removeAttr("checked");
+				/*show the dateEvolver */
+				$("#peer-eval-open-date").hide();
+				$("#peer-eval-due-date").hide();
+				$("#peer-eval-allow-self-div").hide();
+			}else {
+				console.log("#peer-eval-check is checked");
+				$("#available-rubrics-container input").removeAttr("disabled");
+				
+				$("#peer-eval-open-date").show();
+				$("#peer-eval-due-date").show();
+				$("#peer-eval-allow-self-div").show();
+				$("#peer-eval-allow-selfgrade").attr("checked", false);
+			}
+		});
+		
+		$("#student-peer-review-create").hover(function(){$(this).css("cursor", "default")});
+		$("#student-peer-review-create").click(function(){
+			if(!$("#peer-eval-check").attr("checked")) {
+				$("#peer-eval-check").attr("checked", true);
+				$("#peer-eval-check").change();
+			}
+			displayBlankRubric(true);
+			$('#peer-eval-create-dialog').dialog('open');
+			$('#createRubricBtn').show();
+			$('#updateRubricBtn').hide();
 		});
 
 		$("#editgroups-movie").click(function(){
@@ -1246,6 +1402,7 @@ $(function() {
 				$('#youtube-dialog').dialog('isOpen') ||
 				$('#movie-dialog').dialog('isOpen') ||
 				$('#import-cc-dialog').dialog('isOpen') ||
+				$('#export-cc-dialog').dialog('isOpen') ||
 				$('#comments-dialog').dialog('isOpen') ||
 				$('#student-dialog').dialog('isOpen')) ||
 				$('#question-dialog').dialog('isOpen')) {
@@ -1286,6 +1443,20 @@ $(function() {
 		$("#submit-grading").click(function() {
 			submitgrading($(this));
 			return false;
+		});
+		
+		$("#peer-eval-open-date input:nth(4)").blur(function(e){
+			e.target.value=e.target.value.toUpperCase();
+			if((e.target.value.substring(e.target.value.length-2) == "AM" || e.target.value.substring(e.target.value.length-2) == "PM")
+				&& e.target.value.substring(e.target.value.length-3, e.target.value.length-2)!=" ")
+				e.target.value= e.target.value.substring(0, e.target.value.length-2)+" "+e.target.value.substring(e.target.value.length-2);
+		});
+		
+		$("#peer-eval-due-date input:nth(4)").blur(function(e){
+			e.target.value=e.target.value.toUpperCase();
+			if((e.target.value.substring(e.target.value.length-2) == "AM" || e.target.value.substring(e.target.value.length-2) == "PM")
+				&& e.target.value.substring(e.target.value.length-3, e.target.value.length-2)!=" ")
+				e.target.value= e.target.value.substring(0, e.target.value.length-2)+" "+e.target.value.substring(e.target.value.length-2);
 		});
 
 	} // Closes admin if statement
@@ -1451,6 +1622,11 @@ function closeImportCcDialog() {
 	oldloc.focus();
 }
 
+function closeExportCcDialog() {
+	$('#export-cc-dialog').dialog('close');
+	oldloc.focus();
+}
+
 function closeRemovePageDialog() {
 	$('#remove-page-dialog').dialog('close');
 	oldloc.focus();
@@ -1481,6 +1657,10 @@ function closeStudentDialog() {
 function closeQuestionDialog() {
 	$('#question-dialog').dialog('close');
 	oldloc.focus();
+}
+
+function closePeerReviewDialog() {
+	$('#peer-eval-create-dialog').dialog('close');
 }
 
 function checkEditTitleForm() {
@@ -1825,6 +2005,8 @@ function unhideMultimedia() {
 	$("#outer").height("auto");
 	setMainFrameHeight(window.name);
 }
+
+// Peer evaluation functions are located in peer-eval.js 
 
 // Clones one of the multiplechoice answers in the Question dialog and appends it to the end of the list
 function addMultipleChoiceAnswer() {

@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/alias/trunk/alias-tool/tool/src/java/org/sakaiproject/alias/tool/AliasesAction.java $
- * $Id: AliasesAction.java 105078 2012-02-24 23:00:38Z ottenhoff@longsight.com $
+ * $Id: AliasesAction.java 121549 2013-03-21 20:05:41Z matthew@longsight.com $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2008 The Sakai Foundation
@@ -238,7 +238,6 @@ public class AliasesAction extends PagedResourceActionII
 
 		if (menuPopulated)
 		{
-			state.setAttribute(Menu.STATE_MENU, bar);
 			context.put(Menu.CONTEXT_MENU, bar);
 		}
 

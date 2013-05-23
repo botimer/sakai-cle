@@ -652,19 +652,6 @@ public interface SakaiProxy {
 	public String getOfficialImageAttribute();
 	
 	/**
-	 * Wrapper for ServerConfigurationService.getString("skin.repo")
-	 * @return
-	 */
-	public String getSkinRepoProperty();
-	
-	/**
-	 * Gets the tool skin CSS first by checking the tool, otherwise by using the default property.
-	 * @param	the location of the skin repo
-	 * @return
-	 */
-	public String getToolSkinCSS(String skinRepo);
-	
-	/**
 	 * Get a UUID from the IdManager
 	 * @return
 	 */
@@ -838,4 +825,40 @@ public interface SakaiProxy {
 	 * @return true or false. 
 	 */
 	public boolean isProfileStatusEnabled();
+
+	/**
+	 * Is the profile2.profile.social.enabled flag set in sakai.properties? 
+	 * If not set, defaults to true.
+	 * 
+	 * @return <code>true</code> if the profile2.profile.social.enabled flag
+	 *         is set, otherwise returns <code>false</code>.
+	 */
+	public boolean isSocialProfileEnabled();
+
+	/**
+	 * Is the profile2.profile.interests.enabled flag set in sakai.properties? 
+	 * If not set, defaults to true.
+	 * 
+	 * @return <code>true</code> if the profile2.profile.interests.enabled flag
+	 *         is set, otherwise returns <code>false</code>.
+	 */
+	public boolean isInterestsProfileEnabled();
+
+	/**
+	 * Is the profile2.profile.staff.enabled flag set in sakai.properties? 
+	 * If not set, defaults to true.
+	 * 
+	 * @return <code>true</code> if the profile2.profile.staff.enabled flag
+	 *         is set, otherwise returns <code>false</code>.
+	 */
+	public boolean isStaffProfileEnabled();
+
+	/**
+	 * Is the profile2.profile.student.enabled flag set in sakai.properties? 
+	 * If not set, defaults to true.
+	 * 
+	 * @return <code>true</code> if the profile2.profile.student.enabled flag
+	 *         is set, otherwise returns <code>false</code>.
+	 */
+	public boolean isStudentProfileEnabled();
 }

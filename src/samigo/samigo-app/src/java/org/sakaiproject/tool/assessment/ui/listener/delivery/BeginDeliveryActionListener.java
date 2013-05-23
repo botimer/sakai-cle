@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/sam/trunk/samigo-app/src/java/org/sakaiproject/tool/assessment/ui/listener/delivery/BeginDeliveryActionListener.java $
- * $Id: BeginDeliveryActionListener.java 106463 2012-04-02 12:20:09Z david.horwitz@uct.ac.za $
+ * $Id: BeginDeliveryActionListener.java 121231 2013-03-14 20:08:58Z ktsao@stanford.edu $
  ***********************************************************************************
  *
  * Copyright (c) 2004, 2005, 2006, 2007, 2008, 2009 The Sakai Foundation
@@ -31,6 +31,11 @@ import javax.faces.context.FacesContext;
 import javax.faces.event.AbortProcessingException;
 import javax.faces.event.ActionEvent;
 import javax.faces.event.ActionListener;
+import javax.faces.application.FacesMessage;
+import javax.faces.context.ExternalContext;
+import javax.faces.context.FacesContext;
+import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -65,7 +70,7 @@ import org.sakaiproject.tool.assessment.ui.listener.author.RemovePublishedAssess
  * <p>Purpose:  this module handles the beginning of the assessment
  * <p>Description: Sakai Assessment Manager</p>
  * @author Ed Smiley
- * @version $Id: BeginDeliveryActionListener.java 106463 2012-04-02 12:20:09Z david.horwitz@uct.ac.za $
+ * @version $Id: BeginDeliveryActionListener.java 121231 2013-03-14 20:08:58Z ktsao@stanford.edu $
  */
 
 public class BeginDeliveryActionListener implements ActionListener
@@ -138,7 +143,9 @@ public class BeginDeliveryActionListener implements ActionListener
     // protocol = http://servername:8080/; deliverAudioRecording.jsp needs it
     delivery.setProtocol(ContextUtil.getProtocol());
 
-    String paramValue = ServerConfigurationService.getString("samigo.sizeMax");
+    FacesContext context = FacesContext.getCurrentInstance();
+    ExternalContext external = context.getExternalContext();
+    String paramValue = ((Long)((ServletContext)external.getContext()).getAttribute("FILEUPLOAD_SIZE_MAX")).toString();
     Long sizeMax = null;
     float sizeMax_float = 0f;
     if (paramValue != null) {

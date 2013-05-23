@@ -10,7 +10,7 @@
 <!--
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/sam/trunk/samigo-app/src/webapp/jsf/author/publishedSettings.jsp $
- * $Id: publishedSettings.jsp 115704 2012-11-05 12:37:08Z steve.swinsburg@gmail.com $
+ * $Id: publishedSettings.jsp 121791 2013-03-26 16:03:44Z azeckoski@unicon.net $
  ***********************************************************************************
  *
  * Copyright (c) 2006, 2007, 2008 Sakai Foundation
@@ -370,7 +370,7 @@ function uncheckOther(field){
   <f:verbatim><table bgcolor="#CCCCCC"><tr><td></f:verbatim>  
   
   <f:verbatim></td><td></f:verbatim>
-  <h:outputText value="#{assessmentSettingsMessages.title_description}" />
+  <h:outputText value="#{assessmentSettingsMessages.select_all_groups}" />
   <f:verbatim></td></tr></table></f:verbatim>
   
   <h:selectManyCheckbox disabled="true" id="groupsForSite" layout="pagedirection" value="#{publishedSettings.groupsAuthorized}">

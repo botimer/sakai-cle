@@ -27,6 +27,7 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.Locale;
 import java.util.HashMap;
+import java.util.TreeMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -34,6 +35,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TimeZone;
+import java.util.StringTokenizer;
 import java.util.TreeSet;
 import java.util.Map.Entry;
 import java.text.DecimalFormat;
@@ -50,6 +52,12 @@ import javax.faces.context.FacesContext;
 import javax.faces.event.ValueChangeEvent;
 import javax.faces.model.SelectItem;
 import javax.servlet.http.HttpSession;
+
+import net.sf.json.JSON;
+import net.sf.json.JSONArray;
+import net.sf.json.JSONObject;
+import net.sf.json.JSONSerializer;
+import net.sf.json.JsonConfig;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -71,6 +79,10 @@ import org.sakaiproject.api.app.messageforums.OpenForum;
 import org.sakaiproject.api.app.messageforums.PermissionLevel;
 import org.sakaiproject.api.app.messageforums.PermissionLevelManager;
 import org.sakaiproject.api.app.messageforums.PermissionsMask;
+import org.sakaiproject.api.app.messageforums.PrivateMessage;
+import org.sakaiproject.api.app.messageforums.Rank;
+import org.sakaiproject.api.app.messageforums.RankImage;
+import org.sakaiproject.api.app.messageforums.RankManager;
 import org.sakaiproject.api.app.messageforums.SynopticMsgcntrManager;
 import org.sakaiproject.api.app.messageforums.Topic;
 import org.sakaiproject.api.app.messageforums.UserPreferencesManager;
@@ -80,26 +92,43 @@ import org.sakaiproject.api.app.messageforums.ui.DiscussionForumManager;
 import org.sakaiproject.api.app.messageforums.ui.UIPermissionsManager;
 import org.sakaiproject.authz.api.AuthzGroup;
 import org.sakaiproject.authz.api.GroupNotDefinedException;
+import org.sakaiproject.authz.api.Member;
 import org.sakaiproject.authz.api.Role;
 import org.sakaiproject.authz.cover.AuthzGroupService;
 import org.sakaiproject.authz.cover.SecurityService;
 import org.sakaiproject.component.app.messageforums.MembershipItem;
 import org.sakaiproject.component.app.messageforums.dao.hibernate.util.comparator.ForumBySortIndexAscAndCreatedDateDesc;
+import org.sakaiproject.component.app.messageforums.dao.hibernate.RankImpl;
 import org.sakaiproject.component.cover.ComponentManager;
 import org.sakaiproject.component.cover.ServerConfigurationService;
+import org.sakaiproject.content.api.ContentResource;
+import org.sakaiproject.content.api.ContentHostingService;
 import org.sakaiproject.content.api.FilePickerHelper;
 import org.sakaiproject.entity.api.Entity;
 import org.sakaiproject.entity.api.Reference;
+import org.sakaiproject.entity.api.ResourceProperties;
+import org.sakaiproject.entity.api.ResourcePropertiesEdit;
 import org.sakaiproject.entitybroker.DeveloperHelperService;
+import org.sakaiproject.event.api.Event;
+import org.sakaiproject.event.api.LearningResourceStoreService;
+import org.sakaiproject.event.api.LearningResourceStoreService.LRS_Actor;
+import org.sakaiproject.event.api.LearningResourceStoreService.LRS_Context;
+import org.sakaiproject.event.api.LearningResourceStoreService.LRS_Object;
+import org.sakaiproject.event.api.LearningResourceStoreService.LRS_Result;
+import org.sakaiproject.event.api.LearningResourceStoreService.LRS_Statement;
+import org.sakaiproject.event.api.LearningResourceStoreService.LRS_Verb;
+import org.sakaiproject.event.api.LearningResourceStoreService.LRS_Verb.SAKAI_VERB;
 import org.sakaiproject.event.cover.EventTrackingService;
 import org.sakaiproject.exception.IdUnusedException;
 import org.sakaiproject.service.gradebook.shared.Assignment;
 import org.sakaiproject.service.gradebook.shared.CommentDefinition;
+import org.sakaiproject.service.gradebook.shared.GradeDefinition;
 import org.sakaiproject.service.gradebook.shared.GradebookService;
 import org.sakaiproject.site.api.Group;
 import org.sakaiproject.site.api.Site;
 import org.sakaiproject.site.cover.SiteService;
 import org.sakaiproject.thread_local.cover.ThreadLocalManager;
+import org.sakaiproject.tool.api.Placement;
 import org.sakaiproject.tool.api.ToolSession;
 import org.sakaiproject.tool.cover.SessionManager;
 import org.sakaiproject.tool.cover.ToolManager;
@@ -109,13 +138,17 @@ import org.sakaiproject.tool.messageforums.ui.DiscussionForumBean;
 import org.sakaiproject.tool.messageforums.ui.DiscussionMessageBean;
 import org.sakaiproject.tool.messageforums.ui.DiscussionTopicBean;
 import org.sakaiproject.tool.messageforums.ui.EmailNotificationBean;
+import org.sakaiproject.tool.messageforums.ui.ForumRankBean;
 import org.sakaiproject.tool.messageforums.ui.PermissionBean;
 import org.sakaiproject.tool.messageforums.ui.SiteGroupBean;
 import org.sakaiproject.user.api.User;
+import org.sakaiproject.user.api.UserNotDefinedException;
 import org.sakaiproject.user.cover.UserDirectoryService;
 import org.sakaiproject.util.FormattedText;
 import org.sakaiproject.util.ResourceLoader;
 import org.springframework.orm.hibernate3.HibernateOptimisticLockingFailureException;
+
+import org.apache.commons.fileupload.FileItem; 
 
 /**
  * @author <a href="mailto:rshastri@iupui.edu">Rashmi Shastri</a>
@@ -232,6 +265,7 @@ public class DiscussionForumTool
   private static final String GRADE_SUCCESSFUL = "cdfm_grade_successful";
   private static final String GRADE_GREATER_ZERO = "cdfm_grade_greater_than_zero";
   private static final String GRADE_DECIMAL_WARN = "cdfm_grade_decimal_warn";
+  private static final String GRADE_INVALID_GENERIC = "cdfm_grade_invalid_warn";
   private static final String ALERT = "cdfm_alert";
   private static final String SELECT_ASSIGN = "cdfm_select_assign";
   private static final String INVALID_COMMENT = "cdfm_add_comment_invalid";
@@ -249,6 +283,7 @@ public class DiscussionForumTool
   private static final String END_DATE_BEFORE_OPEN_DATE = "endDateBeforeOpenDate";
   private static final String NO_GROUP_SELECTED ="cdfm_no_group_selected";
   private static final String AUTOCREATE_TOPICS_ROLES_DESCRIPTION = "cdfm_autocreate_topics_desc_roles";
+  private static final String AUTOCREATE_TOPICS_GROUPS_DESCRIPTION = "cdfm_autocreate_topics_desc_groups";
   private static final String DUPLICATE_COPY_TITLE = "cdfm_duplicate_copy_title";
   
   private static final String FROM_PAGE = "msgForum:mainOrForumOrTopic";
@@ -317,6 +352,10 @@ public class DiscussionForumTool
    */
   private String gbItemScore;
   private String gbItemComment;
+  
+  private boolean gradeByPoints;
+  private boolean gradeByPercent;
+  private boolean gradeByLetter;
 
 
   /**
@@ -330,6 +369,7 @@ public class DiscussionForumTool
   private EmailNotificationManager emailNotificationManager;
   private SynopticMsgcntrManager synopticMsgcntrManager;
   private UserPreferencesManager userPreferencesManager;
+  private ContentHostingService contentHostingService;
   
   private Boolean instructor = null;
   private Boolean sectionTA = null;
@@ -367,6 +407,15 @@ public class DiscussionForumTool
   private EmailNotificationBean watchSettingsBean;
   
   private boolean needToPostFirst;
+  
+  // rank
+  private RankManager rankManager;
+  private ForumRankBean forumRankBean;
+  
+   
+  public void setContentHostingService(ContentHostingService contentHostingService) {
+		this.contentHostingService = contentHostingService;
+	}
 
   private String editorRows;
   
@@ -1778,6 +1827,12 @@ public class DiscussionForumTool
     prepareRemoveAttach.clear();
     siteGroups.clear();
     createTopicsForGroups = false;
+    LearningResourceStoreService lrss = (LearningResourceStoreService) ComponentManager
+            .get("org.sakaiproject.event.api.LearningResourceStoreService");
+    if (null != lrss) {
+        Event event = EventTrackingService.newEvent("msgcntr", "topic created", true);
+        lrss.registerStatement(getStatementForUserPosted(lrss.getEventActor(event), selectedTopic.getTopic().getTitle(), SAKAI_VERB.interacted), "msgcntr");
+    }
     return TOPIC_SETTING_REVISE;
 
   }
@@ -1859,7 +1914,12 @@ public class DiscussionForumTool
     		updateSynopticMessagesForForumComparingOldMessagesCount(getSiteId(), forumId, null, beforeChangeHM, SynopticMsgcntrManager.NUM_OF_ATTEMPTS);
     	}
     }
-    
+    LearningResourceStoreService lrss = (LearningResourceStoreService) ComponentManager
+            .get("org.sakaiproject.event.api.LearningResourceStoreService");
+    if (null != lrss) {
+        Event event = EventTrackingService.newEvent("msgcntr", "topic created", true);
+        lrss.registerStatement(getStatementForUserPosted(lrss.getEventActor(event), selectedTopic.getTopic().getTitle(), SAKAI_VERB.interacted), "msgcntr");
+    }
     return processReturnToOriginatingPage();
     //reset();
     //return MAIN;
@@ -2254,7 +2314,6 @@ public class DiscussionForumTool
   public String processActionDisplayTopic()
   {
     LOG.debug("processActionDisplayTopic()");
-
     return displayTopicById(TOPIC_ID);
   }
 
@@ -2576,7 +2635,12 @@ public class DiscussionForumTool
 	    }
 	    // don't need this here b/c done in processActionGetDisplayThread();
 	    // selectedTopic = getDecoratedTopic(topic);
-	    
+        LearningResourceStoreService lrss = (LearningResourceStoreService) ComponentManager
+                .get("org.sakaiproject.event.api.LearningResourceStoreService");
+        if (null != lrss) {
+            Event event = EventTrackingService.newEvent("msgcntr", "view thread", true);
+            lrss.registerStatement(getStatementForUserReadViewed(lrss.getEventActor(event), threadMessage.getTitle(), "thread"), "msgcntr");
+        }
 	    return processActionGetDisplayThread();	  
   }
   
@@ -2654,7 +2718,13 @@ public class DiscussionForumTool
     //get thread from message
     getThreadFromMessage();
     refreshSelectedMessageSettings(message);
-    // selectedTopic= new DiscussionTopicBean(message.getTopic());
+    // selectedTopic= new DiscussionTopicBean(message.getTopic()); 
+    LearningResourceStoreService lrss = (LearningResourceStoreService) ComponentManager
+            .get("org.sakaiproject.event.api.LearningResourceStoreService");
+    if (null != lrss) {
+        Event event = EventTrackingService.newEvent("msgcntr", "view thread", true);
+        lrss.registerStatement(getStatementForUserReadViewed(lrss.getEventActor(event), message.getTitle(), "thread"), "msgcntr");
+    }
     return MESSAGE_VIEW;
   }
   
@@ -2743,7 +2813,12 @@ public class DiscussionForumTool
 	    
 	    refreshSelectedMessageSettings(message);  
     }
-    
+    LearningResourceStoreService lrss = (LearningResourceStoreService) ComponentManager
+            .get("org.sakaiproject.event.api.LearningResourceStoreService");
+    if (null != lrss) {
+        Event event = EventTrackingService.newEvent("msgcntr", "view thread", true);
+        lrss.registerStatement(getStatementForUserReadViewed(lrss.getEventActor(event), selectedMessage.getMessage().getTitle(), "thread"), "msgcntr");
+    }
     return null;
   }
 
@@ -2784,7 +2859,12 @@ public class DiscussionForumTool
 	    
 	    refreshSelectedMessageSettings(message);  
     }
-    
+    LearningResourceStoreService lrss = (LearningResourceStoreService) ComponentManager
+            .get("org.sakaiproject.event.api.LearningResourceStoreService");
+    if (null != lrss) {
+        Event event = EventTrackingService.newEvent("msgcntr", "view thread", true);
+        lrss.registerStatement(getStatementForUserReadViewed(lrss.getEventActor(event), selectedMessage.getMessage().getTitle(), "thread"), "msgcntr");
+    }
     return null;
   }
   
@@ -3210,6 +3290,11 @@ public class DiscussionForumTool
     				decoMsg.setUserCanEmail(isInstructor() || isSectionTA());
     				decoTopic.addMessage(decoMsg);
     			}
+				if (LOG.isDebugEnabled()) LOG.debug("SETRANK calling getSelectedMessage, we can set Rank here");
+				String userEid = decoMsg.getMessage().getCreatedBy();
+				Rank thisrank = this.getAuthorRank(userEid);
+				decoMsg.setAuthorRank(thisrank);
+				decoMsg.setAuthorPostCount(userEid);
     		}
     	}
     }
@@ -3271,6 +3356,12 @@ public class DiscussionForumTool
     }
     topicClickCount++;
     if(resetTopicById(externalTopicId)){
+        LearningResourceStoreService lrss = (LearningResourceStoreService) ComponentManager
+                .get("org.sakaiproject.event.api.LearningResourceStoreService");
+        if (null != lrss) {
+            Event event = EventTrackingService.newEvent("msgcntr", "view topics", true);
+            lrss.registerStatement(getStatementForUserReadViewed(lrss.getEventActor(event), selectedTopic.getTopic().getTitle(), "topic"), "msgcntr");
+        }
     	return ALL_MESSAGES;
     } else {
     	return gotoMain();
@@ -3557,6 +3648,12 @@ public class DiscussionForumTool
     	LOG.error("DiscussionForumTool: processDfMsgPost", e);
     	setErrorMessage(getResourceBundleString(ERROR_POSTING_THREAD));
     	gotoMain();
+    }
+    LearningResourceStoreService lrss = (LearningResourceStoreService) ComponentManager
+            .get("org.sakaiproject.event.api.LearningResourceStoreService");
+    if (null != lrss) {
+        Event event = EventTrackingService.newEvent("msgcntr", "responded", true);
+        lrss.registerStatement(getStatementForUserPosted(lrss.getEventActor(event), dMsg.getTitle(), SAKAI_VERB.responded), "msgcntr");
     }
     return ALL_MESSAGES;
   }
@@ -4179,25 +4276,40 @@ public class DiscussionForumTool
 		  allowedToGradeItem = false;
 		  selGBItemRestricted = false;
 	  }
+	  
+	  // get the grade entry type for the gradebook
+	  int gradeEntryType = gradebookService.getGradeEntryType(gradebookUid);
+	  if (gradeEntryType == GradebookService.GRADE_TYPE_LETTER) {
+	      gradeByLetter = true;
+	      gradeByPoints = false;
+	      gradeByPercent = false;
+	  } else if (gradeEntryType == GradebookService.GRADE_TYPE_PERCENTAGE) {
+	      gradeByLetter = false;
+	      gradeByPoints = false;
+	      gradeByPercent = true;
+	  } else {
+	      gradeByLetter = false;
+	      gradeByPoints = true;
+	      gradeByPercent = false;
+	  }
 
 	  NumberFormat numberFormat = DecimalFormat.getInstance(new ResourceLoader().getLocale());
 	  if (!selGBItemRestricted) {
 		  Assignment assign = gradebookService.getAssignment(gradebookUid, selAssignmentName);
-		  if (assign != null) {
+		  if (assign != null && assign.getPoints() != null) {
 			  gbItemPointsPossible = ((DecimalFormat) numberFormat).format(assign.getPoints());
 		  }
+		  
+		  GradeDefinition gradeDef = gradebookService.getGradeDefinitionForStudentForItem(gradebookUid, assign.getId(), studentId);
 
-		  Double assignScore = gradebookService.getAssignmentScore(gradebookUid,  
-				  selAssignmentName, studentId);
-		  CommentDefinition assgnComment = gradebookService.getAssignmentScoreComment(gradebookUid, selAssignmentName, studentId);
+		  if (gradeDef.getGrade() != null) {
+		      gbItemScore = gradeDef.getGrade();
+		  }
 
-		  if (assignScore != null) {
-			  gbItemScore = ((DecimalFormat) numberFormat).format(assignScore);
-			  setSelectedAssignForMessage(selAssignmentName);
+		  if (gradeDef.getGradeComment() != null) {
+		      gbItemComment = gradeDef.getGradeComment();
 		  }
-		  if (assgnComment != null) {
-			  gbItemComment = assgnComment.getCommentText();
-		  }
+		  
 		  setSelectedAssignForMessage(selAssignmentName);
 	  } else {
 		  resetGradeInfo();
@@ -4406,7 +4518,12 @@ public class DiscussionForumTool
   		
   		//now update the parent thread:
     	updateThreadLastUpdatedValue(dMsg, SynopticMsgcntrManager.NUM_OF_ATTEMPTS);
-  		
+        LearningResourceStoreService lrss = (LearningResourceStoreService) ComponentManager
+                .get("org.sakaiproject.event.api.LearningResourceStoreService");
+        if (null != lrss) {
+            Event event = EventTrackingService.newEvent("msgcntr", "responded", true);
+            lrss.registerStatement(getStatementForUserPosted(lrss.getEventActor(event), dMsg.getTitle(), SAKAI_VERB.responded), "msgcntr");
+        }
   	}catch(Exception e){
   		LOG.error("DiscussionForumTool: processDfReplyMsgPost", e);
   		setErrorMessage(getResourceBundleString(ERROR_POSTING_THREAD));
@@ -4689,7 +4806,12 @@ public class DiscussionForumTool
     	setErrorMessage(getResourceBundleString(ERROR_POSTING_THREAD));
     	gotoMain();
     }
-
+    LearningResourceStoreService lrss = (LearningResourceStoreService) ComponentManager
+            .get("org.sakaiproject.event.api.LearningResourceStoreService");
+    if (null != lrss) {
+        Event event = EventTrackingService.newEvent("msgcntr", "responded", true);
+        lrss.registerStatement(getStatementForUserPosted(lrss.getEventActor(event), selectedMessage.getMessage().getTitle(), SAKAI_VERB.responded), "msgcntr");
+    }
     return MESSAGE_VIEW;
   }
 
@@ -5800,6 +5922,16 @@ public class DiscussionForumTool
     return gbItemComment; 
   } 
   
+  public boolean isGradeByPoints() {
+      return gradeByPoints;
+  }
+  public boolean isGradeByPercent() {
+      return gradeByPercent;
+  }
+  public boolean isGradeByLetter() {
+      return gradeByLetter;
+  }
+  
   public void rearrageTopicMsgsThreaded()
   {
 	  if (selectedTopic != null)
@@ -6037,31 +6169,39 @@ public class DiscussionForumTool
      return true;
    }
   
-  private boolean validateGradeInput()
-  {
-    if(!isNumber(gradePoint))
-    {
-      FacesContext currentContext = FacesContext.getCurrentInstance();
-      String uiComponentId = "msgForum:dfMsgGradeGradePoint";
-      FacesMessage validateMessage = new FacesMessage(getResourceBundleString(GRADE_GREATER_ZERO));
-      validateMessage.setSeverity(FacesMessage.SEVERITY_ERROR);
-      currentContext.addMessage(uiComponentId, validateMessage);
-      
-      return false;
-    }
-    else if(!isFewerDigit(gradePoint))
-    {
-      FacesContext currentContext = FacesContext.getCurrentInstance();
-      String uiComponentId = "msgForum:dfMsgGradeGradePoint";
-      FacesMessage validateMessage = new FacesMessage(getResourceBundleString(GRADE_DECIMAL_WARN));
-      validateMessage.setSeverity(FacesMessage.SEVERITY_ERROR);
-      currentContext.addMessage(uiComponentId, validateMessage); 
-      
-      return false;
-    }
-    
-    return true;
-  }
+   private boolean validateGradeInput()
+   {
+       GradebookService gradebookService = getGradebookService();
+       if (gradebookService == null) {
+           return false;
+       }
+
+       String gradebookUid = getSiteId();
+       boolean gradeValid = gradebookService.isGradeValid(gradebookUid, gradePoint);
+
+       if (!gradeValid) {
+           // see if we can figure out why
+           String errorMessageRef = GRADE_INVALID_GENERIC;
+           if (gradebookService.getGradeEntryType(gradebookUid) != GradebookService.GRADE_TYPE_LETTER) {
+               if(!isNumber(gradePoint))
+               {
+                   errorMessageRef = GRADE_GREATER_ZERO;
+               }
+               else if(!isFewerDigit(gradePoint))
+               {
+                   errorMessageRef = GRADE_DECIMAL_WARN; 
+               } 
+           }
+
+           FacesContext currentContext = FacesContext.getCurrentInstance();
+           String uiComponentId = "msgForum:dfMsgGradeGradePoint";
+           FacesMessage validateMessage = new FacesMessage(getResourceBundleString(errorMessageRef));
+           validateMessage.setSeverity(FacesMessage.SEVERITY_ERROR);
+           currentContext.addMessage(uiComponentId, validateMessage);
+       }
+
+       return gradeValid;
+   }
   
   public String processDfGradeSubmitFromDialog(){
 	  String result = processDfGradeSubmit();
@@ -6106,6 +6246,7 @@ public class DiscussionForumTool
 	  
 	  NumberFormat nf = DecimalFormat.getInstance(new ResourceLoader().getLocale());
 	  Double gradeAsDouble = null;
+	  double pointsPossibleAsDouble = 0.0;
 	  try {
 	      gradeAsDouble = new Double (nf.parse(gradePoint).doubleValue());
 	  } catch(ParseException pe) {
@@ -6114,38 +6255,34 @@ public class DiscussionForumTool
 	      return null;
 	  }
 
-      try {
-          double pointsPossibleAsDouble = nf.parse(gbItemPointsPossible).doubleValue();
-          if((gradeAsDouble.doubleValue() > pointsPossibleAsDouble) && !grade_too_large_make_sure) {
-              setErrorMessage(getResourceBundleString(TOO_LARGE_GRADE));
-              grade_too_large_make_sure = true;
-              return null;
-          } else {
-              LOG.info("the user confirms he wants to give student higher grade");
-          }	  
-      } catch(ParseException e) {
-          LOG.warn("Unable to parse points possible " + gbItemPointsPossible + 
-                  " to determine if entered grade is greater than points possible");
-      }	  
-    
+	  if (gradeByPoints) {
+	      try {
+	          pointsPossibleAsDouble = nf.parse(gbItemPointsPossible).doubleValue();
+	          if((gradeAsDouble.doubleValue() > pointsPossibleAsDouble) && !grade_too_large_make_sure) {
+	              setErrorMessage(getResourceBundleString(TOO_LARGE_GRADE));
+	              grade_too_large_make_sure = true;
+	              return null;
+	          } else {
+	              LOG.info("the user confirms he wants to give student higher grade");
+	          }	  
+	      } catch(ParseException e) {
+	          LOG.warn("Unable to parse points possible " + gbItemPointsPossible + 
+	                  " to determine if entered grade is greater than points possible");
+	      }	  
+	  }
+    String studentUid = null;
     try 
     {   
         String selectedAssignName = ((SelectItem)assignments.get((Integer.valueOf(selectedAssign)).intValue())).getLabel();
         String gradebookUuid = ToolManager.getCurrentPlacement().getContext();
-        String studentUid;
         if(selectedMessage == null && selectedGradedUserId != null && !"".equals(selectedGradedUserId)){
         	studentUid = selectedGradedUserId;
         }else{
         	studentUid = UserDirectoryService.getUser(selectedMessage.getMessage().getCreatedBy()).getId();
         }
         
-        gradebookService.setAssignmentScore(gradebookUuid,  
-        		  selectedAssignName, studentUid, gradeAsDouble, "");
-        if (gradeComment != null && gradeComment.trim().length() > 0)
-        {
-        	gradebookService.setAssignmentScoreComment(gradebookUuid,  
-      		  selectedAssignName, studentUid, gradeComment);
-        }
+        Long gbItemId = gradebookService.getAssignment(gradebookUuid, selectedAssignName).getId();
+        gradebookService.saveGradeAndCommentForStudent(gradebookUuid, gbItemId, studentUid, gradePoint, gradeComment);
         
         if(selectedMessage != null){
         	Message msg = selectedMessage.getMessage();
@@ -6175,7 +6312,18 @@ public class DiscussionForumTool
     }else if(selectedForum != null){
     	eventRef = getEventReference(selectedForum.getForum());
     }
-    EventTrackingService.post(EventTrackingService.newEvent(DiscussionForumService.EVENT_FORUMS_GRADE, eventRef, true));
+    LearningResourceStoreService lrss = (LearningResourceStoreService) ComponentManager
+            .get("org.sakaiproject.event.api.LearningResourceStoreService");
+    Event event = EventTrackingService.newEvent(DiscussionForumService.EVENT_FORUMS_GRADE, eventRef, true);
+    EventTrackingService.post(event);
+    try {
+        lrss.registerStatement(getStatementForGrade(studentUid, lrss.getEventActor(event), selectedTopic.getTopic().getTitle(), 
+                gradeAsDouble, pointsPossibleAsDouble), "msgcntr");
+    } catch (UserNotDefinedException e) {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug(e);
+        }
+    }
     
     gradeNotify = false; 
     selectedAssign = DEFAULT_GB_ITEM; 
@@ -7748,6 +7896,13 @@ public class DiscussionForumTool
 					|| (selectedTopic.getIsReviseOwn() && isOwn));  
 		 selectedMessage.setUserCanDelete(selectedTopic.getIsDeleteAny() || (isOwn && selectedTopic.getIsDeleteOwn()));
 		 selectedMessage.setUserCanEmail(isInstructor() || isSectionTA());
+
+		 // Set Rank for selectedMessage.
+		 String userEid = message.getCreatedBy();
+		 Rank thisrank = this.getAuthorRank(userEid);
+		 selectedMessage.setAuthorRank(thisrank);
+		 selectedMessage.setAuthorPostCount(userEid);
+
 	 }
 	 
 	 public boolean isAllowedToGradeItem() {
@@ -7991,7 +8146,10 @@ public class DiscussionForumTool
 		}
 		
 		//MSGCNTR-741 need to filter out post first users
-		userlist.removeAll(getNeedToPostFirst(userlist, (DiscussionTopic)reply.getTopic(), reply.getTopic().getMessages()));
+		if (((DiscussionTopic)reply.getTopic()).getPostFirst()) {
+		    Topic topicWithMessages = forumManager.getTopicByIdWithMessagesAndAttachments(reply.getTopic().getId());
+		    userlist.removeAll(getNeedToPostFirst(userlist, (DiscussionTopic)reply.getTopic(), topicWithMessages.getMessages()));
+		}
 		
 		
 		// now printing out all users = # of messages in the thread - level 2 users
@@ -8291,7 +8449,10 @@ public class DiscussionForumTool
     Long topicId = selectedTopic.getTopic().getId();
 
 	duplicateTopic(topicId, forum, false);
-
+    LearningResourceStoreService lrss = (LearningResourceStoreService) ComponentManager
+            .get("org.sakaiproject.event.api.LearningResourceStoreService");
+    Event event = EventTrackingService.newEvent("msgcntr", "topic created", true);
+    lrss.registerStatement(getStatementForUserPosted(lrss.getEventActor(event), selectedTopic.getTopic().getTitle(), SAKAI_VERB.interacted), "msgcntr");
     reset();
     return gotoMain();
   }
@@ -8707,6 +8868,11 @@ public class DiscussionForumTool
         return groupLevel;
     }
     
+	public String getAutoGroupsDesc() {
+		String level = getAutoGroupsPermConfig();
+		return getResourceBundleString(AUTOCREATE_TOPICS_GROUPS_DESCRIPTION, new Object[]{getResourceBundleString("perm_level_" + level.replaceAll(" ", "_").toLowerCase())});
+	}
+
     public boolean getHasTopicAccessPrivileges(String topicIdStr){
         String userId = getUserId();
         long topicId = -1;
@@ -8763,5 +8929,693 @@ public class DiscussionForumTool
 	public String getDefaultAvailabilityTime(){
 		return ServerConfigurationService.getString("msgcntr.forums.defaultAvailabilityTime", "").toLowerCase();
 	}
+
+	/**
+	 * Determine if we have been passed a parameter that contains a given string, return ArrayList of the corresponding values,
+	 * else return empty list.
+	 */
+	public static ArrayList getRequestParamArrayValueLike(String paramPart) {
+		FacesContext context = FacesContext.getCurrentInstance();
+		Map requestParams = context.getExternalContext().getRequestParameterMap();
+		ArrayList list = new ArrayList();
+
+		for (Iterator it = requestParams.entrySet().iterator(); it.hasNext();) {
+			Map.Entry entry = (Map.Entry) it.next();
+			String currKey = (String) entry.getKey();
+			int location = currKey.indexOf(paramPart);
+			if (location > -1) {
+				list.add((String) entry.getValue());
+			}
+		}
+		return list;
+	}
+
+	public String getTotalAssignToListJSON() {
+		if (this.courseMemberMap == null) {
+			this.courseMemberMap = membershipManager.getFilteredCourseMembers(true, null);
+		}
+		List members = membershipManager.convertMemberMapToList(courseMemberMap);
+		List jsonList = transformItemList(members);
+		JsonConfig config = new JsonConfig();
+		JSON json = JSONSerializer.toJSON(jsonList);
+		if (LOG.isDebugEnabled()) LOG.debug(" finished getTotalAssignToListJSON");
+		return json.toString(4, 0);
+	}
+
+	private List transformItemList(List members) {
+		Map<String, List<JSONObject>> allParticipantsMap = new HashMap<String, List<JSONObject>>(1);
+		allParticipantsMap.put("allParticipants", new ArrayList<JSONObject>(1));
+
+		Map<String, List<JSONObject>> rolesMap = new HashMap<String, List<JSONObject>>(1);
+		rolesMap.put("roles", new ArrayList<JSONObject>(1));
+
+		Map<String, List<JSONObject>> groupsMap = new HashMap<String, List<JSONObject>>(1);
+		groupsMap.put("groups", new ArrayList<JSONObject>(1));
+
+		Map<String, List<JSONObject>> usersMap = new HashMap<String, List<JSONObject>>(1);
+		usersMap.put("users", new ArrayList<JSONObject>());
+
+		for (Iterator iterator = members.iterator(); iterator.hasNext();) {
+			MembershipItem item = (MembershipItem) iterator.next();
+			if (MembershipItem.TYPE_ALL_PARTICIPANTS.equals(item.getType())) {
+				parseAllParticipants(item, allParticipantsMap);
+			} else if (MembershipItem.TYPE_ROLE.equals(item.getType())) {
+				parseRoles(item, rolesMap);
+			} else if (MembershipItem.TYPE_GROUP.equals(item.getType())) {
+				parseGroups(item, groupsMap);
+			} else if (MembershipItem.TYPE_USER.equals(item.getType())) {
+				continue;
+			} else {
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("Could not determine type of MembershipItem" + item);
+                }
+			}
+		}
+		// now that roles and groups are parsed, walk users, adding them
+		// to users map and their ids to the groups and/or roles the belong to
+		for (Iterator iterator = members.iterator(); iterator.hasNext();) {
+			MembershipItem item = (MembershipItem) iterator.next();
+			if (MembershipItem.TYPE_USER.equals(item.getType())) {
+				parseUsers(item, groupsMap, rolesMap, usersMap);
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("parseUsers....TYPE_USER  itemtype =  " + item.getType());
+                }
+			} else {
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("parseUsers...Could not determine type of MembershipItem" + item.getType());
+                }
+			}
+		}
+		List allItemsList = new ArrayList(3);
+		allItemsList.add(allParticipantsMap);
+		allItemsList.add(rolesMap);
+
+		// we only need the userIds to setup the individual user data
+		// so remove it before delivering to page
+		List<JSONObject> groupsList = groupsMap.get("groups");
+		for (JSONObject groupJSON : groupsList) {
+			groupJSON.remove("userIds");
+		}
+		allItemsList.add(groupsMap);
+		allItemsList.add(usersMap);
+		return allItemsList;
+	}
+
+	private void parseRoles(MembershipItem item, Map<String, List<JSONObject>> rolesMap) {
+		List<JSONObject> rolesList = rolesMap.get("roles");
+		if (rolesList == null) {
+			rolesList = new ArrayList<JSONObject>();
+		}
+		Role role = item.getRole();
+		List<String> userIds = new ArrayList<String>();
+		JSONObject rolesJSON = new JSONObject();
+		rolesJSON.element("membershipItemId", item.getId()).element("roleId", role.getId()).element("description", role.getDescription())
+				.element("userIds", userIds);
+		rolesList.add(rolesJSON);
+	}
+
+	private void parseGroups(MembershipItem item, Map<String, List<JSONObject>> groupsMap) {
+		Group group = item.getGroup();
+		List<JSONObject> groupsList = groupsMap.get("groups");
+		if (groupsList == null) {
+			groupsList = new ArrayList<JSONObject>();
+		}
+		Set<Member> groupMembers = (Set<Member>) group.getMembers();
+		List<String> userIds = new ArrayList<String>(groupMembers.size());
+		for (Member member : groupMembers) {
+			userIds.add(member.getUserId());
+		}
+		JSONObject groupJSON = new JSONObject().element("membershipItemId", item.getId()).element("groupId", group.getId())
+				.element("title", group.getTitle()).element("userIds", userIds);
+		groupsList.add(groupJSON);
+	}
+
+	private void parseUsers(MembershipItem item, Map<String, List<JSONObject>> groupsMap, Map<String, List<JSONObject>> rolesMap,
+			Map<String, List<JSONObject>> usersMap) {
+		List<JSONObject> usersList = usersMap.get("users");
+		if (usersList == null) {
+			usersList = new ArrayList<JSONObject>();
+		}
+
+		JSONObject jsonMembershipItem = new JSONObject();
+		jsonMembershipItem.element("membershipItemId", item.getId()).element("roleId", item.getRole().getId())
+				.element("userDisplayName", item.getUser().getDisplayName()).element("eid", item.getUser().getEid());
+		usersList.add(jsonMembershipItem);
+
+		JSONArray memberGroupsArray = new JSONArray();
+		List<JSONObject> groupsList = groupsMap.get("groups");
+		for (JSONObject jsonGroup : groupsList) {
+			List<String> userIds = (List<String>) jsonGroup.get("userIds");
+			if (userIds.contains(item.getUser().getId())) {
+				JSONObject memberGroupJSON = new JSONObject();
+				memberGroupJSON.element("groupId", jsonGroup.get("groupId"));
+				memberGroupJSON.element("title", jsonGroup.get("title"));
+				memberGroupsArray.add(memberGroupJSON);
+			}
+		}
+		jsonMembershipItem.element("groups", memberGroupsArray);
+	}
+
+	private void parseAllParticipants(MembershipItem item, Map<String, List<JSONObject>> allParticipantsMap) {
+		List<JSONObject> allParticipantsList = allParticipantsMap.get("allParticipants");
+		if (allParticipantsList == null) {
+			allParticipantsList = new ArrayList<JSONObject>();
+		}
+		JSONObject jsonMembershipItem = new JSONObject();
+		jsonMembershipItem.element("name", item.getName()).element("membershipItemId", item.getId());
+		allParticipantsList.add(jsonMembershipItem);
+	}
+
+	public void setRankManager(RankManager rankManager) {
+		this.rankManager = rankManager;
+	}
+
+	private List<ForumRankBean> rankBeanList = new ArrayList<ForumRankBean>();
+
+	public ForumRankBean getForumRankBean() {
+		return forumRankBean;
+	}
+
+	public void setForumRankBean(ForumRankBean thisrank) {
+		this.forumRankBean = thisrank;
+	}
+
+	public List<ForumRankBean> getRankBeanList() {
+		return rankBeanList;
+	}
+
+	public void setRankBeanList(List ranklist) {
+		List<ForumRankBean> alist = new ArrayList();
+		if (ranklist != null) {
+			Iterator childiter = ranklist.iterator();
+			// update topic id for each child msg.
+			while (childiter.hasNext()) {
+				Rank thisrank = (Rank) childiter.next();
+				ForumRankBean rankBean = new ForumRankBean(thisrank);
+				alist.add(rankBean);
+			}
+		}
+		this.rankBeanList.clear();
+		this.rankBeanList.addAll(alist);
+	}
+
+	private static final String INSUFFICIENT_PRIVILEGES_TO_EDIT_RANKS = "cdfm_insufficient_privileges_ranks";
+	private static final String VIEW_RANK = "dfViewAllRanks";
+	private static final String ADD_RANK = "dfAddRank";
+	private static final String EDIT_RANK = "dfEditRank";
+	private static final String CONFIRM_REMOVE_RANK = "dfConfirmRemoveRanks";
+
+	private boolean just_created = false;
+	private boolean imageDeletePending = false;
+
+	public boolean isImageDeletePending() {
+		return imageDeletePending;
+	}
+
+	public void setImageDeletePending(boolean imageDeletePending) {
+		this.imageDeletePending = imageDeletePending;
+	}
+
+	public void saveRank(Rank newRank) {
+		if ((forumRankBean != null) && (newRank != null)) {
+			if (LOG.isDebugEnabled()) LOG.debug("saveRank:   forumRankBean !=null) && (newRank!=null");
+
+			String selectedRankType = this.forumRankBean.getType();
+			if (LOG.isDebugEnabled()) LOG.debug("saveRank: selectedRankType () = " + selectedRankType);
+
+			if (Rank.RANK_TYPE_INDIVIDUAL.equalsIgnoreCase(selectedRankType)) {
+				if (LOG.isDebugEnabled()) LOG.debug("saveRank:   RANK_TYPE_INDIVIDUAL");
+
+				newRank.setType(Rank.RANK_TYPE_INDIVIDUAL);
+				String assigned_to_display = constructAssignedToDisplay();
+				newRank.setAssignToDisplay(assigned_to_display);
+				String assigned_to = constructAssignedTo();
+				if (LOG.isDebugEnabled()) LOG.debug("user_eid = " + assigned_to);
+				newRank.setAssignTo(assigned_to);
+				newRank.setMinPosts(0);
+				rankManager.saveRank(newRank);
+			} else if (Rank.RANK_TYPE_POST_COUNT.equalsIgnoreCase(selectedRankType)) { // by # of post
+				if (LOG.isDebugEnabled()) LOG.debug("saveRank:  RANK_TYPE_POST_COUNT ");
+
+				newRank.setAssignTo(null);
+				newRank.setAssignToDisplay(null);
+				newRank.setType(Rank.RANK_TYPE_POST_COUNT);
+				rankManager.saveRank(newRank);
+			} else {
+				LOG.warn("ForumTool.saveRank(): should not come here.  The type is undefined.");
+			}
+			this.setSelectedIndividualMemberItemIds(null);
+		} else {
+			if (LOG.isDebugEnabled()) LOG.debug("ForumTool.saveRank(): Can not save because forumRankBean is null");
+			// should not come here
+		}
+	}
+
+	public void saveRankImages(Rank rank) {
+		if (just_created) {
+			if (attachment != null) {
+				rankManager.addImageAttachToRank(rank, attachment);
+				just_created = false;
+			}
+		}
+	}
+
+	public String processDeleteRankImage() {
+		setImageDeletePending(true);
+		if (LOG.isDebugEnabled()) LOG.debug("ForumTool.processDeleteRankImage(): ranktype = " + this.forumRankBean.getType());
+		return EDIT_RANK;
+	}
+
+	public void finishDeleteRankImage() {
+		Rank currRank = this.forumRankBean.getRank();
+		RankImage imageAttach = currRank.getRankImage();
+		if (imageAttach != null) {
+			rankManager.removeImageAttachToRank(currRank, imageAttach);
+		}
+
+		// refresh the Edit rank page
+		Rank newRank = rankManager.getRankById(currRank.getId());
+		this.forumRankBean.setRank(newRank);
+		setImageDeletePending(false);
+	}
+
+	// JSF for checkboxes for deleteting ranks
+	private String[] deleteRanks =
+		{}; // for ranks to delete
+	private List checkedRanks;
+
+	public void setCheckedRanks(List ranklist) {
+		checkedRanks = ranklist;
+	}
+
+	public List getCheckedRanks() {
+		return checkedRanks;
+	}
+
+	public void setDeleteRanks(String[] ranktodelete) {
+		deleteRanks = ranktodelete;
+	}
+
+	public String[] getDeleteRanks() {
+		return deleteRanks;
+	}
+
+	public String processActionViewRanks() {
+		if (LOG.isDebugEnabled()) LOG.debug("processActionViewRanks()");
+		if (!isInstructor()) {
+			setErrorMessage(getResourceBundleString(INSUFFICIENT_PRIVILEGES_TO_EDIT_RANKS));
+			return gotoMain();
+		}
+		List<RankImpl> ranklist = new ArrayList();
+		ranklist = rankManager.getRankList(getSiteId());
+		setRankBeanList(ranklist);
+		return VIEW_RANK;
+	}
+
+	public String processActionAddRank() {
+		if (LOG.isDebugEnabled()) LOG.debug("processActionAddRank()");
+		this.setForumRankBean(new ForumRankBean());
+        this.courseMemberMap = membershipManager.getFilteredCourseMembers(true, null);
+		return ADD_RANK;
+	}
+
+	public static final String ASSIGNEDTO_DELIMITER = ";";
+
+	public String processActionEditRank() {
+		if (LOG.isDebugEnabled()) LOG.debug("processActionEditRank()");
+		String rankId = getExternalParameterByKey("rankId");
+		Rank thisrank = rankManager.getRankById(new Long(rankId));
+		ForumRankBean rankBean = new ForumRankBean(thisrank);
+		this.setForumRankBean(rankBean);
+
+		if (Rank.RANK_TYPE_INDIVIDUAL.equalsIgnoreCase(rankBean.getType())) {
+			// get selected individuals for editing
+			String useridlistString = thisrank.getAssignTo();
+			if ((useridlistString == null) || (useridlistString.length() <= 0)) {
+				return VIEW_RANK; // not going anywhere. AssignTo should have at least 1 user.
+			}
+			StringTokenizer st = new StringTokenizer(useridlistString, ASSIGNEDTO_DELIMITER, false);
+			StringBuffer memberitemidlist = new StringBuffer();
+            this.courseMemberMap = membershipManager.getFilteredCourseMembers(true, null);
+			List members = membershipManager.convertMemberMapToList(courseMemberMap);
+			Map<String, MembershipItem> membersKeyOnUserId = new HashMap();
+
+			for (Iterator i = members.iterator(); i.hasNext();) {
+				MembershipItem item = (MembershipItem) i.next();
+				User itemUser = item.getUser();
+				if (itemUser != null) {
+					membersKeyOnUserId.put(itemUser.getEid(), item);
+				} else {
+					// okay ,not a User membershipItem, could be Group, or Role...
+				}
+			}
+
+			Set userIds = new HashSet();
+			while (st.hasMoreTokens()) {
+				String userid = (String) st.nextToken().trim();
+				if (membersKeyOnUserId.containsKey(userid)) {
+					// exist in courseMemberMap
+					memberitemidlist.append(membersKeyOnUserId.get(userid).getId());
+					memberitemidlist.append(AGGREGATE_DELIMITER);
+				}
+			}
+
+			if (LOG.isDebugEnabled()) LOG.debug("processActionEditRank() memberitemidlist.toString = " + memberitemidlist.toString());
+			this.setSelectedIndividualMemberItemIds(memberitemidlist.toString());
+		}
+		return EDIT_RANK;
+	}
+
+	public String processActionUpdateRank() {
+		if (LOG.isDebugEnabled()) LOG.debug("ForumTool.processActionUpdateRank()");
+		if (this.isImageDeletePending()) {
+			finishDeleteRankImage();
+		}
+
+        // if processUpdate sets imageTooLarge, then stop
+        if (imageTooLarge) {
+            imageTooLarge = false; // reset imageTooLarge for new Edit
+			return EDIT_RANK;
+		}
+
+		Rank newRank = this.forumRankBean.getRank(); // rankManager.getRankById(this.forumRankBean.getRank().getId());
+		newRank.setTitle(forumRankBean.getTitle());
+		newRank.setMinPosts(forumRankBean.getMinPosts());
+		saveRank(newRank);
+		saveRankImages(newRank);
+		return processActionViewRanks();
+	}
+
+	public String processActionSaveRank() {
+		if (LOG.isDebugEnabled()) LOG.debug("ForumTool.processActionSaveRank()");
+
+		String filename = getExternalParameterByKey("addRank:add_attach.uploadId");
+        // if processUpdate sets imageTooLarge, then stop
+		if (imageTooLarge) {
+		    imageTooLarge = false;          // reset imageTooLarge for new Add 
+			return ADD_RANK;
+		}
+
+		Rank newRank = this.forumRankBean.getRank();
+		newRank.setTitle(forumRankBean.getTitle());
+		newRank.setMinPosts(forumRankBean.getMinPosts());
+		saveRank(newRank);
+		saveRankImages(newRank);
+		return processActionViewRanks();
+	}
+
+	public String processActionDeleteRanks() {
+		if (LOG.isDebugEnabled()) LOG.debug("ForumTool.processActionDeleteRank()");
+
+		List ranklist = this.getCheckedRanks();
+		Iterator iter = ranklist.iterator();
+		while (iter.hasNext()) {
+			Rank rank_to_delete = (Rank) iter.next();
+			RankImage imageAttach = rank_to_delete.getRankImage();
+			if (imageAttach != null) {
+				rankManager.removeImageAttachToRank(rank_to_delete, imageAttach);
+			}
+			Rank rank2 = rankManager.getRankById(rank_to_delete.getId());
+			rankManager.removeRank(rank2);
+		}
+		return processActionViewRanks();
+	}
+
+	public String processActionConfirmDeleteRanks() {
+		if (LOG.isDebugEnabled()) LOG.debug("ForumTool.processActionConfirmDeleteRanks()");
+		Long rankId = null;
+		List selectedRanks = getRequestParamArrayValueLike("removeCheckbox");
+		List ranklist = new ArrayList();
+		Iterator iter = selectedRanks.iterator();
+		while (iter.hasNext()) {
+			rankId = new Long((String) iter.next());
+			Rank rankchecked = rankManager.getRankById(rankId);
+			ranklist.add(rankchecked);
+		}
+
+		this.setCheckedRanks(ranklist);
+		return CONFIRM_REMOVE_RANK;
+	}
+
+	public String gotoViewRank() {
+		setImageDeletePending(false);
+		return VIEW_RANK;
+	}
+
+	// Code borrowed from Messages tool. Rank based on roles. Below code is to parse the roles selected from the dialog popup.
+	private String aggregatedAssignToItemIds;
+	private List selectedComposeToList = new ArrayList();
+	public static final String AGGREGATE_DELIMITER = "&";
+	private String selectedIndividualMemberItemIds;
+
+	public String getSelectedIndividualMemberItemIds() {
+		return selectedIndividualMemberItemIds;
+	}
+
+	public void setSelectedIndividualMemberItemIds(String selectedIndividualMemberItemIds) {
+		this.selectedIndividualMemberItemIds = selectedIndividualMemberItemIds;
+	}
+
+	/**
+	 * Copied from Messages Tool, new method to handle the new UI submission as we're now using a custom widget, not a select
+	 * list, and we need to aggregate id's to parse into a List
+	 */
+	public void setAggregatedAssignToItemIds(String aggregatedids) {
+		this.aggregatedAssignToItemIds = aggregatedids;
+		this.selectedComposeToList = parseAggregatedAssignToItemIds();
+	}
+
+	private List parseAggregatedAssignToItemIds() {
+		List<String> itemIdList = null;
+		Set<String> itemIdSet = null;
+		if (this.aggregatedAssignToItemIds == null || "".equals(this.aggregatedAssignToItemIds.trim())) {
+			// make an empty list so regular error handling will work with new hidden form field data
+			// aggregate_compose_to_item_ids
+			itemIdList = new ArrayList(0);
+			LOG.error("aggregatedAssignToItemIds is null or empty, check you post data param aggregate_compose_to_item_ids");
+		} else if (this.aggregatedAssignToItemIds.contains(AGGREGATE_DELIMITER)) {
+			StringTokenizer st = new StringTokenizer(this.aggregatedAssignToItemIds, AGGREGATE_DELIMITER, false);
+			itemIdSet = new HashSet(st.countTokens());
+			while (st.hasMoreTokens()) {
+				itemIdSet.add(st.nextToken());
+			}
+			itemIdList = new ArrayList<String>(itemIdSet.size());
+			itemIdList.addAll(itemIdSet);
+		} else {
+			itemIdList = new ArrayList(1);
+			itemIdList.add(this.aggregatedAssignToItemIds);
+		}
+
+		return itemIdList;
+	}
+
+	public String getAggregatedAssignToItemIds() {
+		return aggregatedAssignToItemIds;
+	}
+
+	public List getSelectedComposeToList() {
+		return selectedComposeToList;
+	}
+
+	public String constructAssignedToDisplay() {
+		// store the user display name, separated by some delimiter.
+		// for faster performance.
+		String assignedtodisplay = "";
+
+		// store this in a Map to be sorted
+		Map<String, MembershipItem> NamesMap = new HashMap();
+		for (int i = 0; i < selectedComposeToList.size(); i++) {
+			MembershipItem membershipItem = (MembershipItem) courseMemberMap.get(selectedComposeToList.get(i));
+			if (membershipItem != null) {
+				NamesMap.put(membershipItem.getUser().getFirstName() + membershipItem.getUser().getEid(), membershipItem);
+			}
+		}
+
+		TreeMap<String, MembershipItem> sortNameMap = new TreeMap<String, MembershipItem>(NamesMap);
+		// after sorting
+		Iterator itr = sortNameMap.keySet().iterator();
+		while (itr.hasNext()) {
+			String firstname = (String) itr.next();
+			MembershipItem memberName = (MembershipItem) sortNameMap.get(firstname);
+			if (memberName != null) {
+				assignedtodisplay += memberName.getUser().getDisplayName() + ", ";
+			}
+		}
+
+		if (!"".equals(assignedtodisplay)) {
+			assignedtodisplay = assignedtodisplay.substring(0, assignedtodisplay.length() - 2); // remove last comma and space
+		}
+		return assignedtodisplay;
+	}
+
+	public String constructAssignedTo() {
+		// store eid separated by delimiter.
+		String assignedto = "";
+		for (int i = 0; i < selectedComposeToList.size(); i++) {
+			MembershipItem item = (MembershipItem) courseMemberMap.get(selectedComposeToList.get(i));
+			if (item != null) {
+				assignedto += item.getUser().getEid() + "; ";
+			}
+		}
+		if (!"".equals(assignedto)) {
+			assignedto = assignedto.substring(0, assignedto.length() - 2); // remove last comma and space
+		}
+		return assignedto;
+	}
+
+	private boolean attachCaneled = false;
+	private RankImage attachment = null;
+    private boolean imageTooLarge = false;
+
+	private boolean validateImageSize(FileItem item) {
+		// check size
+		long maxsize = new Long(ServerConfigurationService.getString("msgcntr.forum.rankimage.maxsize", "102400"));
+		long imagesize = item.getSize();
+		if (LOG.isDebugEnabled()) LOG.debug("validateImageSize(item)  imagesize = " + imagesize);
+
+		if (imagesize > maxsize) {
+			this.getForumRankBean().setImageSizeErr(true);
+            imageTooLarge = true;
+			return false;
+		}
+        this.getForumRankBean().setImageSizeErr(false);
+		return true;
+	}
+
+	public String processUpload(ValueChangeEvent event) {
+		if (LOG.isDebugEnabled()) LOG.debug("processUpload(ValueChangeEvent event) ");
+		if (attachCaneled == false) {
+			Object newValue = event.getNewValue();
+            if (newValue instanceof String) {
+                return "";
+            }
+            if (newValue == null) {
+                return "";
+            }
+            try {
+                FileItem item = (FileItem) event.getNewValue();
+                if (!validateImageSize(item)) {
+                    return null;
+                }
+
+                String fileName = item.getName();
+                byte[] fileContents = item.get();
+                ResourcePropertiesEdit props = contentHostingService.newResourceProperties();
+                String tempS = fileName;
+
+                int lastSlash = tempS.lastIndexOf("/") > tempS.lastIndexOf("\\") ? tempS.lastIndexOf("/") : tempS.lastIndexOf("\\");
+                if (lastSlash > 0) {
+                    fileName = tempS.substring(lastSlash + 1);
+                }
+                props.addProperty(ResourceProperties.PROP_DISPLAY_NAME, fileName);
+                ContentResource thisAttach = contentHostingService.addAttachmentResource(fileName, item.getContentType(), fileContents,
+                        props);
+                RankImage attachObj = rankManager.createRankImageAttachmentObject(thisAttach.getId(), fileName);
+                attachment = attachObj;
+
+            } catch (Exception e) {
+                LOG.error(this + ".processUpload() in DiscussionForumTool " + e);
+                e.printStackTrace();
+            }
+            just_created = true;
+            return VIEW_RANK;
+        }
+		return null;
+	}
+
+	private Rank authorRank;
+
+	public Rank getAuthorRank(String userEid) {
+		// if both types of ranks exist for the same user, use the "Special rank assigned to selected site member(s)" type first.
+		Rank currRank = null;
+		currRank = findRankByUser(userEid);
+		if (currRank == null) {
+			int authorCount = messageManager.findAuthoredMessageCountForStudent(userEid);
+			currRank = findRankByMinPost(authorCount);
+		}
+		return currRank;
+	}
+
+	private Rank findRankByMinPost(int authorCount) {
+		Rank returnRank = null;
+		List sortedranks = rankManager.findRanksByContextIdOrderByMinPostDesc(getSiteId());
+		if (sortedranks != null && !sortedranks.isEmpty()) {
+			Rank currRank = (Rank) sortedranks.get(sortedranks.size() - 1);
+			for (int i = 0; i < sortedranks.size(); i++) {
+				currRank = (Rank) sortedranks.get(i);
+				if (LOG.isDebugEnabled()) LOG.debug("... findRankByMinPost authorCount = " + authorCount);
+				if (LOG.isDebugEnabled()) LOG.debug("... findRankByMinPost currRank.getMinPosts = " + currRank.getMinPosts());
+				if (authorCount >= currRank.getMinPosts()) {
+					returnRank = currRank;
+					break;
+				} else {
+					// continue
+				}
+			}
+		}
+		return returnRank;
+	}
+
+	private Rank findRankByUser(String userEid) {
+		Rank returnRank = null;
+		List sortedranks = rankManager.findRanksByContextIdUserId(getSiteId(), userEid);
+		if (sortedranks != null && !sortedranks.isEmpty()) {
+			// if more than one result, pick the first one.
+			returnRank = (Rank) sortedranks.get(0);
+		}
+		return returnRank;
+	}
+
+    private LRS_Statement getStatementForUserReadViewed(LRS_Actor student, String subject, String target) {
+        String url = ServerConfigurationService.getPortalUrl();
+        LRS_Verb verb = new LRS_Verb(SAKAI_VERB.interacted);
+        LRS_Object lrsObject = new LRS_Object(url + "/forums", "viewed-" + target);
+        HashMap<String, String> nameMap = new HashMap<String, String>();
+        nameMap.put("en-US", "User viewed " + target);
+        lrsObject.setActivityName(nameMap);
+        HashMap<String, String> descMap = new HashMap<String, String>();
+        descMap.put("en-US", "User viewed " + target + " with subject: " + subject);
+        lrsObject.setDescription(descMap);
+        return new LRS_Statement(student, verb, lrsObject);
+    }
+
+    private LRS_Statement getStatementForUserPosted(LRS_Actor student, String subject, SAKAI_VERB sakaiVerb) {
+        String url = ServerConfigurationService.getPortalUrl();
+        LRS_Verb verb = new LRS_Verb(sakaiVerb);
+        LRS_Object lrsObject = new LRS_Object(url + "/forums", sakaiVerb == SAKAI_VERB.responded ? "post-to-thread" : "created-topic");
+        HashMap<String, String> nameMap = new HashMap<String, String>();
+        nameMap.put("en-US", sakaiVerb == SAKAI_VERB.responded ? "User responded to a thread" : "User created a new topic");
+        lrsObject.setActivityName(nameMap);
+        HashMap<String, String> descMap = new HashMap<String, String>();
+        descMap.put("en-US", (sakaiVerb == SAKAI_VERB.responded ? "User responded to a thread with subject: "
+                : "User created a new topic with subject: ") + subject);
+        lrsObject.setDescription(descMap);
+        return new LRS_Statement(student, verb, lrsObject);
+    }
+    
+    private LRS_Statement getStatementForGrade(String studentUid, LRS_Actor instructor, String forumTitle, double score, double maxScore)
+            throws UserNotDefinedException {
+        LRS_Verb verb = new LRS_Verb(SAKAI_VERB.scored);
+        LRS_Object lrsObject = new LRS_Object(ServerConfigurationService.getPortalUrl() + "/forums", "received-grade-forum");
+        HashMap<String, String> nameMap = new HashMap<String, String>();
+        nameMap.put("en-US", "User received a grade");
+        lrsObject.setActivityName(nameMap);
+        HashMap<String, String> descMap = new HashMap<String, String>();
+        descMap.put("en-US", "User received a grade for their forum post: " + forumTitle);
+        lrsObject.setDescription(descMap);
+        User studentUser = UserDirectoryService.getUser(studentUid);
+        LRS_Actor student = new LRS_Actor(studentUser.getEmail());
+        student.setName(studentUser.getDisplayName());
+        LRS_Context context = new LRS_Context(instructor);
+        context.setActivity("other", "assignment");
+        LRS_Statement statement = new LRS_Statement(student, verb, lrsObject, getLRS_Result(score, maxScore), context);
+        return statement;
+    }
+
+    private LRS_Result getLRS_Result(double score, double maxScore) {
+        LRS_Result result = new LRS_Result(new Float(score), new Float(0.0), new Float(maxScore), null);
+        result.setCompletion(true);
+        return result;
+    }
 }
 

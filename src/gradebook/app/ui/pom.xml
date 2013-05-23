@@ -128,6 +128,11 @@
       <groupId>org.sakaiproject.entitybroker</groupId>
       <artifactId>entitybroker-api</artifactId>
     </dependency>
+    <dependency>
+        <groupId>org.sakaiproject.entitybroker</groupId>
+        <artifactId>entitybroker-utils</artifactId>
+    </dependency>
+    
 <!-- End Sakai2 Dependencies -->
 <!-- Database dependencies used for integration testing and schema generation -->
 <!-- Please contact the gradebook development team before removing these -->
@@ -181,16 +186,6 @@
       <artifactId>odmg</artifactId>
       <version>3.0</version>
     </dependency>
-    <!-- <dependency>
-      <groupId>commons-dbcp</groupId>
-      <artifactId>commons-dbcp</artifactId>
-      <version>1.2.2</version>
-    </dependency>
-    <dependency>
-      <groupId>commons-pool</groupId>
-      <artifactId>commons-pool</artifactId>
-      <version>1.2</version>
-    </dependency> -->
     <dependency>
       <groupId>commons-lang</groupId>
       <artifactId>commons-lang</artifactId>
@@ -288,6 +283,22 @@
     <dependency>
       <groupId>org.sakaiproject.jsf</groupId>
       <artifactId>jsf-spreadsheet</artifactId>
+    </dependency>
+    
+	<dependency>
+		<groupId>org.projectlombok</groupId>
+		<artifactId>lombok</artifactId>
+		<version>0.11.4</version>
+	</dependency>         
+    <dependency>
+    	<groupId>org.apache.poi</groupId>
+    	<artifactId>poi</artifactId>
+    	<version>3.9</version>    
+    </dependency>
+     <dependency>
+    	<groupId>org.apache.poi</groupId>
+    	<artifactId>poi-ooxml</artifactId>
+    	<version>3.9</version>    
     </dependency>
   </dependencies>
 

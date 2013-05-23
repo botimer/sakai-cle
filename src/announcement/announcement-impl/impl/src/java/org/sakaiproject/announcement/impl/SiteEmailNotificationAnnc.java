@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/announcement/trunk/announcement-impl/impl/src/java/org/sakaiproject/announcement/impl/SiteEmailNotificationAnnc.java $
- * $Id: SiteEmailNotificationAnnc.java 112127 2012-09-05 13:42:57Z savithap@umich.edu $
+ * $Id: SiteEmailNotificationAnnc.java 122277 2013-04-05 16:26:04Z azeckoski@unicon.net $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008, 2009 The Sakai Foundation
@@ -45,6 +45,7 @@ import org.sakaiproject.event.api.Event;
 import org.sakaiproject.event.api.Notification;
 import org.sakaiproject.event.api.NotificationEdit;
 import org.sakaiproject.event.api.NotificationService;
+import org.sakaiproject.content.api.ContentHostingService;
 import org.sakaiproject.event.cover.EventTrackingService;
 import org.sakaiproject.exception.IdUnusedException;
 import org.sakaiproject.exception.PermissionException;
@@ -169,29 +170,14 @@ public class SiteEmailNotificationAnnc extends SiteEmailNotification
 		// Now build up the message text.
 		if (AnnouncementService.SECURE_ANNC_ADD.equals(event.getEvent()))
 		{
-			buf.append(rb.getFormattedMessage("noti.header.add", new Object[]{title,ServerConfigurationService.getString("ui.service", "Sakai"), url}));
+			buf.append(rb.getFormattedMessage("noti.header.add", new Object[]{title, url}));
 		}
 		else
 		{
-			buf.append(rb.getFormattedMessage("noti.header.update", new Object[]{title,ServerConfigurationService.getString("ui.service", "Sakai"), url}));
+			buf.append(rb.getFormattedMessage("noti.header.update", new Object[]{title, url}));
 		}
-		buf.append(newline);
-		buf.append(newline);
-		buf.append(newline);
-		buf.append(rb.getString("Subject"));
-		buf.append(hdr.getSubject());
-		//buf.append(rb.getString("Subject") + ": "); buf.append(hdr.getSubject());
-		buf.append(newline);
-		buf.append(newline);
-		buf.append(rb.getString("Group"));
-		buf.append(getAnnouncementGroup(msg));
-		buf.append(newline);
-		buf.append(newline);
-		buf.append(rb.getString("Message"));
-		buf.append(newline);
-		buf.append(newline);
-		buf.append(msg.getBody());
-		buf.append(newline);
+		buf.append(" " + rb.getString("at_date") + " ");
+		buf.append(hdr.getDate().toStringLocalFull());
 		buf.append(newline);
 
 		// add any attachments
@@ -458,7 +444,7 @@ public class SiteEmailNotificationAnnc extends SiteEmailNotification
 		SecurityService.pushAdvisor(new SecurityAdvisor() {
 			public SecurityAdvice isAllowed(String userId, String function,
 					String reference) {
-				if (function.equals(AnnouncementService.SECURE_ANNC_READ))
+				if (function.equals(AnnouncementService.SECURE_ANNC_READ) || function.equals(ContentHostingService.AUTH_RESOURCE_READ)) // SAK-23300
 					return SecurityAdvice.ALLOWED;
 				else
 					return SecurityAdvice.PASS;
@@ -501,6 +487,7 @@ public class SiteEmailNotificationAnnc extends SiteEmailNotification
 		}
 		catch (Exception ignore)
 		{
+			
 		}
 
 		// Now build up the message text.

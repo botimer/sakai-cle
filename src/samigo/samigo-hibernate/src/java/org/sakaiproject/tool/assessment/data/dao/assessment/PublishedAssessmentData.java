@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/sam/trunk/samigo-hibernate/src/java/org/sakaiproject/tool/assessment/data/dao/assessment/PublishedAssessmentData.java $
- * $Id: PublishedAssessmentData.java 106463 2012-04-02 12:20:09Z david.horwitz@uct.ac.za $
+ * $Id: PublishedAssessmentData.java 121258 2013-03-15 15:03:36Z ottenhoff@longsight.com $
  ***********************************************************************************
  *
  * Copyright (c) 2004, 2005, 2006, 2007, 2008, 2009 The Sakai Foundation
@@ -677,8 +677,8 @@ public class PublishedAssessmentData
     return this.feedbackDate;
   }
 
-  public Float getTotalScore(){
-    float total = 0;
+  public Double getTotalScore(){
+    double total = 0;
     Iterator iter = this.sectionSet.iterator();
     while (iter.hasNext()){
       PublishedSectionData s = (PublishedSectionData) iter.next();
@@ -704,10 +704,10 @@ public class PublishedAssessmentData
 
       while (iter2.hasNext()){
         PublishedItemData item = (PublishedItemData)iter2.next();
-        total= total + item.getScore().floatValue();
+        total= total + item.getScore().doubleValue();
       }
     }
-    return  Float.valueOf(total);
+    return  Double.valueOf(total);
   }
 
   public Set getAssessmentAttachmentSet() {

@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/user/trunk/user-tool-prefs/tool/src/java/org/sakaiproject/user/tool/UserPrefsTool.java $
- * $Id: UserPrefsTool.java 105080 2012-02-24 23:10:31Z ottenhoff@longsight.com $
+ * $Id: UserPrefsTool.java 123811 2013-05-07 21:27:17Z ottenhoff@longsight.com $
  ***********************************************************************************
  *
  * Copyright (c) 2005, 2006, 2007, 2008 The Sakai Foundation
@@ -41,6 +41,8 @@ import javax.faces.context.FacesContext;
 import javax.faces.event.ValueChangeEvent;
 import javax.faces.model.SelectItem;
 
+import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.sakaiproject.component.cover.ComponentManager;
@@ -227,7 +229,7 @@ public class UserPrefsTool
 
 	private List prefTimeZones = new ArrayList();
 
-	private List prefLocales = new ArrayList();
+	private List<SelectItem> prefLocales = new ArrayList<SelectItem>();
 
 	private int DEFAULT_TAB_COUNT = 4;
 	private int MAX_TAB_COUNT = 20;
@@ -270,20 +272,14 @@ public class UserPrefsTool
 	// user's currently selected regional language locale
 	private Locale m_locale = null;
 
-	private LocaleComparator localeComparator = new LocaleComparator();
-
 	/** The user id retrieved from UsageSessionService */
 	private String userId = "";
 
-	private String SAKAI_LOCALES = "locales";
-	private String SAKAI_LOCALES_MORE = "locales.more";
-
 	/**
 	 * SAK-11460:  With DTHML More Sites, there are potentially two
-	 * "Customize Tab" pages, namely "tab.jsp" (for the pre-DHTML more
-	 * sites), and "tab-dhtml-moresites.jsp".  Which one is used depends on the
-	 * sakai.properties "portal.use.dhtml.more".  Default is to use
-	 * the pre-DTHML page.
+	 * "Customize Tab" pages, namely "tab.jsp" (for the Drag and Drop)
+	 * and "tab-dhtml-moresites.jsp".  Which one is used depends on the
+	 * sakai.properties "prefs.tabs.dragdrop".
 	 */
 	private String m_TabOutcome = "tab";
 	
@@ -526,60 +522,20 @@ public class UserPrefsTool
 	}
 
 	/**
-	 * *
-	 * 
-	 * @return Locale based on its string representation (language_region)
-	 */
-	private Locale getLocaleFromString(String localeString)
-	{
-		String[] locValues = localeString.trim().split("_");
-		if (locValues.length >= 3)
-			return new Locale(locValues[0], locValues[1], locValues[2]); // language, country, variant
-		else if (locValues.length == 2)
-			return new Locale(locValues[0], locValues[1]); // language, country
-		else if (locValues.length == 1)
-			return new Locale(locValues[0]); // language
-		else
-			return Locale.getDefault();
-	}
-
-	/**
 	 * @return Returns the prefLocales
 	 */
-	public List getPrefLocales()
+	public List<SelectItem> getPrefLocales()
 	{
 		// Initialize list of supported locales, if necessary
-		if (prefLocales.size() == 0)
+		if (prefLocales.isEmpty())
 		{
-			Locale[] localeArray = null;
-			String localeString = ServerConfigurationService.getString(SAKAI_LOCALES);
-			String localeStringMore = ServerConfigurationService.getString(SAKAI_LOCALES_MORE);
-			
-			if ( localeString == null )
-				localeString = "";
-			if ( localeStringMore != null && !localeStringMore.equals("") )
-				localeString += ","+localeStringMore;
-
-			if ( !localeString.equals("") )
-			{
-				String[] sakai_locales = localeString.split(",");
-				localeArray = new Locale[sakai_locales.length + 1];
-				for (int i = 0; i < sakai_locales.length; i++)
-					localeArray[i] = getLocaleFromString(sakai_locales[i]);
-				localeArray[localeArray.length - 1] = Locale.getDefault();
-			}
-			else
-				// if no locales specified, get default list
-			{
-				localeArray = new Locale[] { Locale.getDefault() };
-			}
-
-			// Sort locales and add to prefLocales (removing duplicates)
-			Arrays.sort(localeArray, localeComparator);
+		    org.sakaiproject.component.api.ServerConfigurationService scs = (org.sakaiproject.component.api.ServerConfigurationService) ComponentManager.get(org.sakaiproject.component.api.ServerConfigurationService.class);
+		    Locale[] localeArray = scs.getSakaiLocales();
 			for (int i = 0; i < localeArray.length; i++)
 			{
-				if (i == 0 || !localeArray[i].equals(localeArray[i - 1]))
+				if (i == 0 || !localeArray[i].equals(localeArray[i - 1])) {
 					prefLocales.add(new SelectItem(localeArray[i].toString(), localeArray[i].getDisplayName()));
+				}
 			}
 		}
 
@@ -686,10 +642,12 @@ public class UserPrefsTool
 		ResourceProperties props = prefs.getProperties(ResourceLoader.APPLICATION_ID);
 		String prefLocale = props.getProperty(ResourceLoader.LOCALE_KEY);
 
-		if (hasValue(prefLocale))
-			m_locale = getLocaleFromString(prefLocale);
-		else
+		if (hasValue(prefLocale)) {
+		    org.sakaiproject.component.api.ServerConfigurationService scs = (org.sakaiproject.component.api.ServerConfigurationService) ComponentManager.get(org.sakaiproject.component.api.ServerConfigurationService.class);
+			m_locale = scs.getLocaleFromString(prefLocale);
+		} else {
 			m_locale = Locale.getDefault();
+		}
 
 		return m_locale;
 	}
@@ -716,7 +674,10 @@ public class UserPrefsTool
 	 */
 	public void setSelectedLocaleString(String selectedLocale)
 	{
-		if (selectedLocale != null) m_locale = getLocaleFromString(selectedLocale);
+		if (selectedLocale != null) {
+		    org.sakaiproject.component.api.ServerConfigurationService scs = (org.sakaiproject.component.api.ServerConfigurationService) ComponentManager.get(org.sakaiproject.component.api.ServerConfigurationService.class);
+		    m_locale = scs.getLocaleFromString(selectedLocale);
+		}
 	}
 
 	/**
@@ -820,10 +781,10 @@ public class UserPrefsTool
 	public UserPrefsTool()
 	{
 		// Is DTHML more site enabled?
-		if (ServerConfigurationService.getBoolean ("portal.use.dhtml.more", false))
-			m_TabOutcome = "tabDHTMLMoreSites";
-		else
+		if (ServerConfigurationService.getBoolean ("prefs.tabs.dragdrop", true))
 			m_TabOutcome = "tab";
+		else
+			m_TabOutcome = "tabDHTMLMoreSites";
 
 		//Tab order configuration
 		String defaultPreference="prefs_tab_title, prefs_noti_title, prefs_timezone_title, prefs_lang_title";

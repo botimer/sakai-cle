@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/portal/trunk/portal-impl/impl/src/java/org/sakaiproject/portal/charon/site/DefaultSiteViewImpl.java $
- * $Id: DefaultSiteViewImpl.java 117749 2012-12-16 22:15:03Z a.fish@lancaster.ac.uk $
+ * $Id: DefaultSiteViewImpl.java 121886 2013-03-28 12:05:10Z a.fish@lancaster.ac.uk $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008 The Sakai Foundation
@@ -28,6 +28,9 @@ import java.util.Iterator;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import org.sakaiproject.authz.api.AuthzGroup;
 import org.sakaiproject.authz.api.Role;
 import org.sakaiproject.authz.cover.AuthzGroupService;
@@ -53,6 +56,7 @@ import org.sakaiproject.util.Web;
  */
 public class DefaultSiteViewImpl extends AbstractSiteViewImpl
 {
+    private static final Log LOG = LogFactory.getLog(DefaultSiteViewImpl.class);
 
 	/**
 	 * @param siteHelper
@@ -198,7 +202,7 @@ public class DefaultSiteViewImpl extends AbstractSiteViewImpl
                 canAddSite = role.isAllowed("site.add.course") || role.isAllowed("site.add.portfolio") || role.isAllowed("site.add.project");
             }
         } catch(Exception e) {
-            System.err.println("INFO: Failed to set canAddSite for current user. Defaulting to false ...");
+            LOG.warn("Failed to set canAddSite for current user. Defaulting to false ...");
         }
 
  		String profileToolUrl = null;

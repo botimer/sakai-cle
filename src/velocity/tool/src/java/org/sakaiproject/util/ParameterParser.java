@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/velocity/trunk/tool/src/java/org/sakaiproject/util/ParameterParser.java $
- * $Id: ParameterParser.java 105080 2012-02-24 23:10:31Z ottenhoff@longsight.com $
+ * $Id: ParameterParser.java 123549 2013-05-02 23:07:36Z matthew@longsight.com $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008 The Sakai Foundation
@@ -22,6 +22,7 @@
 package org.sakaiproject.util;
 
 import java.io.IOException;
+import java.text.Normalizer;
 import java.util.Iterator;
 import java.util.Properties;
 
@@ -236,11 +237,11 @@ public class ParameterParser
 			org.apache.commons.fileupload.FileItem item = (org.apache.commons.fileupload.FileItem) o;
 			try
             {
-	            return new FileItem(item.getName(), item.getContentType(), item.getInputStream());
+	            return new FileItem(Normalizer.normalize(item.getName(), Normalizer.Form.NFC), item.getContentType(), item.getInputStream());
             }
             catch (IOException e)
             {
-            	return new FileItem(item.getName(), item.getContentType(), item.get());
+            	return new FileItem(Normalizer.normalize(item.getName(), Normalizer.Form.NFC), item.getContentType(), item.get());
             }
 		}
 

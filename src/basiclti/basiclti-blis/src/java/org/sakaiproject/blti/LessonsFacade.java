@@ -1,6 +1,6 @@
 /**
  * $URL: https://source.sakaiproject.org/svn/basiclti/trunk/basiclti-blis/src/java/org/sakaiproject/blti/LessonsFacade.java $
- * $Id: LessonsFacade.java 119588 2013-02-07 00:34:27Z csev@umich.edu $
+ * $Id: LessonsFacade.java 121289 2013-03-15 23:21:09Z csev@umich.edu $
  *
  * Copyright (c) 2009 The Sakai Foundation
  *
@@ -162,6 +162,9 @@ public class LessonsFacade {
 			props.setProperty(LTIService.LTI_ALLOWCUSTOM, "1");
 			props.setProperty(LTIService.LTI_SENDNAME, "1");
 			props.setProperty(LTIService.LTI_SENDEMAILADDR, "1");
+			props.setProperty(LTIService.LTI_ALLOWTITLE, "1");
+			props.setProperty(LTIService.LTI_ALLOWPAGETITLE, "1");
+			props.setProperty(LTIService.LTI_ALLOWLAUNCH, "1");
 			props.setProperty(LTIService.LTI_ALLOWOUTCOMES, "1");
 			props.setProperty(LTIService.LTI_ALLOWROSTER, "1");
 

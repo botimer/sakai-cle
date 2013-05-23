@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/web/trunk/web-portlet/src/java/org/sakaiproject/portlets/PortletIFrame.java $
- * $Id: PortletIFrame.java 120169 2013-02-17 20:43:32Z csev@umich.edu $
+ * $Id: PortletIFrame.java 124848 2013-05-22 17:09:10Z azeckoski@unicon.net $
  ***********************************************************************************
  *
  * Copyright (c) 2005-2013 The Sakai Foundation.
@@ -75,6 +75,8 @@ import org.sakaiproject.tool.cover.SessionManager;
 import org.sakaiproject.event.api.UsageSession;
 import org.sakaiproject.event.cover.UsageSessionService;
 import org.sakaiproject.component.cover.ServerConfigurationService;
+import org.sakaiproject.component.cover.ComponentManager;
+import org.sakaiproject.event.api.EventTrackingService;
 
 import org.sakaiproject.site.api.Site;
 import org.sakaiproject.site.api.SitePage;
@@ -351,6 +353,16 @@ public class PortletIFrame extends GenericPortlet {
 				context.put("maximize", Boolean.valueOf(maximize));
 				context.put("placement", placement.getId().replaceAll("[^a-zA-Z0-9]","_"));
 				context.put("loadTime", new Long(xframeLoad));
+
+				// SAK-23566 capture the view calendar events
+				if (placement != null && placement.getContext() != null && placement.getId() != null) {
+				    EventTrackingService ets = (EventTrackingService) ComponentManager.get(EventTrackingService.class);
+				    if (ets != null) {
+				        String eventRef = "/web/"+placement.getContext()+"/id/"+placement.getId()+"/url/"+URLEncoder.encode(url, "UTF-8");
+				        eventRef = StringUtils.abbreviate(eventRef, 240); // ensure the ref won't pass 255 chars
+				        ets.post(ets.newEvent("webcontent.read", eventRef, false));
+				    }
+				}
 
                 // TODO: state.setAttribute(TARGETPAGE_URL,config.getProperty(TARGETPAGE_URL));
                 // TODO: state.setAttribute(TARGETPAGE_NAME,config.getProperty(TARGETPAGE_NAME));

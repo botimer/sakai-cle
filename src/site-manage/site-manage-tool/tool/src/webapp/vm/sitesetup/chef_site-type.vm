@@ -26,7 +26,7 @@
     
         <input type="text" id="courseSiteTypes" style="display:none" value="$courseSiteTypeStrings">
         
-    #if ($alertMessage)<div class="alertMessage">$tlang.getString("sitetype.alert") $validator.escapeHtml($alertMessage)</div>  #end
+    #if ($alertMessage)<div class="alertMessage">$tlang.getString("sitetype.alert") $alertMessage</div>  #end
     <p class="step">
         ## if there is NO template site types
         $tlang.getString("sitetype.chothetyp.withouttemplate")
@@ -56,14 +56,14 @@
         <div id="siteTypeList" 
              #* if templates enabled *# class="indnt3" #*end templates enabled *#>
             #foreach ($type in $siteTypes)
-                #if (($type != $courseSiteType && $type != $portfolioSiteType) || ($type == $courseSiteType && $canAddCourse) || ($type == $portfolioSiteType && $canAddPortfolio))
+                #if ((!$courseSiteTypeStrings.contains($type) && $type != $portfolioSiteType) || ($courseSiteTypeStrings.contains($type) && $canAddPortfolio))
                     <p class="checkbox indnt1">
                         <input type="radio" name="itemType" id="$type" value="$type" #if ($type == $typeSelected) checked="checked" #end/>
                         <label for = "$type">
                             $tlang.getFormattedMessage("sitetype.websit", $type)
                         </label>    
                     </p>        
-                    #if ($type == $courseSiteType && $canAddCourse)
+                    #if ($courseSiteTypeStrings.contains($type) && $canAddCourse)
                         <div class="indnt3" id="termList" style="display:none;">
                             <p class="required">
                                 <span class ="reqStar" id="term-required" style="height:1em;border:1px solid transparent"> * </span>
@@ -89,8 +89,8 @@
                                 </select> 
                             </p>    
                         </div>  
-                    #end ## end of #if ($type == $courseSiteType && $canAddCourse)
-                #end ## end of #if ($type != $courseSiteType || ($type == $courseSiteType && $canAddCourse))
+                    #end ## end of #if ($courseSiteTypeStrings.contains($type) && $canAddCourse)
+                #end ## end of #if (!$courseSiteTypeStrings.contains($type) || ($courseSiteTypeStrings.contains($type) && $canAddCourse))
                 #*
                 #if ($templateList.size() > 0 && $templateList.containsKey($type))
                     <p class="checkbox indnt3">
@@ -202,10 +202,10 @@
                                 #set($templateCatNum = $templateCatNum + 1)
                                 <li  class="siteTypeRow $siteType">
                                     <div>
-                                        <h4 class="specialLink" id="templateSettingsTitleTerm">
+                                        <h4 class="specialLink">
                                             <a href="$siteType">
                                                 <span class="open"  style="display: none">&#9662;</span><span class="closed"> &#9656;</span>
-                                                 $siteType
+                                                 <em>$siteType.replace("_", " ")</em>
                                                  <span class="siteTypeRowBlurb"></span>
                                              </a>
                                          </h4>

@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/emailtemplateservice/trunk/impl/logic/src/java/org/sakaiproject/emailtemplateservice/service/impl/EmailTemplateServiceImpl.java $
- * $Id: EmailTemplateServiceImpl.java 114115 2012-10-09 10:50:13Z david.horwitz@uct.ac.za $
+ * $Id: EmailTemplateServiceImpl.java 122193 2013-04-04 16:26:12Z matthew@longsight.com $
  ***********************************************************************************
  *
  * Copyright 2006, 2007 Sakai Foundation
@@ -197,8 +197,8 @@ public class EmailTemplateServiceImpl implements EmailTemplateService {
 
       ret.setRenderedSubject(this.processText(ret.getSubject(), replacementValues, key));
       ret.setRenderedMessage(this.processText(ret.getMessage(), replacementValues, key));
-      //HTML component might be null
-      if (ret.getHtmlMessage() != null)
+      //HTML component is optional, so might be null or empty
+      if (ret.getHtmlMessage() != null && !ret.getHtmlMessage().trim().isEmpty())
     	  ret.setRenderedHtmlMessage(this.processText(ret.getHtmlMessage(), replacementValues, key));
       return ret;
    }

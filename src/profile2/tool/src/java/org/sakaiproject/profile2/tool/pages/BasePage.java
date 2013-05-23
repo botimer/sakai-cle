@@ -18,6 +18,7 @@ package org.sakaiproject.profile2.tool.pages;
 import java.util.Locale;
 
 import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletRequest;
 
 import org.apache.log4j.Logger;
 import org.apache.wicket.AttributeModifier;
@@ -44,8 +45,6 @@ import org.sakaiproject.profile2.logic.SakaiProxy;
 import org.sakaiproject.profile2.tool.components.LocaleAwareHtmlTag;
 import org.sakaiproject.profile2.util.ProfileConstants;
 import org.sakaiproject.profile2.util.ProfileUtils;
-
-import wicket.contrib.tinymce.settings.TinyMCESettings;
 
 
 public class BasePage extends WebPage implements IHeaderContributor {
@@ -253,19 +252,11 @@ public class BasePage extends WebPage implements IHeaderContributor {
 	
 	//Style it like a Sakai tool
 	public void renderHead(IHeaderResponse response) {
-		//Sakai skin
-		String skinRepo = sakaiProxy.getSkinRepoProperty();
-		String toolCSS = sakaiProxy.getToolSkinCSS(skinRepo);
-		String toolBaseCSS = skinRepo + "/tool_base.css";
 		
-		//Sakai additions
-		response.renderCSSReference(toolBaseCSS);
-		response.renderCSSReference(toolCSS);
+		//get the Sakai skin header fragment from the request attribute
+		HttpServletRequest request = getWebRequestCycle().getWebRequest().getHttpServletRequest();
+		response.renderString((String)request.getAttribute("sakai.html.head"));
 		response.renderOnLoadJavascript("setMainFrameHeight( window.name )");
-		
-		//wicketstuff TinyMCE
-		response.renderJavascriptReference(TinyMCESettings.javaScriptReference());
-
 		
 		//Tool additions (at end so we can override if required)
 		response.renderString("<meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\" />");

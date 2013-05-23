@@ -26,11 +26,13 @@ import java.util.Map;
 
 import lombok.Setter;
 
+import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.sakaiproject.api.common.edu.person.SakaiPerson;
 import org.sakaiproject.api.common.edu.person.SakaiPersonManager;
 import org.sakaiproject.authz.api.SecurityAdvisor;
+import org.sakaiproject.authz.api.SecurityAdvisor.SecurityAdvice;
 import org.sakaiproject.authz.api.SecurityService;
 import org.sakaiproject.component.api.ServerConfigurationService;
 import org.sakaiproject.content.api.ContentHostingService;
@@ -64,7 +66,6 @@ import org.sakaiproject.user.api.User;
 import org.sakaiproject.user.api.UserDirectoryService;
 import org.sakaiproject.user.api.UserEdit;
 import org.sakaiproject.user.api.UserNotDefinedException;
-import org.sakaiproject.util.Validator;
 
 /**
  * Implementation of SakaiProxy for Profile2.
@@ -677,7 +678,7 @@ public class SakaiProxyImpl implements SakaiProxy {
 				sb.append(MIME_ADVISORY);
 				sb.append(BOUNDARY_LINE);
 				sb.append(PLAIN_TEXT_HEADERS);
-				sb.append(Validator.escapeHtmlFormattedText(message));
+				sb.append(StringEscapeUtils.escapeHtml(message));
 				sb.append(BOUNDARY_LINE);
 				sb.append(HTML_HEADERS);
 				sb.append(htmlPreamble(subject));
@@ -952,6 +953,42 @@ public class SakaiProxyImpl implements SakaiProxy {
 		return serverConfigurationService.getBoolean(
 				"profile2.profile.business.enabled",
 				ProfileConstants.SAKAI_PROP_PROFILE2_PROFILE_BUSINESS_ENABLED);
+	}
+	
+	/**
+	 * {@inheritDoc}
+	 */
+	public boolean isSocialProfileEnabled() {
+		return serverConfigurationService.getBoolean(
+				"profile2.profile.social.enabled",
+				ProfileConstants.SAKAI_PROP_PROFILE2_PROFILE_SOCIAL_ENABLED);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public boolean isInterestsProfileEnabled() {
+		return serverConfigurationService.getBoolean(
+				"profile2.profile.interests.enabled",
+				ProfileConstants.SAKAI_PROP_PROFILE2_PROFILE_INTERESTS_ENABLED);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public boolean isStaffProfileEnabled() {
+		return serverConfigurationService.getBoolean(
+				"profile2.profile.staff.enabled",
+				ProfileConstants.SAKAI_PROP_PROFILE2_PROFILE_STAFF_ENABLED);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public boolean isStudentProfileEnabled() {
+		return serverConfigurationService.getBoolean(
+				"profile2.profile.student.enabled",
+				ProfileConstants.SAKAI_PROP_PROFILE2_PROFILE_STUDENT_ENABLED);
 	}
 
 	/**
@@ -1253,27 +1290,6 @@ public class SakaiProxyImpl implements SakaiProxy {
  	*/
 	public String getOfficialImageAttribute() {
 		return serverConfigurationService.getString("profile2.official.image.attribute", ProfileConstants.USER_PROPERTY_JPEG_PHOTO);
-	}
-	
-	/**
- 	* {@inheritDoc}
- 	*/
-	public String getSkinRepoProperty(){
-		return serverConfigurationService.getString("skin.repo");
-	}
-	
-	/**
- 	* {@inheritDoc}
- 	*/
-	public String getToolSkinCSS(String skinRepo){
-		
-		String skin = siteService.findTool(sessionManager.getCurrentToolSession().getPlacementId()).getSkin();			
-		
-		if(skin == null) {
-			skin = serverConfigurationService.getString("skin.default");
-		}
-		
-		return skinRepo + "/" + skin + "/tool.css";
 	}
 	
 	/**
@@ -1583,6 +1599,7 @@ public class SakaiProxyImpl implements SakaiProxy {
 
 	//INJECT OTHER RESOURCES
 	@Setter
+
 	private ArrayList<String> emailTemplates;
 	
 	

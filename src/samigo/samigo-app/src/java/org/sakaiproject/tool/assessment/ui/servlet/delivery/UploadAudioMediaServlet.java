@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/sam/trunk/samigo-app/src/java/org/sakaiproject/tool/assessment/ui/servlet/delivery/UploadAudioMediaServlet.java $
- * $Id: UploadAudioMediaServlet.java 106463 2012-04-02 12:20:09Z david.horwitz@uct.ac.za $
+ * $Id: UploadAudioMediaServlet.java 121258 2013-03-15 15:03:36Z ottenhoff@longsight.com $
  ***********************************************************************************
  *
  * Copyright (c) 2006, 2008, 2009 The Sakai Foundation
@@ -58,7 +58,7 @@ import java.util.ArrayList;
  * This gets a posted input stream (from AudioRecorder.java in the client JVM)
  * and writes out to a file.</p>
  * @author Ed Smiley
- * @version $Id: UploadAudioMediaServlet.java 106463 2012-04-02 12:20:09Z david.horwitz@uct.ac.za $
+ * @version $Id: UploadAudioMediaServlet.java 121258 2013-03-15 15:03:36Z ottenhoff@longsight.com $
  */
 
 public class UploadAudioMediaServlet extends HttpServlet
@@ -371,7 +371,7 @@ private static Log log = LogFactory.getLog(UploadAudioMediaServlet.class);
       itemGrading.setPublishedItemId(item.getItemId());
       itemGrading.setPublishedItemTextId(itemText.getId());
       itemGrading.setAgentId(agentId);
-      itemGrading.setOverrideScore(Float.valueOf(0));
+      itemGrading.setOverrideScore(Double.valueOf(0));
       itemGrading.setSubmittedDate(new Date());
       itemGrading.setAttemptsRemaining(Integer.valueOf(attemptsRemaining));
       itemGrading.setLastDuration(duration);
@@ -427,7 +427,7 @@ private static Log log = LogFactory.getLog(UploadAudioMediaServlet.class);
     itemGrading.setAttemptsRemaining(Integer.valueOf(attemptsRemaining));
     itemGrading.setSubmittedDate(new Date());
     itemGrading.setAnswerText(mediaId + "");
-    itemGrading.setAutoScore(Float.valueOf(0));
+    itemGrading.setAutoScore(Double.valueOf(0));
     gradingService.saveItemGrading(itemGrading);
 
     // 3. if saveToDB, remove file from file system

@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/search/trunk/search-impl/impl/src/test/org/sakaiproject/search/mock/MockSecurityService.java $
- * $Id: MockSecurityService.java 105078 2012-02-24 23:00:38Z ottenhoff@longsight.com $
+ * $Id: MockSecurityService.java 121485 2013-03-20 14:11:06Z azeckoski@unicon.net $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008 The Sakai Foundation
@@ -26,6 +26,7 @@ import java.util.List;
 
 import org.sakaiproject.authz.api.SecurityAdvisor;
 import org.sakaiproject.authz.api.SecurityService;
+import org.sakaiproject.tool.api.Session;
 import org.sakaiproject.user.api.User;
 
 /**
@@ -160,6 +161,9 @@ public class MockSecurityService implements SecurityService
 		return null;
 	}
 
-
+	public Session clearUserEffectiveRolesBySession(String sessionId) {
+	    // TODO Auto-generated method stub
+	    return null;
+	}
 
 }

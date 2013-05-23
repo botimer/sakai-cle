@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/sam/trunk/samigo-app/src/java/org/sakaiproject/tool/assessment/ui/listener/evaluation/StudentScoreUpdateListener.java $
- * $Id: StudentScoreUpdateListener.java 119797 2013-02-08 23:28:38Z ktsao@stanford.edu $
+ * $Id: StudentScoreUpdateListener.java 121258 2013-03-15 15:03:36Z ottenhoff@longsight.com $
  ***********************************************************************************
  *
  * Copyright (c) 2004, 2005, 2006, 2007, 2008, 2009 The Sakai Foundation
@@ -63,7 +63,7 @@ import org.sakaiproject.tool.assessment.util.TextFormat;
  * <p>Copyright: Copyright (c) 2004</p>
  * <p>Organization: Sakai Project</p>
  * @author Rachel Gollub
- * @version $Id: StudentScoreUpdateListener.java 119797 2013-02-08 23:28:38Z ktsao@stanford.edu $
+ * @version $Id: StudentScoreUpdateListener.java 121258 2013-03-15 15:03:36Z ottenhoff@longsight.com $
  */
 
 public class StudentScoreUpdateListener
@@ -163,18 +163,18 @@ public class StudentScoreUpdateListener
               data.setAgentId(bean.getStudentId());
             }
             
-            float newAutoScore = 0;            
+            double newAutoScore = 0;            
             if ((question.getItemData().getTypeId().equals(Long.valueOf(8)) || question.getItemData().getTypeId().equals(Long.valueOf(11))) && fibFinNumCorrect != 0) {
             	if (Boolean.TRUE.equals(data.getIsCorrect())) {
-            		newAutoScore = (question.getExactPoints() / (float) fibFinNumCorrect);
+            		newAutoScore = (question.getExactPoints() / (double) fibFinNumCorrect);
             	}
             }
             else {
-          	  newAutoScore = (question.getExactPoints() / (float) gradingarray.size());
+          	  newAutoScore = (question.getExactPoints() / (double) gradingarray.size());
             }
-            float oldAutoScore = 0;
+            double oldAutoScore = 0;
             if (data.getAutoScore() !=null) {
-              oldAutoScore=data.getAutoScore().floatValue();
+              oldAutoScore=data.getAutoScore().doubleValue();
             }
             String newComments = TextFormat.convertPlaintextToFormattedTextNoHighUnicode(log, question.getGradingComment());
             if (newComments != null) {
@@ -201,7 +201,7 @@ public class StudentScoreUpdateListener
             logString.append(data.getItemGradingId());
             
             if (updateScore) {
-              data.setAutoScore(Float.valueOf(newAutoScore));
+              data.setAutoScore(Double.valueOf(newAutoScore));
               logString.append(", newAutoScore=");
               logString.append(newAutoScore);
               logString.append(", oldAutoScore=");

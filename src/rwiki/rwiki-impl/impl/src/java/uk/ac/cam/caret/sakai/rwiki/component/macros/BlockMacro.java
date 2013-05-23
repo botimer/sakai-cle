@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/rwiki/trunk/rwiki-impl/impl/src/java/uk/ac/cam/caret/sakai/rwiki/component/macros/BlockMacro.java $
- * $Id: BlockMacro.java 84222 2010-11-03 13:15:52Z david.horwitz@uct.ac.za $
+ * $Id: BlockMacro.java 124104 2013-05-15 16:38:44Z matthew@longsight.com $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006 The Sakai Foundation.
@@ -91,15 +91,17 @@ public class BlockMacro extends BaseMacro
 		writer.write("<div"); //$NON-NLS-1$
 		if (cssClass != null && !"".equals(cssClass)) //$NON-NLS-1$
 		{
+			cssClass = cssClass.replaceAll("[^A-Za-z0-9-_]", "");
 			writer.write(" class='"); //$NON-NLS-1$
-			writer.write(cssClass.replaceAll("'", "&apos;")); //$NON-NLS-1$ //$NON-NLS-2$
+			writer.write(cssClass); //$NON-NLS-1$ //$NON-NLS-2$
 			writer.write('\'');
 		}
 		if (style != null && !"".equals(style)) //$NON-NLS-1$
 		{
-			writer.write(" style='"); //$NON-NLS-1$
-			writer.write(style.replaceAll("'", "&apos;")); //$NON-NLS-1$ //$NON-NLS-2$
-			writer.write('\'');
+			// SAK-20449 disabling style output
+			// writer.write(" style='"); //$NON-NLS-1$
+			// writer.write(style.replaceAll("'", "&apos;")); //$NON-NLS-1$ //$NON-NLS-2$
+			// writer.write('\'');
 		}
 		if (id != null && !"".equals(id)) //$NON-NLS-1$
 		{

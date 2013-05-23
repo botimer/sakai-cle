@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/basiclti/trunk/basiclti-util/src/java/org/imsglobal/basiclti/XMLMap.java $
- * $Id: XMLMap.java 109505 2012-06-25 02:38:53Z csev@umich.edu $
+ * $Id: XMLMap.java 121298 2013-03-16 14:05:44Z csev@umich.edu $
  **********************************************************************************
  *
  * Copyright (c) 2009 IMS GLobal Learning Consortium, Inc.
@@ -263,7 +263,10 @@ public class XMLMap {
 	public static Document documentFromString(String input)
 	{
 		try{
-			DocumentBuilder parser = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+			DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance(); 
+			factory.setFeature("http://xml.org/sax/features/external-general-entities", false); 
+			factory.setFeature("http://xml.org/sax/features/external-parameter-entities", false); 
+			DocumentBuilder parser = factory.newDocumentBuilder();
 			Document document = parser.parse(new ByteArrayInputStream(input.getBytes()));
 			return document;
 		} catch (Exception e) {
@@ -489,7 +492,10 @@ public class XMLMap {
 		Document document = null;
 
 		try{
-			DocumentBuilder parser = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+			DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance(); 
+			factory.setFeature("http://xml.org/sax/features/external-general-entities", false); 
+			factory.setFeature("http://xml.org/sax/features/external-parameter-entities", false); 
+			DocumentBuilder parser = factory.newDocumentBuilder();
 			document = parser.newDocument();
 		} catch (Exception e) {
 			return null;

@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/sam/trunk/samigo-qti/src/java/org/sakaiproject/tool/assessment/qti/helper/item/ItemHelper12Impl.java $
- * $Id: ItemHelper12Impl.java 108774 2012-05-30 22:21:33Z ktsao@stanford.edu $
+ * $Id: ItemHelper12Impl.java 123521 2013-05-02 17:44:22Z ktsao@stanford.edu $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008, 2009 The Sakai Foundation
@@ -50,7 +50,7 @@ import org.sakaiproject.tool.assessment.data.ifc.assessment.AnswerFeedbackIfc;
 
 /**
  * <p>Version for QTI 1.2 item XML, significant differences between 1.2 and 2.0</p>
- * * @version $Id: ItemHelper12Impl.java 108774 2012-05-30 22:21:33Z ktsao@stanford.edu $
+ * * @version $Id: ItemHelper12Impl.java 123521 2013-05-02 17:44:22Z ktsao@stanford.edu $
  * 
  * Many methods in Fill in Blank and Numerical Responses(FIN) are identical for now.  
  * This might change if we want to add random variable, parameterized calculation....
@@ -70,10 +70,10 @@ public class ItemHelper12Impl extends ItemHelperBase
   protected String[] itemTypes = AuthoringConstantStrings.itemTypes;
   private AuthoringXml authoringXml;
   private List allIdents;
-  private Float currentMaxScore =  Float.valueOf(0);
-  private Float currentMinScore = Float.valueOf(0);
-  private float currentPerItemScore = 0;
-  private float currentPerItemDiscount = 0;
+  private Double currentMaxScore =  Double.valueOf(0);
+  private Double currentMinScore = Double.valueOf(0);
+  private double currentPerItemScore = 0;
+  private double currentPerItemDiscount = 0;
 
   /**
    *
@@ -106,12 +106,12 @@ public class ItemHelper12Impl extends ItemHelperBase
    * @param score
    * @param itemXml
    */
-  public void addMaxScore(Float score, Item itemXml)
+  public void addMaxScore(Double score, Item itemXml)
   {
     String xPath = "item/resprocessing/outcomes/decvar/@maxvalue";
     if (score == null)
     {
-      score = Float.valueOf(0);
+      score = Double.valueOf(0);
     }
     currentMaxScore = score;
     updateItemXml(itemXml, xPath, "" + score.toString());
@@ -122,12 +122,12 @@ public class ItemHelper12Impl extends ItemHelperBase
    * @param score
    * @param itemXml
    */
-  public void addMinScore(Float discount, Item itemXml)
+  public void addMinScore(Double discount, Item itemXml)
   {
 	  String xPath = "item/resprocessing/outcomes/decvar/@minvalue";
 	  if (discount == null)
 	  {
-		  discount = Float.valueOf(0);
+		  discount = Double.valueOf(0);
 	  }
 	  currentMinScore = discount;
 	  updateItemXml(itemXml, xPath, "" + discount.toString());
@@ -365,13 +365,13 @@ public class ItemHelper12Impl extends ItemHelperBase
     itemXml.add(xpath, "response_label");
     String randomNumber = ("" + Math.random()).substring(2);
     Iterator iter = itemTextList.iterator();
-    float itSize = itemTextList.size();
+    double itSize = itemTextList.size();
 
     // just in case we screw up
     if (itSize > 0)
     {
-      currentPerItemScore = currentMaxScore.floatValue() / itSize;
-      currentPerItemDiscount = currentMinScore.floatValue();
+      currentPerItemScore = currentMaxScore.doubleValue() / itSize;
+      currentPerItemDiscount = currentMinScore.doubleValue();
     }
     int respCondCount = 0; //used to count the respconditions
 
@@ -457,7 +457,7 @@ public class ItemHelper12Impl extends ItemHelperBase
 	  itemXml.add(xpath, "response_label");
 	  String randomNumber = ("" + Math.random()).substring(2);
 	  Iterator iter = itemTextList.iterator();
-	  float itSize = itemTextList.size();
+	  double itSize = itemTextList.size();
 
 	  while (iter.hasNext())
 	  {
@@ -1791,19 +1791,23 @@ public class ItemHelper12Impl extends ItemHelperBase
           if(itemXml.isMCSC()){
         	  //MC Single Correct 
         	  if(answer.getIsCorrect().booleanValue()){
-        		  answer.setPartialCredit(100f);
+        		  answer.setPartialCredit(100d);
         	  }
         	  
         	  if (answer.getItem().getPartialCreditFlag()) {
-        		  Float partialCredit = 100f;
+        		  Double partialCredit = 100d;
         		  try {
-        			  partialCredit = Float.valueOf(((answer.getItem().getScore().floatValue())*answer.getPartialCredit().floatValue())/100f);
+        			  partialCredit = Double.valueOf(((answer.getItem().getScore().doubleValue())*answer.getPartialCredit().doubleValue())/100d);
         		  }
         		  catch (Exception e) {
         			  log.error("Could not compute partial value for id: " + answer.getId());
         		  }
         		  addAnswerFeedbackPartialCredit(itemXml, value,
         				  isInsert, xpathIndex, "" + label, partialCredit); //--mustansar
+        	  }
+        	  else {
+        		  addAnswerFeedback(itemXml, value,
+            			  isInsert, xpathIndex, "" + label  );
         	  }
           }
           else 
@@ -2141,7 +2145,7 @@ public class ItemHelper12Impl extends ItemHelperBase
    */
   private void addAnswerFeedbackPartialCredit(Item itemXml, String value,
 		  boolean isInsert, int responseNo,
-		  String responseLabel, Float partialCredit)
+		  String responseLabel, Double partialCredit)
   {
 	  log.debug("addAnswerFeedback()");
 	  log.debug("answer feedback value: " + value);

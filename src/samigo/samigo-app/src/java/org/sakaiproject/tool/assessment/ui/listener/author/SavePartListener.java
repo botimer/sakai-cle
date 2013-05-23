@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/sam/trunk/samigo-app/src/java/org/sakaiproject/tool/assessment/ui/listener/author/SavePartListener.java $
- * $Id: SavePartListener.java 107566 2012-04-25 14:16:22Z david.horwitz@uct.ac.za $
+ * $Id: SavePartListener.java 121258 2013-03-15 15:03:36Z ottenhoff@longsight.com $
  ***********************************************************************************
  *
  * Copyright (c) 2004, 2005, 2006, 2007, 2008, 2009 The Sakai Foundation
@@ -66,7 +66,7 @@ import org.sakaiproject.util.FormattedText;
  * <p>Title: Samigo</p>2
  * <p>Description: Sakai Assessment Manager</p>
  * @author Ed Smiley
- * @version $Id: SavePartListener.java 107566 2012-04-25 14:16:22Z david.horwitz@uct.ac.za $
+ * @version $Id: SavePartListener.java 121258 2013-03-15 15:03:36Z ottenhoff@longsight.com $
  */
 
 public class SavePartListener
@@ -200,18 +200,18 @@ public class SavePartListener
     	
     	if(addItemsFromPool){
     		boolean hasRandomPartScore = false;
-    		Float score = null;
+    		Double score = null;
     		String requestedScore = sectionBean.getRandomPartScore();
     		if (requestedScore != null && !requestedScore.equals("")) {
     			hasRandomPartScore = true;
-    			score = new Float(requestedScore);
+    			score = new Double(requestedScore);
     		}
     		boolean hasRandomPartDiscount = false;
-    		Float discount = null;
+    		Double discount = null;
     		String requestedDiscount = sectionBean.getRandomPartDiscount();
     		if (requestedDiscount != null && !requestedDiscount.equals("")) {
     			hasRandomPartDiscount = true;
-    			discount = new Float(requestedDiscount);
+    			discount = new Double(requestedDiscount);
     		}
     		
     		if (hasRandomPartScore && score != null) {
@@ -305,8 +305,8 @@ public class SavePartListener
      String randomScore = sectionBean.getRandomPartScore();
      if (randomScore != null && !randomScore.equals("")) {    	 
     	 try{
-    		 float randomScoreFloat = Float.parseFloat(randomScore);
-    		 if(randomScoreFloat < 0.0){
+    		 double randomScoreDouble = Double.parseDouble(randomScore);
+    		 if(randomScoreDouble < 0.0){
     			 err=ContextUtil.getLocalizedString("org.sakaiproject.tool.assessment.bundle.AuthorMessages","qdrawn_pt_error");
     			 context.addMessage(null,new FacesMessage(err ));
     			 return false;
@@ -321,8 +321,8 @@ public class SavePartListener
      String randomDiscount = sectionBean.getRandomPartDiscount();
      if (randomDiscount != null && !randomDiscount.equals("")) {
     	 try{
-    		 float randomDiscountFloat = Float.parseFloat(randomDiscount);
-    		 if(randomDiscountFloat < 0.0){
+    		 double randomDiscountDouble = Double.parseDouble(randomDiscount);
+    		 if(randomDiscountDouble < 0.0){
     			 err=ContextUtil.getLocalizedString("org.sakaiproject.tool.assessment.bundle.AuthorMessages","qdrawn_pt_error");
     			 context.addMessage(null,new FacesMessage(err ));
     			 return false;

@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/content/trunk/content-tool/tool/src/java/org/sakaiproject/content/tool/ResourcesAction.java $
- * $Id: ResourcesAction.java 120870 2013-03-06 23:12:47Z azeckoski@unicon.net $
+ * $Id: ResourcesAction.java 124736 2013-05-21 14:04:18Z steve.swinsburg@gmail.com $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008, 2009 The Sakai Foundation
@@ -23,8 +23,11 @@ package org.sakaiproject.content.tool;
 
 import java.io.File;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.text.Format;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
@@ -138,7 +141,7 @@ import org.w3c.dom.Element;
 * <p>ResourceAction is a ContentHosting application</p>
 *
 * @author University of Michigan, CHEF Software Development Team
-* @version $Revision: 120870 $
+* @version $Revision: 124736 $
 */
 public class ResourcesAction 
 	extends PagedResourceHelperAction // VelocityPortletPaneledAction
@@ -3907,6 +3910,14 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			//item.setPubviewPossible(! preventPublicDisplay);
 			item.metadataGroupsIntoContext(context);
 			
+			// copied from ResourcesHelperAction since the context created in that class is not available to a template used here.
+			if(parent.isDropbox)
+			{
+				String dropboxNotificationsProperty = getDropboxNotificationsProperty();
+				logger.debug("dropboxNotificationAllowed: buildCreateWizardContext: "+ Boolean.valueOf(ResourcesAction.DROPBOX_NOTIFICATIONS_ALLOW.equals(dropboxNotificationsProperty)));
+				context.put("dropboxNotificationAllowed", Boolean.valueOf(ResourcesAction.DROPBOX_NOTIFICATIONS_ALLOW.equals(dropboxNotificationsProperty)));
+			}
+			
 			context.put("item", item);
 			
 			state.setAttribute(STATE_CREATE_WIZARD_ITEM, item);
@@ -3983,6 +3994,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			// not show the public option or notification when in dropbox mode
 			context.put("dropboxMode", Boolean.TRUE);
 			String dropboxNotificationsProperty = getDropboxNotificationsProperty();
+			logger.debug("dropboxNotificationAllowed: buildDeleteConfirmContext: "+ Boolean.valueOf(DROPBOX_NOTIFICATIONS_ALLOW.equals(dropboxNotificationsProperty)));
 			context.put("dropboxNotificationAllowed", Boolean.valueOf(DROPBOX_NOTIFICATIONS_ALLOW.equals(dropboxNotificationsProperty)));
 		}
 		context.put("homeCollection", (String) state.getAttribute (STATE_HOME_COLLECTION_ID));
@@ -4197,7 +4209,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			else
 			{
 				
-				if(!inMyWorkspace )
+				if(!inMyWorkspace && !isSpecialSite)
 				{
 					context.put("showPermissions", Boolean.TRUE.toString());
 					//buildListMenu(portlet, context, data, state);
@@ -4392,7 +4404,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			String allowed_to_see_other_sites = (String) state.getAttribute(STATE_SHOW_ALL_SITES);
 			String show_other_sites = (String) state.getAttribute(STATE_SHOW_OTHER_SITES);
 			context.put("show_other_sites", show_other_sites);
-			if(Boolean.TRUE.toString().equals(allowed_to_see_other_sites))
+			if(Boolean.TRUE.toString().equals(allowed_to_see_other_sites) && canReviseAny())
 			{
 				context.put("allowed_to_see_other_sites", Boolean.TRUE.toString());
 				show_all_sites = Boolean.TRUE.toString().equals(show_other_sites);
@@ -5031,6 +5043,14 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 			state.setAttribute(STATE_REVISE_PROPERTIES_ITEM, item);
 		}
 		item.metadataGroupsIntoContext(context);
+		
+		if(item.isDropbox)
+		{
+			String dropboxNotificationsProperty = getDropboxNotificationsProperty();
+			logger.debug("dropboxNotificationAllowed: buildReviseMetadataContext: "+ Boolean.valueOf(ResourcesAction.DROPBOX_NOTIFICATIONS_ALLOW.equals(dropboxNotificationsProperty)));
+			context.put("dropboxNotificationAllowed", Boolean.valueOf(ResourcesAction.DROPBOX_NOTIFICATIONS_ALLOW.equals(dropboxNotificationsProperty)));
+		}
+		
 		context.put("item", item);
 		
 		String chhbeanname = "";
@@ -5874,6 +5894,7 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 					{
 						addAlert(state, alert);
 					}
+					ContentHostingService.cancelResource(resource);
 				}
 			} 
 			catch (IdUnusedException e) 
@@ -6736,7 +6757,17 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 		{
 			doHideconfirm(data);
 		}
-		
+		else if(ResourceToolAction.COPY_OTHER.equals(actionId))
+		{
+			List<String> selectedSet  = new ArrayList<String>();
+			String[] selectedItems = params.getStrings("selectedMembers-other");
+			if(selectedItems != null)
+			{
+				selectedSet.addAll(Arrays.asList(selectedItems));
+			}
+			state.setAttribute(STATE_ITEMS_TO_BE_COPIED, selectedSet);
+			state.removeAttribute(STATE_ITEMS_TO_BE_MOVED);
+		}
 	}
 
 	/**
@@ -8604,17 +8635,28 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 				ContentResourceEdit resource = ContentHostingService.addResource(collectionId,Validator.escapeResourceName(basename),Validator.escapeResourceName(extension),MAXIMUM_ATTEMPTS_FOR_UNIQUENESS);
 				
 				extractContent(fp, resource);
-
+								
 				// SAK-23171 - cleanup the URL spaces
-				String url = new String(resource.getContent());
-				String cleanedURL = StringUtils.trim(url);
-				cleanedURL = StringUtils.replace(cleanedURL, " ", "%20");
-				if (!StringUtils.equals(url, cleanedURL)) {
+				String originalUrl = new String(resource.getContent());
+				String cleanedURL = StringUtils.trim(originalUrl);
+				//cleanedURL = StringUtils.replace(cleanedURL, " ", "%20");
+				
+				// SAK-23587 - properly escape the URL where required
+				try {
+					URL url = new URL(cleanedURL);
+					URI uri = new URI(url.getProtocol(), url.getUserInfo(), url.getHost(), url.getPort(), url.getPath(), url.getQuery(), url.getRef());
+					cleanedURL = uri.toString();
+				} catch (Exception e) {
+					//ok to ignore, just use the original url
+					logger.debug("URL can not be encoded: " + e.getClass() + ":" + e.getCause());
+				}
+				
+				if (!StringUtils.equals(originalUrl, cleanedURL)) {
 				    // the url was cleaned up, log it and update it
-				    logger.info("Resources URL cleanup changed url to '"+cleanedURL+"' from '"+url+"'");
+				    logger.info("Resources URL cleanup changed url to '"+cleanedURL+"' from '"+originalUrl+"'");
 				    resource.setContent(cleanedURL.getBytes());
 				}
-
+				
 				resource.setContentType(fp.getRevisedMimeType());
 				resource.setResourceType(pipe.getAction().getTypeId());
 				int notification = NotificationService.NOTI_NONE;

@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/sam/trunk/samigo-services/src/java/org/sakaiproject/tool/assessment/facade/AssessmentFacadeQueries.java $
- * $Id: AssessmentFacadeQueries.java 107319 2012-04-17 13:39:00Z david.horwitz@uct.ac.za $
+ * $Id: AssessmentFacadeQueries.java 121508 2013-03-20 22:29:31Z ktsao@stanford.edu $
  ***********************************************************************************
  *
  * Copyright (c) 2004, 2005, 2006, 2007, 2008, 2009 The Sakai Foundation
@@ -786,7 +786,7 @@ public class AssessmentFacadeQueries extends HibernateDaoSupport implements
 			AssessmentData a = (AssessmentData) list.get(i);
 			agent = new AgentFacade(a.getLastModifiedBy());
 			if (agent != null) {
-				lastModifiedBy = agent.getFirstName() + " " + agent.getLastName();
+				lastModifiedBy = agent.getDisplayName();
 			}
 			int questionSize = 0;
 			if (questionSizeMap.get(a.getAssessmentBaseId()) != null) {

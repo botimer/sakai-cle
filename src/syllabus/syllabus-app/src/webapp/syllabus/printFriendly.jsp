@@ -41,8 +41,24 @@
 				<h:dataTable value="#{SyllabusTool.entries}" var="eachEntry" rendered="#{! SyllabusTool.syllabusItem.redirectURL}" style="margin-top:1em;clear:both;" summary="#{msgs.mainCaption}" >
 					<h:column>
 							<f:verbatim><h4 class="textPanelHeader"></f:verbatim>		  
+								<h:outputText rendered="#{eachEntry.status == eachEntry.draftStatus}" value="#{msgs.mainDraft} - "/> 
 								<h:outputText value="#{eachEntry.entry.title}" />
-								<h:outputText rendered="#{eachEntry.status == 'draft'}" value="#{msgs.mainDraft}"/>
+								<f:subview id="date" rendered="#{eachEntry.entry.startDate != null || eachEntry.entry.endDate != null}">
+									<f:verbatim><br/><span style="font-weight: normal"></f:verbatim>
+										<h:outputText value="("/>
+										<h:outputText value="#{eachEntry.entry.startDate}">
+											<f:convertDateTime type="date" pattern="EEE MMM dd, yyyy hh:mm a"/>
+										</h:outputText>
+										<h:outputText value=" - " rendered="#{eachEntry.entry.startDate != null && eachEntry.entry.endDate != null}"/>
+										<h:outputText value="#{eachEntry.entry.endDate}" rendered="#{!eachEntry.startAndEndDatesSameDay}">
+								  			<f:convertDateTime type="date" pattern="EEE MMM dd, yyyy hh:mm a"/>
+										</h:outputText>
+										<h:outputText value="#{eachEntry.entry.endDate}" rendered="#{eachEntry.startAndEndDatesSameDay}">
+								  			<f:convertDateTime type="date" pattern="hh:mm a"/>
+										</h:outputText>
+										<h:outputText value=")"/>
+									<f:verbatim></span></f:verbatim>
+								</f:subview>
 							<f:verbatim></h4></f:verbatim>
 							<f:verbatim><div class="textPanel"></f:verbatim>
 							<syllabus:syllabus_htmlShowArea value="#{eachEntry.entry.asset}" />

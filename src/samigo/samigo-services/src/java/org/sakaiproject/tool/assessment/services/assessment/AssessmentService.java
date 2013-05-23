@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/sam/trunk/samigo-services/src/java/org/sakaiproject/tool/assessment/services/assessment/AssessmentService.java $
- * $Id: AssessmentService.java 115707 2012-11-05 13:09:54Z david.horwitz@uct.ac.za $
+ * $Id: AssessmentService.java 121258 2013-03-15 15:03:36Z ottenhoff@longsight.com $
  ***********************************************************************************
  *
  * Copyright (c) 2004, 2005, 2006, 2007, 2008 The Sakai Foundation
@@ -434,22 +434,22 @@ public class AssessmentService {
 
 				// ItemService itemservice = new ItemService();
 				boolean hasRandomPartScore = false;
-				Float score = null;
+				Double score = null;
 				String requestedScore = (section.getSectionMetaDataByLabel(SectionDataIfc.POINT_VALUE_FOR_QUESTION) != null) ? 
 						                 section.getSectionMetaDataByLabel(SectionDataIfc.POINT_VALUE_FOR_QUESTION)	: "";
 						                 
 				if (requestedScore != null && !requestedScore.equals("")) {
 					hasRandomPartScore = true;
-					score = new Float(requestedScore);
+					score = new Double(requestedScore);
 				}
 				boolean hasRandomPartDiscount = false;
-				Float discount = null;
+				Double discount = null;
 				String requestedDiscount = (section.getSectionMetaDataByLabel(SectionDataIfc.DISCOUNT_VALUE_FOR_QUESTION) != null) ? 
 											section.getSectionMetaDataByLabel(SectionDataIfc.DISCOUNT_VALUE_FOR_QUESTION) : "";
 
 				if (requestedDiscount != null && !requestedDiscount.equals("")) {
 					hasRandomPartDiscount = true;
-					discount = new Float(requestedDiscount);
+					discount = new Double(requestedDiscount);
 				}
 
 				int i = 0;

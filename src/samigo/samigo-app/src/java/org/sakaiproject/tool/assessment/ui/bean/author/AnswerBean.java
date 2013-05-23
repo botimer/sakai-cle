@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/sam/trunk/samigo-app/src/java/org/sakaiproject/tool/assessment/ui/bean/author/AnswerBean.java $
- * $Id: AnswerBean.java 115326 2012-10-30 23:47:00Z ktsao@stanford.edu $
+ * $Id: AnswerBean.java 121258 2013-03-15 15:03:36Z ottenhoff@longsight.com $
  ***********************************************************************************
  *
  * Copyright (c) 2004, 2005, 2006, 2007, 2008 The Sakai Foundation
@@ -48,7 +48,7 @@ public class AnswerBean implements Serializable{
   public static final String choiceLabels = rb.getString("choice_labels"); 
   public AnswerBean() {}
 
-  public AnswerBean(String ptext, Long pseq, String plabel, String pfdbk, Boolean pcorr, String pgrade , Float pscore) {
+  public AnswerBean(String ptext, Long pseq, String plabel, String pfdbk, Boolean pcorr, String pgrade , Double pscore) {
     this.text = ptext;
     this.sequence = pseq;
     this.label = plabel;
@@ -105,7 +105,7 @@ public class AnswerBean implements Serializable{
   
   // additional constroctor for partial credit
 	public AnswerBean(String ptext, Long pseq, String plabel, String pfdbk,
-			Boolean pcorr, String pgrade, Float pscore, String pCredit) {
+			Boolean pcorr, String pgrade, Double pscore, String pCredit) {
 		this.text = ptext;
 		this.sequence = pseq;
 		this.label = plabel;

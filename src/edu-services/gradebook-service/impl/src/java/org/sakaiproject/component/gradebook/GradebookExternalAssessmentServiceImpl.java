@@ -1,6 +1,6 @@
 /**********************************************************************************
 *
-* $Id: GradebookExternalAssessmentServiceImpl.java 120933 2013-03-08 15:03:55Z david.horwitz@uct.ac.za $
+* $Id: GradebookExternalAssessmentServiceImpl.java 122905 2013-04-17 14:39:21Z azeckoski@unicon.net $
 *
 ***********************************************************************************
 *
@@ -64,8 +64,6 @@ public class GradebookExternalAssessmentServiceImpl extends BaseHibernateManager
     // Special logger for data contention analysis.
     private static final Log logData = LogFactory.getLog(GradebookExternalAssessmentServiceImpl.class.getName() + ".GB_DATA");
 
-    private NumberFormat numberFormat;
-    
     private EventTrackingService eventTrackingService;
 	
     public void setEventTrackingService(EventTrackingService eventTrackingService) {
@@ -487,7 +485,7 @@ public class GradebookExternalAssessmentServiceImpl extends BaseHibernateManager
 	public Map<String, String> getExternalAssignmentsForCurrentUser(String gradebookUid)
 		throws GradebookNotFoundException
 	{
-		
+		final Gradebook gradebook = getGradebook(gradebookUid);
 		Map<String, String> allAssignments = new HashMap<String, String>();
 		for (ExternalAssignmentProvider provider : getExternalAssignmentProviders().values()) {
 			String appKey = provider.getAppKey();
@@ -502,7 +500,7 @@ public class GradebookExternalAssessmentServiceImpl extends BaseHibernateManager
 	public Map<String, List<String>> getVisibleExternalAssignments(String gradebookUid, Collection<String> studentIds)
 		throws GradebookNotFoundException
 	{
-		
+		final Gradebook gradebook = getGradebook(gradebookUid);
 		Map<String, Set<String>> visible = new HashMap<String, Set<String>>();
 		for (String studentId : studentIds) {
 			visible.put(studentId, new HashSet<String>());
@@ -759,11 +757,7 @@ public class GradebookExternalAssessmentServiceImpl extends BaseHibernateManager
 	}
 
 	private NumberFormat getNumberFormat() {
-	    if (numberFormat == null) {
-	        numberFormat = NumberFormat.getInstance(new ResourceLoader().getLocale());
-	    }
-
-	    return numberFormat;
+	    return NumberFormat.getInstance(new ResourceLoader().getLocale());
 	}
 
 }

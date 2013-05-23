@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/sam/trunk/samigo-qti/src/java/org/sakaiproject/tool/assessment/qti/helper/item/ItemHelperIfc.java $
- * $Id: ItemHelperIfc.java 106463 2012-04-02 12:20:09Z david.horwitz@uct.ac.za $
+ * $Id: ItemHelperIfc.java 121258 2013-03-15 15:03:36Z ottenhoff@longsight.com $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2008 The Sakai Foundation
@@ -34,7 +34,7 @@ import org.sakaiproject.tool.assessment.qti.asi.Item;
  * <p>Copyright: Copyright (c) 2005</p>
  * <p>Organization: Sakai Project</p>
  * @author Ed Smiley esmiley@stanford.edu
-   * @version $Id: ItemHelperIfc.java 106463 2012-04-02 12:20:09Z david.horwitz@uct.ac.za $
+   * @version $Id: ItemHelperIfc.java 121258 2013-03-15 15:03:36Z ottenhoff@longsight.com $
  */
 
 public interface ItemHelperIfc
@@ -124,14 +124,14 @@ public interface ItemHelperIfc
    * @param score
    * @param itemXml
    */
-  public void addMaxScore(Float score, Item itemXml);
+  public void addMaxScore(Double score, Item itemXml);
 
   /**
    * Add maximum score to item XML
    * @param score
    * @param itemXml
    */
-  public void addMinScore(Float score, Item itemXml);
+  public void addMinScore(Double score, Item itemXml);
 
   /**
    * Flags an answer as correct.

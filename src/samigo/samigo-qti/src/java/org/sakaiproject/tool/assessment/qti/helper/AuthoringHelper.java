@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/sam/trunk/samigo-qti/src/java/org/sakaiproject/tool/assessment/qti/helper/AuthoringHelper.java $
- * $Id: AuthoringHelper.java 106463 2012-04-02 12:20:09Z david.horwitz@uct.ac.za $
+ * $Id: AuthoringHelper.java 124466 2013-05-17 23:11:31Z ktsao@stanford.edu $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008, 2009 The Sakai Foundation
@@ -93,7 +93,7 @@ import org.sakaiproject.util.FormattedText;
  * <p>Organization: Sakai Project</p>
  * @author Ed Smiley esmiley@stanford.edu
  * @author Shastri, Rashmi <rshastri@iupui.edu>
- * @version $Id: AuthoringHelper.java 106463 2012-04-02 12:20:09Z david.horwitz@uct.ac.za $
+ * @version $Id: AuthoringHelper.java 124466 2013-05-17 23:11:31Z ktsao@stanford.edu $
  */
 public class AuthoringHelper
 {
@@ -540,7 +540,7 @@ public class AuthoringHelper
           return true;
       }
       catch (SAXException ex) {
-          log.debug("The xml is not valid QTI format.");
+          log.debug("The xml is not valid QTI format.", ex);
       }
       return false;
   }

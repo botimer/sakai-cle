@@ -50,7 +50,7 @@
 	<property name="numReaders" column="NUM_READERS" type="integer"/>
 
     
-    <set name="attachmentsSet" lazy="true" order-by="created desc" cascade="all-delete-orphan">
+    <set name="attachmentsSet" lazy="true" order-by="created desc" cascade="all-delete-orphan" batch-size="10">
         <key column="m_surrogateKey"/>                        
         <one-to-many class="org.sakaiproject.component.app.messageforums.dao.hibernate.AttachmentImpl"/>            
     </set>
@@ -220,7 +220,6 @@
       join fetch message.topic topic join fetch topic.openForum openForum
     where message.id = us.messageId and openForum.area.contextId = :contextId and 
       us.userId = :userId and us.read = true and message.draft = false and message.deleted = false
-    order by message.created desc
   ]]></query>
   
   <query name="findReadMessagesForStudentByTopicId"><![CDATA[
@@ -231,7 +230,6 @@
     where message.id = us.messageId and openForum.area.contextId = :contextId and 
       us.userId = :userId and us.read = true and message.draft = false and message.deleted = false
       and message.topic.id = :topicId
-    order by message.created desc
   ]]></query>
   
   <query name="findReadMessagesForStudentByForumId"><![CDATA[
@@ -242,7 +240,6 @@
     where message.id = us.messageId and openForum.area.contextId = :contextId and 
       us.userId = :userId and us.read = true and message.draft = false and message.deleted = false
       and openForum.id = :forumId
-    order by message.created desc
   ]]></query>
   
   <query name="findReadMessageCountForAllStudents"><![CDATA[

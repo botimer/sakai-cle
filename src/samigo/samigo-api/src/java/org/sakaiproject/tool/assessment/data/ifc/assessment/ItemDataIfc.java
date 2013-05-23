@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/sam/trunk/samigo-api/src/java/org/sakaiproject/tool/assessment/data/ifc/assessment/ItemDataIfc.java $
- * $Id: ItemDataIfc.java 106463 2012-04-02 12:20:09Z david.horwitz@uct.ac.za $
+ * $Id: ItemDataIfc.java 122050 2013-04-02 13:32:36Z ottenhoff@longsight.com $
  ***********************************************************************************
  *
  * Copyright (c) 2004, 2005, 2006, 2008, 2009 The Sakai Foundation
@@ -75,13 +75,13 @@ public interface ItemDataIfc extends java.io.Serializable {
 
   void setGrade(String grade);
 
-  Float getScore();
+  Double getScore();
 
-  void setScore(Float score);
+  void setScore(Double score);
   
-  Float getDiscount();
+  Double getDiscount();
 
-  void setDiscount(Float discount);
+  void setDiscount(Double discount);
 
   String getHint();
 
@@ -125,13 +125,9 @@ public interface ItemDataIfc extends java.io.Serializable {
 
   void setItemMetaDataSet(Set itemMetaDataSet);
 
-  HashMap getItemMetaDataMap(Set itemMetaDataSet) ;
-
   Set getItemFeedbackSet();
 
   void setItemFeedbackSet(Set itemFeedbackSet);
-
-  HashMap getItemFeedbackMap(Set itemFeedbackSet) ;
 
   String getItemMetaDataByLabel(String label);
 

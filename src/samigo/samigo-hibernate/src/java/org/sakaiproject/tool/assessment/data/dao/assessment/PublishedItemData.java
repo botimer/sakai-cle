@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/sam/trunk/samigo-hibernate/src/java/org/sakaiproject/tool/assessment/data/dao/assessment/PublishedItemData.java $
- * $Id: PublishedItemData.java 106463 2012-04-02 12:20:09Z david.horwitz@uct.ac.za $
+ * $Id: PublishedItemData.java 122050 2013-04-02 13:32:36Z ottenhoff@longsight.com $
  ***********************************************************************************
  *
  * Copyright (c) 2004, 2005, 2006, 2008, 2009 The Sakai Foundation
@@ -59,8 +59,8 @@ public class PublishedItemData
   private String description;
   private Long typeId;
   private String grade;
-  private Float score;
-  private Float discount;
+  private Double score;
+  private Double discount;
   private String hint;
   private Boolean hasRationale;
   private Integer status;
@@ -71,8 +71,6 @@ public class PublishedItemData
   private Set itemTextSet;
   private Set itemMetaDataSet;
   private Set itemFeedbackSet;
-  private HashMap itemMetaDataMap = new HashMap();
-  private HashMap itemFeedbackMap = new HashMap();
   private ItemGradingData lastItemGradingDataByAgent;
   private Set itemAttachmentSet;
   private Boolean partialCreditFlag;
@@ -82,7 +80,7 @@ public class PublishedItemData
   // this constructor should be deprecated, it is missing triesAllowed
   public PublishedItemData(SectionDataIfc section, Integer sequence,
                   Integer duration, String instruction, String description,
-                  Long typeId, String grade, Float score, Float discount, String hint,
+                  Long typeId, String grade, Double score, Double discount, String hint,
                   Boolean hasRationale, Integer status, String createdBy,
                   Date createdDate, String lastModifiedBy,
                   Date lastModifiedDate,
@@ -111,7 +109,7 @@ public class PublishedItemData
 
   public PublishedItemData(SectionDataIfc section, Integer sequence,
                   Integer duration, String instruction, String description,
-                  Long typeId, String grade, Float score, Float discount, String hint,
+                  Long typeId, String grade, Double score, Double discount, String hint,
                   Boolean hasRationale, Integer status, String createdBy,
                   Date createdDate, String lastModifiedBy,
                   Date lastModifiedDate,
@@ -213,24 +211,24 @@ public class PublishedItemData
     this.grade = grade;
   }
 
-  public Float getScore() {
+  public Double getScore() {
     return this.score;
   }
 
-  public void setScore(Float score) {
+  public void setScore(Double score) {
     this.score = score;
   }
 
-  public Float getDiscount() {
+  public Double getDiscount() {
 	  if (this.discount==null){
-		  this.discount= Float.valueOf(0);
+		  this.discount= Double.valueOf(0);
 	  }
 	  return this.discount;
   }
 
-  public void setDiscount(Float discount) {
+  public void setDiscount(Double discount) {
 	  if (discount==null){
-		  discount =Float.valueOf(0);
+		  discount =Double.valueOf(0);
 	  }
 	  this.discount = discount;
   }
@@ -305,18 +303,6 @@ public class PublishedItemData
 
   public void setItemMetaDataSet(Set itemMetaDataSet) {
     this.itemMetaDataSet = itemMetaDataSet;
-    this.itemMetaDataMap = getItemMetaDataMap(itemMetaDataSet);
-  }
-
-  public HashMap getItemMetaDataMap(Set itemMetaDataSet) {
-    HashMap itemMetaDataMap = new HashMap();
-    if (itemMetaDataSet != null){
-      for (Iterator i = itemMetaDataSet.iterator(); i.hasNext(); ) {
-        PublishedItemMetaData itemMetaData = (PublishedItemMetaData) i.next();
-        itemMetaDataMap.put(itemMetaData.getLabel(), itemMetaData.getEntry());
-      }
-    }
-    return itemMetaDataMap;
   }
 
   public Set getItemFeedbackSet() {
@@ -325,18 +311,6 @@ public class PublishedItemData
 
   public void setItemFeedbackSet(Set itemFeedbackSet) {
     this.itemFeedbackSet = itemFeedbackSet;
-    this.itemFeedbackMap = getItemFeedbackMap(itemFeedbackSet);
-  }
-
-  public HashMap getItemFeedbackMap(Set itemFeedbackSet) {
-    HashMap itemFeedbackMap = new HashMap();
-    if (itemFeedbackSet != null){
-      for (Iterator i = itemFeedbackSet.iterator(); i.hasNext(); ) {
-        PublishedItemFeedback itemFeedback = (PublishedItemFeedback) i.next();
-        itemFeedbackMap.put(itemFeedback.getTypeId(), itemFeedback.getText());
-      }
-    }
-    return itemFeedbackMap;
   }
 
   private void writeObject(java.io.ObjectOutputStream out) throws IOException {
@@ -358,15 +332,19 @@ public class PublishedItemData
   }
 
   public String getItemMetaDataByLabel(String label) {
-    return (String)this.itemMetaDataMap.get(label);
+    for (Iterator<PublishedItemMetaData> it = this.itemMetaDataSet.iterator(); it.hasNext();) {
+      PublishedItemMetaData imd = (PublishedItemMetaData) it.next();
+      if (imd.getLabel().equals(label)) {
+        return (String) imd.getEntry();
+      }
+    }
+    return null;
   }
 
   public void addItemMetaData(String label, String entry) {
     if (this.itemMetaDataSet == null) {
       setItemMetaDataSet(new HashSet());
-      this.itemMetaDataMap = new HashMap();
     }
-    this.itemMetaDataMap.put(label, entry);
     this.itemMetaDataSet.add(new PublishedItemMetaData(this, label, entry));
   }
 
@@ -406,15 +384,20 @@ public class PublishedItemData
   }
 
   public String getItemFeedback(String typeId) {
-    return (String)this.itemFeedbackMap.get(typeId);
+    for (Iterator i = this.itemFeedbackSet.iterator(); i.hasNext(); ) {
+      PublishedItemFeedback itemFeedback = (PublishedItemFeedback) i.next();
+      if (itemFeedback.getTypeId().equals(typeId)) {
+        return itemFeedback.getText();
+      }
+    }
+
+    return null;
   }
 
   public void addItemFeedback(String typeId, String text) {
     if (this.itemFeedbackSet == null) {
       setItemFeedbackSet(new HashSet());
-      this.itemFeedbackMap = new HashMap();
     }
-    this.itemFeedbackMap.put(typeId, text);
     this.itemFeedbackSet.add(new PublishedItemFeedback(this, typeId, text));
   }
 
@@ -595,9 +578,9 @@ public class PublishedItemData
 				}
 				//multiple choice partial credit:
 				if (this.getTypeId().equals(TypeD.MULTIPLE_CHOICE) && this.getPartialCreditFlag()){
-					Float pc =  Float.valueOf(a.getPartialCredit()); //--mustansar
+					Double pc =  Double.valueOf(a.getPartialCredit()); //--mustansar
 					if (pc == null) {
-						pc = Float.valueOf(0f);
+						pc = Double.valueOf(0d);
 					}
 					if(pc > 0){
 						String correct = rb.getString("correct");

@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/syllabus/trunk/syllabus-hbm/src/java/org/sakaiproject/component/app/syllabus/SyllabusDataImpl.java $
- * $Id: SyllabusDataImpl.java 120522 2013-02-28 15:33:34Z holladay@longsight.com $
+ * $Id: SyllabusDataImpl.java 122076 2013-04-02 19:35:27Z holladay@longsight.com $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008 The Sakai Foundation
@@ -268,6 +268,10 @@ public class SyllabusDataImpl implements SyllabusData, Comparable
   @Override
   public void setEndDate(Date endDate) {
 	  this.endDate = endDate;
+  }
+  @Override
+  public Boolean getLinkCalendar() {
+	  return isLinkCalendar();
   }
   @Override
   public Boolean isLinkCalendar() {

@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/kernel/trunk/api/src/main/java/org/sakaiproject/authz/api/AuthzGroupService.java $
- * $Id: AuthzGroupService.java 112409 2012-09-13 14:11:16Z azeckoski@unicon.net $
+ * $Id: AuthzGroupService.java 121067 2013-03-12 18:25:04Z david.horwitz@uct.ac.za $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008 Sakai Foundation

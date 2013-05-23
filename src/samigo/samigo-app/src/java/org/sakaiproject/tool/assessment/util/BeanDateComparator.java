@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/sam/trunk/samigo-app/src/java/org/sakaiproject/tool/assessment/util/BeanDateComparator.java $
- * $Id: BeanDateComparator.java 106463 2012-04-02 12:20:09Z david.horwitz@uct.ac.za $
+ * $Id: BeanDateComparator.java 121197 2013-03-14 15:40:44Z holladay@longsight.com $
  ***********************************************************************************
  *
  * Copyright (c) 2005, 2006, 2007, 2008 The Sakai Foundation
@@ -30,7 +30,7 @@ import java.text.*;
  * DOCUMENTATION PENDING
  *
  * @author $author$
- * @version $Id: BeanDateComparator.java 106463 2012-04-02 12:20:09Z david.horwitz@uct.ac.za $
+ * @version $Id: BeanDateComparator.java 121197 2013-03-14 15:40:44Z holladay@longsight.com $
  */
 public class BeanDateComparator
   extends BeanSortComparator
@@ -76,7 +76,7 @@ public class BeanDateComparator
     if(s1 == null) s1="";
     if(s2 == null) s2="";
 
-    DateFormat dateFormat=new SimpleDateFormat("yyyy-MM-dd hh:mm:ss.SSS");
+    DateFormat dateFormat=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
     Date i1 = null;
     Date i2 = null;
 

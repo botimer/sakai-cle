@@ -1,5 +1,5 @@
 /**
- * $Id: ExternalIntegrationProviderMock.java 113499 2012-09-25 01:13:56Z azeckoski@unicon.net $
+ * $Id: ExternalIntegrationProviderMock.java 123125 2013-04-23 01:03:34Z azeckoski@unicon.net $
  * $URL: https://source.sakaiproject.org/svn/entitybroker/trunk/utils/src/java/org/sakaiproject/entitybroker/util/external/ExternalIntegrationProviderMock.java $
  * ExternalIntegrationProviderMock.java - entity-broker - Jan 13, 2009 5:52:37 PM - azeckoski
  **********************************************************************************
@@ -87,6 +87,13 @@ public class ExternalIntegrationProviderMock implements ExternalIntegrationProvi
             return ((T) Boolean.TRUE);
         }
         return defaultValue;
+    }
+
+    /* (non-Javadoc)
+     * @see org.sakaiproject.entitybroker.entityprovider.extension.LearningTrackingProvider#registerStatement(java.lang.String, java.lang.String, java.lang.String, java.lang.String, java.lang.Boolean, java.lang.Float)
+     */
+    public void registerStatement(String prefix, String actorEmail, String verbStr, String objectURI, Boolean resultSuccess, Float resultScaledScore) {
+        // nothing to do
     }
 
 }

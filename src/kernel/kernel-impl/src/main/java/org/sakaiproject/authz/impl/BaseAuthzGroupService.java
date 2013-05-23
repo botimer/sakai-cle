@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/kernel/trunk/kernel-impl/src/main/java/org/sakaiproject/authz/impl/BaseAuthzGroupService.java $
- * $Id: BaseAuthzGroupService.java 114741 2012-10-18 14:52:40Z ottenhoff@longsight.com $
+ * $Id: BaseAuthzGroupService.java 123045 2013-04-19 16:51:53Z matthew.buckett@it.ox.ac.uk $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008 Sakai Foundation
@@ -88,11 +88,9 @@ public abstract class BaseAuthzGroupService implements AuthzGroupService
 	/** A provider of additional Abilities for a userId. */
 	protected GroupProvider m_provider = null;
 
-	
 	/**********************************************************************************************************************************************************************************************************************************************************
 	 * Abstractions, etc.
 	 *********************************************************************************************************************************************************************************************************************************************************/
-
 	
 	/**
 	 * Construct storage for this service.
@@ -250,7 +248,7 @@ public abstract class BaseAuthzGroupService implements AuthzGroupService
 	protected abstract UserDirectoryService userDirectoryService();
 
 	
-	private SiteService siteService;
+	protected SiteService siteService;
 	public void setSiteService(SiteService siteService) {
 		this.siteService = siteService;
 	}
@@ -1093,17 +1091,30 @@ public abstract class BaseAuthzGroupService implements AuthzGroupService
 	public boolean parseEntityReference(String reference, Reference ref)
 	{
 		// for azGroup access
-		if (reference.startsWith(REFERENCE_ROOT))
+		String id = extractEntityId(reference);
+		if (id != null)
 		{
-			// the azGroup id may have separators - we use everything after "/realm/"
-			String id = reference.substring(REFERENCE_ROOT.length() + 1, reference.length());
-
 			ref.set(APPLICATION_ID, null, id, null, null);
-
 			return true;
 		}
 
 		return false;
+	}
+
+	/**
+	 * Get the realm ID from a reference string. 
+	 * @param reference The reference to a realm. eg<code>/realm//site/mercury</code>
+	 * @return The ID of the realm or <code>null</code> if it's not a realm reference.
+	 */
+	protected String extractEntityId(String reference)
+	{
+		if (reference.startsWith(REFERENCE_ROOT) && REFERENCE_ROOT.length() + 1 <= reference.length())
+		{
+			// the azGroup id may have separators - we use everything after "/realm/"
+			String id = reference.substring(REFERENCE_ROOT.length() + 1, reference.length());
+			return id;
+		}
+		return null;
 	}
 
 	/**

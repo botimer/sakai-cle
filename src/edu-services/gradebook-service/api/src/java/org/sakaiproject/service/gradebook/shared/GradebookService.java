@@ -1,6 +1,6 @@
 /**********************************************************************************
  *
- * $Id: GradebookService.java 120890 2013-03-07 17:57:52Z azeckoski@unicon.net $
+ * $Id: GradebookService.java 124813 2013-05-22 09:03:11Z david.horwitz@uct.ac.za $
  *
  ***********************************************************************************
  *
@@ -493,7 +493,7 @@ public interface GradebookService {
 			AssignmentHasIllegalPointsException;
 
 	/**
-	 * @deprecated Replaced by {@link addExternalAssessment(String, String, String, Boolean)}
+	 * @deprecated Replaced by {@link GradebookExternalAssessmentService#addExternalAssessment(String, String, String, Boolean)}
 	 */
 	public void addExternalAssessment(String gradebookUid, String externalId,
 			String externalUrl, String title, double points, Date dueDate,
@@ -503,7 +503,7 @@ public interface GradebookService {
 			AssignmentHasIllegalPointsException;
 
 	/**
-	 * @deprecated Replaced by {@link updateExternalAssessment(String, String, String, String, Double, Date)}
+	 * @deprecated Replaced by {@link GradebookExternalAssessmentService#updateExternalAssessment(String, String, String, String, Double, Date)}
 	 */
 	public void updateExternalAssessment(String gradebookUid,
 			String externalId, String externalUrl, String title, double points,
@@ -744,6 +744,15 @@ public interface GradebookService {
 	 * 
 	 */
 	public Map getCalculatedCourseGrade(String gradebookUid);
+
+	/**
+	 * Get a Map of auto calculated CourseGrade for students.
+	 * @param gradebookUid
+	 * @param mapTheGrades Should we map the grades from points to letters?
+	 * @return Map of enrollment displayId as key, point as value
+	 * 
+	 */
+	public Map getCalculatedCourseGrade(String gradebookUid, boolean mapTheGrades);
 	
 	/**
 	 * Get student's assignment's score as string.

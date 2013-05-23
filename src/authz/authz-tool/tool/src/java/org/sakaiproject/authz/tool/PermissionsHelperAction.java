@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/authz/trunk/authz-tool/tool/src/java/org/sakaiproject/authz/tool/PermissionsHelperAction.java $
- * $Id: PermissionsHelperAction.java 105078 2012-02-24 23:00:38Z ottenhoff@longsight.com $
+ * $Id: PermissionsHelperAction.java 123084 2013-04-22 08:53:15Z matthew.buckett@it.ox.ac.uk $
  ***********************************************************************************
  *
  * Copyright (c) 2005, 2006, 2008 The Sakai Foundation
@@ -449,6 +449,7 @@ public class PermissionsHelperAction extends VelocityPortletPaneledAction
 				rolesAbilities.put(role.getId(), locks);
 			}
 		}
+		
 
 		context.put("realm", viewEdit != null ? viewEdit : edit);
 		context.put("prefix", prefix);
@@ -569,8 +570,8 @@ public class PermissionsHelperAction extends VelocityPortletPaneledAction
 			{
 				String lock = (String) iLocks.next();
 
-				String checked = data.getParameters().getString(role.getId() + lock);
-				if (checked != null)
+				boolean checked = data.getParameters().getBoolean(role.getId() + lock);
+				if (checked)
 				{
 					// we have an ability! Make sure there's a role
 					Role myRole = edit.getRole(role.getId());

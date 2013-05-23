@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/sam/trunk/samigo-api/src/java/org/sakaiproject/tool/assessment/data/ifc/assessment/AnswerIfc.java $
- * $Id: AnswerIfc.java 106463 2012-04-02 12:20:09Z david.horwitz@uct.ac.za $
+ * $Id: AnswerIfc.java 121258 2013-03-15 15:03:36Z ottenhoff@longsight.com $
  ***********************************************************************************
  *
  * Copyright (c) 2004, 2005, 2006, 2008 The Sakai Foundation
@@ -58,22 +58,22 @@ public  interface AnswerIfc
 
   void setIsCorrect(Boolean isCorrect);
 
-  Float getDiscount();
+  Double getDiscount();
   
-  void setDiscount(Float discount);
+  void setDiscount(Double discount);
   
   String getGrade();
 
   void setGrade(String grade);
 
-  Float getScore();
+  Double getScore();
 
-  void setScore(Float score);
+  void setScore(Double score);
   
   // to incorporate partial credit we need to add field for partial credit
-  void setPartialCredit(Float partialCredit);
+  void setPartialCredit(Double partialCredit);
   
-  Float getPartialCredit();
+  Double getPartialCredit();
 
   Set getAnswerFeedbackSet();
 

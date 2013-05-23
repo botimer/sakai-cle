@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/syllabus/trunk/syllabus-api/src/java/org/sakaiproject/api/app/syllabus/SyllabusData.java $
- * $Id: SyllabusData.java 120522 2013-02-28 15:33:34Z holladay@longsight.com $
+ * $Id: SyllabusData.java 122076 2013-04-02 19:35:27Z holladay@longsight.com $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2008 The Sakai Foundation
@@ -138,6 +138,7 @@ public interface SyllabusData
    * @return
    */
   public Boolean isLinkCalendar();
+  public Boolean getLinkCalendar();
   
   /**
    * flag used to associate date to the calendar tool

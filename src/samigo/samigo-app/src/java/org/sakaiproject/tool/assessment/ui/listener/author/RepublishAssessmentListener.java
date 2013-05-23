@@ -99,7 +99,7 @@ public class RepublishAssessmentListener implements ActionListener {
 		author.setJustPublishedAnAssessment(true);
 		
 		//update Calendar Events
-       boolean addDueDateToCalendar = FacesContext.getCurrentInstance().getExternalContext().getRequestParameterMap().get("publishAssessmentForm:calendarDueDate") != null;
+       boolean addDueDateToCalendar = FacesContext.getCurrentInstance().getExternalContext().getRequestParameterMap().get("publishAssessmentForm:calendarDueDate2") != null;
        calendarService.updateAllCalendarEvents(assessment, publishedAssessmentSettings.getReleaseTo(), publishedAssessmentSettings.getGroupsAuthorized(), rl.getString("calendarDueDatePrefix") + " ", addDueDateToCalendar, notificationMessage);
 
 		author.setOutcome("author");
@@ -198,7 +198,7 @@ public class RepublishAssessmentListener implements ActionListener {
 								if(ag.getStatus() ==5) {
 									ag.setFinalScore(ag.getFinalScore());
 								} else {
-									Float averageScore = PersistenceService.getInstance().getAssessmentGradingFacadeQueries().
+									Double averageScore = PersistenceService.getInstance().getAssessmentGradingFacadeQueries().
 									getAverageSubmittedAssessmentGrading(Long.valueOf(assessment.getPublishedAssessmentId()), ag.getAgentId());
 									ag.setFinalScore(averageScore);
 								}	

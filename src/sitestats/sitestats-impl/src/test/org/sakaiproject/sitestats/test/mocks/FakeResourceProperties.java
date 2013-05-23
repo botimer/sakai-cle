@@ -1,6 +1,6 @@
 /**
  * $URL: https://source.sakaiproject.org/svn/sitestats/trunk/sitestats-impl/src/test/org/sakaiproject/sitestats/test/mocks/FakeResourceProperties.java $
- * $Id: FakeResourceProperties.java 105078 2012-02-24 23:00:38Z ottenhoff@longsight.com $
+ * $Id: FakeResourceProperties.java 124652 2013-05-20 07:50:03Z david.horwitz@uct.ac.za $
  *
  * Copyright (c) 2006-2009 The Sakai Foundation
  *
@@ -18,6 +18,7 @@
  */
 package org.sakaiproject.sitestats.test.mocks;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -262,5 +263,7 @@ public class FakeResourceProperties implements ResourceProperties {
 		// TODO Auto-generated method stub
 		return null;
 	}
-
+    public Date getDateProperty(String name) {
+	return null;
+    }
 }

@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/dav/trunk/dav/src/java/org/sakaiproject/dav/DavServlet.java $
- * $Id: DavServlet.java 120352 2013-02-21 15:24:30Z hedrick@rutgers.edu $
+ * $Id: DavServlet.java 124872 2013-05-22 20:42:53Z azeckoski@unicon.net $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008, 2009 The Sakai Foundation
@@ -524,11 +524,6 @@ public class DavServlet extends HttpServlet
 	 * Don't show directories starting with "protected" to non-owner This defaults off because it requires corresponding changes in AccessServlet, which currently aren't present.
 	 */
 	private boolean doProtected = false;
-
-	/**
-	 * The MD5 helper object for this class.
-	 */
-	protected static final MD5Encoder md5Encoder = new MD5Encoder();
 
 	/**
 	 * MD5 message digest provider.
@@ -2232,7 +2227,8 @@ public class DavServlet extends HttpServlet
 
 		if (!exists)
 		{
-			resp.sendError(HttpServletResponse.SC_NOT_FOUND, "/dav" + path);
+			// We're not exactly sure why, but SC_BAD_REQUEST (not SC_NOT_FOUND) resolves a session clearing problem resulting in inflated open session counts
+			resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "/dav" + path);
 			return;
 		}
 
@@ -2961,7 +2957,12 @@ public class DavServlet extends HttpServlet
 
 		String path = getRelativePath(req);
 
-		copyResource(req, resp, true);
+		boolean success = copyResource(req, resp, true);
+		// https://jira.sakaiproject.org/browse/SAK-23639
+		// Remove this call to deleteResource if rename() is fixed
+		if (success) {
+		    deleteResource(path, req, resp);
+		}
 
 	}
 
@@ -3273,7 +3274,7 @@ public class DavServlet extends HttpServlet
 			String lockTokenStr = req.getServletPath() + "-" + lock.type + "-" + lock.scope + "-" + req.getUserPrincipal() + "-"
 					+ lock.depth + "-" + lock.owner + "-" + lock.tokens + "-" + lock.expiresAt + "-" + System.currentTimeMillis()
 					+ "-" + secret;
-			lockToken = md5Encoder.encode(md5Helper.digest(lockTokenStr.getBytes()));
+			lockToken = MD5Encoder.encode(md5Helper.digest(lockTokenStr.getBytes()));
 
 			if ((exists) && (object instanceof DirContext) && (lock.depth == INFINITY))
 			{
@@ -4109,14 +4110,16 @@ public class DavServlet extends HttpServlet
 		{
 		    boolean isCollection = contentHostingService.getProperties(source).getBooleanProperty(ResourceProperties.PROP_IS_COLLECTION);
 
+		    /* https://jira.sakaiproject.org/browse/SAK-23639
 		    if (move) {
 		    	contentHostingService.rename(source, dest);
 		    }
-		    else if (isCollection) {
-		    	copyCollection(source, dest);
-		    }
-		    else {
-		    	contentHostingService.copy(source, dest);
+		    else */
+		    // NOTE: moves cause a copy as below and a delete around line 2960, if rename() is fixed the remove that code also
+		    if (isCollection) {
+		        copyCollection(source, dest);
+		    } else {
+		        contentHostingService.copy(source, dest);
 		    }
 		}
 		catch (EntityPropertyNotDefinedException e)

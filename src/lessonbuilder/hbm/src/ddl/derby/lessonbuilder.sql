@@ -44,6 +44,7 @@
         anonymous smallint,
         showComments smallint,
         forcedCommentsAnonymous smallint,
+        showPeerEval smallint,
         gradebookId varchar(35),
         gradebookPoints integer,
         gradebookTitle varchar(200),
@@ -87,15 +88,19 @@
         primary key (pageId)
     );
 
-    create table lesson_builder_qr_totals (
-        id bigint not null,
-        questionId bigint,
-        responseId bigint,
-        count bigint,
-        primary key (id)
+    create table lesson_builder_peer_eval_results (
+        PEER_EVAL_RESULT_ID bigint not null,
+        PAGE_ID bigint not null,
+        TIME_POSTED timestamp,
+        GRADER varchar(255) not null,
+        GRADEE varchar(255) not null,
+        ROW_TEXT varchar(255) not null,
+        COLUMN_VALUE integer not null,
+        SELECTED smallint,
+        primary key (PEER_EVAL_RESULT_ID)
     );
 
-    create table lesson_builder_question_responses (
+    create table lesson_builder_q_responses (
         id bigint not null,
         timeAnswered timestamp not null,
         questionId bigint not null,
@@ -106,6 +111,14 @@
         originalText clob(255),
         overridden smallint not null,
         points double,
+        primary key (id)
+    );
+
+    create table lesson_builder_qr_totals (
+        id bigint not null,
+        questionId bigint,
+        responseId bigint,
+        respcount bigint,
         primary key (id)
     );
 

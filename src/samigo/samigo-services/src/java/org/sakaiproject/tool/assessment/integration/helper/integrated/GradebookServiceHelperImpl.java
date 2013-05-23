@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/sam/trunk/samigo-services/src/java/org/sakaiproject/tool/assessment/integration/helper/integrated/GradebookServiceHelperImpl.java $
- * $Id: GradebookServiceHelperImpl.java 107319 2012-04-17 13:39:00Z david.horwitz@uct.ac.za $
+ * $Id: GradebookServiceHelperImpl.java 121258 2013-03-15 15:03:36Z ottenhoff@longsight.com $
  ***********************************************************************************
  *
  * Copyright (c) 2004, 2005, 2006, 2007, 2008, 2009 The Sakai Foundation
@@ -264,9 +264,9 @@ public void removeExternalAssessment(String gradebookUId,
       return;
     }
     
-    //SAM-1562 We need to round the float score and covert to a double -DH
-    float fScore = MathUtils.round(ag.getFinalScore(), 2);
-    Double score = Float.valueOf(fScore).doubleValue();
+    //SAM-1562 We need to round the double score and covert to a double -DH
+    double fScore = MathUtils.round(ag.getFinalScore(), 2);
+    Double score = Double.valueOf(fScore).doubleValue();
     log.info("rounded:  " + ag.getFinalScore() + " to: " + score.toString() );
     g.updateExternalAssessmentScore(gradebookUId,
       ag.getPublishedAssessmentId().toString(),

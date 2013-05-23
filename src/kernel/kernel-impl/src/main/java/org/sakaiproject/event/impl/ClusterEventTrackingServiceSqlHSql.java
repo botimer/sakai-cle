@@ -1,6 +1,6 @@
 /**********************************************************************************
- * $URL: https://source.sakaiproject.org/contrib/rsmart/dbrefactor/chat/chat-impl/impl/src/java/org/sakaiproject/chat/impl/ChatServiceSqlHSql.java $
- * $Id: ChatServiceSqlHSql.java 3560 2007-02-19 22:08:01Z jbush@rsmart.com $
+ * $URL: https://source.sakaiproject.org/svn/kernel/trunk/kernel-impl/src/main/java/org/sakaiproject/event/impl/ClusterEventTrackingServiceSqlHSql.java $
+ * $Id: ClusterEventTrackingServiceSqlHSql.java 122934 2013-04-17 21:16:11Z azeckoski@unicon.net $
  ***********************************************************************************
  *
  * Copyright (c) 2007, 2008 Sakai Foundation

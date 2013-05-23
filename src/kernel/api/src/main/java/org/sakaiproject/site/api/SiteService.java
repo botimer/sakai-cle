@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/kernel/trunk/api/src/main/java/org/sakaiproject/site/api/SiteService.java $
- * $Id: SiteService.java 120411 2013-02-23 01:14:26Z botimer@umich.edu $
+ * $Id: SiteService.java 121766 2013-03-26 11:41:48Z steve.swinsburg@gmail.com $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008 Sakai Foundation
@@ -373,7 +373,8 @@ public interface SiteService extends EntityProducer
 	boolean siteExists(String id);
 
 	/**
-	 * Access a site object.
+	 * Access a site object. This method does not perform any security/permission checks. 
+	 * If you need permission checks to occur, use {@link getSiteVisit(String id)} instead
 	 * 
 	 * @param id
 	 *        The site id string.

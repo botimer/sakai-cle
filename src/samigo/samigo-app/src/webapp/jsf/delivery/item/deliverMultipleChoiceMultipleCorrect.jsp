@@ -1,4 +1,4 @@
-<%-- $Id: deliverMultipleChoiceMultipleCorrect.jsp 118502 2013-01-18 22:39:13Z ktsao@stanford.edu $
+<%-- $Id: deliverMultipleChoiceMultipleCorrect.jsp 123878 2013-05-08 22:59:16Z ktsao@stanford.edu $
 include file for delivering multiple choice questions
 should be included in file importing DeliveryMessages
 --%>
@@ -27,7 +27,7 @@ should be included in file importing DeliveryMessages
   <!-- ATTACHMENTS -->
   <%@ include file="/jsf/delivery/item/attachment.jsp" %>
 
-  <h:dataTable value="#{question.selectionArray}" var="selection">
+  <h:dataTable value="#{question.selectionArray}" var="selection" width="100%">
     <h:column rendered="#{delivery.feedback eq 'true' &&
        delivery.feedbackComponent.showCorrectResponse && !delivery.noFeedback=='true'}">
       <h:graphicImage id="image"
@@ -47,7 +47,7 @@ should be included in file importing DeliveryMessages
                  || delivery.actionString=='gradeAssessment'}" />
      <h:outputText value=" #{selection.answer.label}" escape="false" />
      <h:outputText value="#{deliveryMessages.dot}" rendered="#{selection.answer.label ne ''}" />
-     <h:outputText value=" #{selection.answer.text}" escape="false" />
+     <h:outputText value=" #{selection.answer.text}" styleClass="mcAnswerText" escape="false" />
      <f:verbatim></label></f:verbatim>
     </h:column>
     <h:column>

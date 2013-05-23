@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/sam/trunk/samigo-services/src/java/org/sakaiproject/tool/assessment/facade/AssessmentGradingFacadeQueriesAPI.java $
- * $Id: AssessmentGradingFacadeQueriesAPI.java 120911 2013-03-07 22:32:47Z ktsao@stanford.edu $
+ * $Id: AssessmentGradingFacadeQueriesAPI.java 121258 2013-03-15 15:03:36Z ottenhoff@longsight.com $
  ***********************************************************************************
  *
  * Copyright (c) 2004, 2005, 2006, 2007, 2008, 2009 The Sakai Foundation
@@ -99,7 +99,7 @@ public interface AssessmentGradingFacadeQueriesAPI
    * Choices should be given negative score values if one wants them
    * to lose points for the wrong choice.
    */
-  //public float getAnswerScore(ItemGradingIfc data);
+  //public double getAnswerScore(ItemGradingIfc data);
 
   public Long add(AssessmentGradingData a);
 
@@ -248,6 +248,6 @@ public interface AssessmentGradingFacadeQueriesAPI
   public void completeItemGradingData(AssessmentGradingData assessmentGradingData);	
   
   public List getHighestSubmittedAssessmentGradingList(final Long publishedAssessmentId);
-  public Float getAverageSubmittedAssessmentGrading( final Long publishedAssessmentId, final String agentId);
+  public Double getAverageSubmittedAssessmentGrading( final Long publishedAssessmentId, final String agentId);
   public HashMap getAverageAssessmentGradingByPublishedItem(Long publishedAssessmentId);	
 }
