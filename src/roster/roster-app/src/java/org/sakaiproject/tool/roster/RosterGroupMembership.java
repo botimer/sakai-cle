@@ -90,6 +90,10 @@ public class RosterGroupMembership extends BaseRosterPageBean {
 				//remove each grouped participant from the 'unassignedParticipants' set
 				unassignedParticipants.removeAll(roster);
 
+				Collections.sort(roster, getComparator());
+				if (!prefs.sortAscending) {
+					Collections.reverse(roster);
+				}
 				groupedParticipants.add(new GroupedParticipants(group.getTitle(), roster, roster.size(), getRoleCountMessage(filter.findRoleCounts(roster))));
 			}
 
@@ -97,10 +101,16 @@ public class RosterGroupMembership extends BaseRosterPageBean {
 			if (!unassignedParticipants.isEmpty())
 			{
 				String unassigned = LocaleUtil.getLocalizedString(FacesContext.getCurrentInstance(), ServicesBean.MESSAGE_BUNDLE, "roster_group_unassigned");
+
+				List<Participant> unassignedList = new ArrayList<Participant>(unassignedParticipants);
+				Collections.sort(unassignedList, getComparator());
+				if (!prefs.sortAscending) {
+					Collections.reverse(unassignedList);
+				}
 				groupedParticipants.add(
 						new GroupedParticipants(
 								unassigned, 
-								unassignedParticipants, 
+								unassignedList, 
 								unassignedParticipants.size(), 
 								getRoleCountMessage(filter.findRoleCounts(unassignedParticipants))
 						)

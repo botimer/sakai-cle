@@ -1,6 +1,6 @@
 /**********************************************************************************
 *
-* $Id: GradebookExternalAssessmentService.java 118469 2013-01-18 13:47:15Z nbotimer@unicon.net $
+* $Id: GradebookExternalAssessmentService.java 124813 2013-05-22 09:03:11Z david.horwitz@uct.ac.za $
 *
 ***********************************************************************************
 *
@@ -119,6 +119,21 @@ public interface GradebookExternalAssessmentService {
 			String title, double points, Date dueDate)
 	        throws GradebookNotFoundException, AssessmentNotFoundException,
             ConflictingAssignmentNameException, AssignmentHasIllegalPointsException;
+    
+    /**
+     *  Update an external assessment
+     * @param gradebookUid
+     * @param externalId
+     * @param externalUrl
+     * @param title
+     * @param points
+     * @param dueDate
+     * @param ungraded
+     * @throws GradebookNotFoundException
+     * @throws AssessmentNotFoundException
+     * @throws ConflictingAssignmentNameException
+     * @throws AssignmentHasIllegalPointsException
+     */
     public void updateExternalAssessment(String gradebookUid, String externalId, String externalUrl,
   			String title, Double points, Date dueDate, Boolean ungraded)
   	        throws GradebookNotFoundException, AssessmentNotFoundException,

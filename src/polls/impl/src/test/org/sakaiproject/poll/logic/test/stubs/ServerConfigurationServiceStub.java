@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/polls/trunk/impl/src/test/org/sakaiproject/poll/logic/test/stubs/ServerConfigurationServiceStub.java $
- * $Id: ServerConfigurationServiceStub.java 105078 2012-02-24 23:00:38Z ottenhoff@longsight.com $
+ * $Id: ServerConfigurationServiceStub.java 122162 2013-04-03 21:27:02Z azeckoski@unicon.net $
  ***********************************************************************************
  *
  * Copyright (c) 2008 The Sakai Foundation
@@ -24,6 +24,7 @@ package org.sakaiproject.poll.logic.test.stubs;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Locale;
 
 import org.sakaiproject.component.api.ServerConfigurationService;
 
@@ -150,6 +151,44 @@ public class ServerConfigurationServiceStub implements ServerConfigurationServic
 		return null;
 	}
 
+	/*
+	 * Returns true if selected tool is contained in pre-initialized list of selected items
+	 * @parms toolId id of the selected tool
+	 */
+	public boolean toolGroupIsSelected(String groupName, String toolId) {
+		return false;
+	}
+
+	 /*
+	  * Returns true if selected tool is contained in pre-initialized list of required items
+	  * @parms toolId id of the selected tool
+	  */
+	public boolean toolGroupIsRequired(String groupName, String toolId) {
+		return false;
+	}		
+	
+	/**
+	 * Access the list of groups by category (site type)
+	 * 
+	 * @param category
+	 *			 The tool category
+	 * @return An ordered list of tool ids (String) indicating the desired tool display order, or an empty list if there are none for this category.
+	 */
+	public List getCategoryGroups(String category){		
+		return null;
+	}
+	
+	/**
+	 * Access the list of tools by group
+	 * 
+	 * @param category
+	 *			 The tool category
+	 * @return An unordered list of tool ids (String) in selected group, or an empty list if there are none for this category.
+	 */
+	public List getToolGroup(String category) {
+		return null;
+	}
+
 	public List getToolsRequired(String category) {
 		// TODO Auto-generated method stub
 		return null;
@@ -187,6 +226,14 @@ public class ServerConfigurationServiceStub implements ServerConfigurationServic
 
     public void registerListener(ConfigurationListener configurationListener) {
         
+    }
+
+    public Locale[] getSakaiLocales() {
+        return new Locale[] {Locale.getDefault()};
+    }
+
+    public Locale getLocaleFromString(String localeString) {
+        return Locale.getDefault();
     }
 
 }

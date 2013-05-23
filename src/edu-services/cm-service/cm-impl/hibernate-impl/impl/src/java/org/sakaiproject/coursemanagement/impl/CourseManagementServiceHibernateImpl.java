@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/edu-services/trunk/cm-service/cm-impl/hibernate-impl/impl/src/java/org/sakaiproject/coursemanagement/impl/CourseManagementServiceHibernateImpl.java $
- * $Id: CourseManagementServiceHibernateImpl.java 105077 2012-02-24 22:54:29Z ottenhoff@longsight.com $
+ * $Id: CourseManagementServiceHibernateImpl.java 123501 2013-05-01 22:46:45Z matthew@longsight.com $
  ***********************************************************************************
  *
  * Copyright (c) 2006, 2007, 2008 The Sakai Foundation
@@ -136,12 +136,27 @@ public class CourseManagementServiceHibernateImpl extends HibernateDaoSupport im
 		return ((CourseSetCmImpl)getCourseSet(courseSetEid)).getCanonicalCourses();
 	}
 
-	public List<AcademicSession> getAcademicSessions() {
-		return getHibernateTemplate().findByNamedQuery("findAcademicSessions");
+	public List <AcademicSession> getAcademicSessions() {
+	    return (List <AcademicSession>) getHibernateTemplate().execute(new HibernateCallback() {
+		@Override
+		public List <AcademicSession> doInHibernate(Session session) {
+		    Query query = session.getNamedQuery("findAcademicSessions");
+		    query.setCacheable(true);
+		    return query.list();
+		}
+	    });
+
 	}
 
-	public List<AcademicSession> getCurrentAcademicSessions() {
-		return getHibernateTemplate().findByNamedQuery("findCurrentAcademicSessions");
+	public List <AcademicSession> getCurrentAcademicSessions() {
+	    return (List <AcademicSession>) getHibernateTemplate().execute(new HibernateCallback() {
+		@Override
+		public List <AcademicSession> doInHibernate(Session session) {
+		    Query query = session.getNamedQuery("findCurrentAcademicSessions");
+		    query.setCacheable(true);
+		    return query.list();
+		}
+	    });
 	}
 
 	public AcademicSession getAcademicSession(final String eid) throws IdNotFoundException {

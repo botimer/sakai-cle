@@ -1,4 +1,4 @@
-<!-- $Id: chef_assignments_instructor_student_list_submissions.vm 113077 2012-09-18 16:42:38Z gsilver@umich.edu $ -->
+<!-- $Id: chef_assignments_instructor_student_list_submissions.vm 122725 2013-04-12 21:05:51Z ottenhoff@longsight.com $ -->
 <!-- start: chef_assignments_instructor_student_list_submissions.vm  -->
 ##<!-- $Header: /cvs/sakai2/legacy/tools/src/webapp/vm/assignment/chef_assignments_instructor_student_list_submissions.vm,v 1.8 2005/05/28 03:04:35 ggolden.umich.edu Exp $ -->
 <div class="portletBody">
@@ -42,7 +42,7 @@
 	<h3>
 		$!tlang.getString('lisofass2')
 	</h3>
-	#if ($alertMessage)<div class="alertMessage">$tlang.getString("gen.alert") $validator.escapeHtml($alertMessage)</div>#end
+	#if ($alertMessage)<div class="alertMessage">$tlang.getString("gen.alert") $alertMessage</div>#end
 		#if ($!studentMembers.size() == 0)
 			<p class="instruction" style="clear:both">
 				$tlang.getString("theisnostudent")

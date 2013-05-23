@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/sam/trunk/samigo-app/src/java/org/sakaiproject/tool/assessment/ui/listener/delivery/DeliveryActionListener.java $
- * $Id: DeliveryActionListener.java 121258 2013-03-15 15:03:36Z ottenhoff@longsight.com $
+ * $Id: DeliveryActionListener.java 124154 2013-05-16 14:04:00Z azeckoski@unicon.net $
  ***********************************************************************************
  *
  * Copyright (c) 2004, 2005, 2006, 2007, 2008, 2009 The Sakai Foundation
@@ -45,6 +45,15 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.sakaiproject.component.cover.ComponentManager;
+import org.sakaiproject.component.cover.ServerConfigurationService;
+import org.sakaiproject.event.api.Event;
+import org.sakaiproject.event.api.LearningResourceStoreService;
+import org.sakaiproject.event.api.LearningResourceStoreService.LRS_Actor;
+import org.sakaiproject.event.api.LearningResourceStoreService.LRS_Object;
+import org.sakaiproject.event.api.LearningResourceStoreService.LRS_Statement;
+import org.sakaiproject.event.api.LearningResourceStoreService.LRS_Verb;
+import org.sakaiproject.event.api.LearningResourceStoreService.LRS_Verb.SAKAI_VERB;
 import org.sakaiproject.event.cover.EventTrackingService;
 import org.sakaiproject.event.cover.NotificationService;
 import org.sakaiproject.tool.assessment.api.SamigoApiFactory;
@@ -97,7 +106,7 @@ import org.sakaiproject.util.ResourceLoader;
  * <p>Purpose:  this module creates the lists of published assessments for the select index
  * <p>Description: Sakai Assessment Manager</p>
  * @author Ed Smiley
- * @version $Id: DeliveryActionListener.java 121258 2013-03-15 15:03:36Z ottenhoff@longsight.com $
+ * @version $Id: DeliveryActionListener.java 124154 2013-05-16 14:04:00Z azeckoski@unicon.net $
  */
 
 public class DeliveryActionListener
@@ -400,6 +409,10 @@ public class DeliveryActionListener
                       
                   eventLogFacade.setData(eventLogData);
                   eventService.saveOrUpdateEventLog(eventLogFacade);           	  
+                  LearningResourceStoreService lrss = (LearningResourceStoreService) ComponentManager
+                            .get("org.sakaiproject.event.api.LearningResourceStoreService");
+                  StringBuffer lrssMetaInfo = new StringBuffer("Assesment: " + delivery.getAssessmentTitle());
+                  lrssMetaInfo.append(", Past Due?: " + delivery.getPastDue());
             	  if (action == DeliveryBean.TAKE_ASSESSMENT) {
             		  StringBuffer eventRef = new StringBuffer("publishedAssessmentId=");
             		  eventRef.append(delivery.getAssessmentId());
@@ -412,7 +425,12 @@ public class DeliveryActionListener
             			  int timeRemaining = Integer.parseInt(delivery.getTimeLimit()) - Integer.parseInt(delivery.getTimeElapse());
             			  eventRef.append(timeRemaining);
             		  }
-            		  EventTrackingService.post(EventTrackingService.newEvent("sam.assessment.take", "siteId=" + site_id + ", " + eventRef.toString(), true));
+                      Event event = EventTrackingService.newEvent("sam.assessment.take",
+                              "siteId=" + site_id + ", " + eventRef.toString(), true);
+                      EventTrackingService.post(event);
+                      if (null != lrss) {
+                          lrss.registerStatement(getStatementForTakeAssessment(lrss.getEventActor(event), event, lrssMetaInfo.toString()), "samigo");
+                      }
             	  }
             	  else if (action == DeliveryBean.TAKE_ASSESSMENT_VIA_URL) {
             		  StringBuffer eventRef = new StringBuffer("publishedAssessmentId=");
@@ -426,7 +444,13 @@ public class DeliveryActionListener
             			  int timeRemaining = Integer.parseInt(delivery.getTimeLimit()) - Integer.parseInt(delivery.getTimeElapse());
             			  eventRef.append(timeRemaining);
             		  }
-            		  EventTrackingService.post(EventTrackingService.newEvent("sam.assessment.take.via_url", "siteId=" + site_id + ", " + eventRef.toString(), site_id, true, NotificationService.NOTI_REQUIRED));
+                      Event event = EventTrackingService.newEvent("sam.assessment.take.via_url",
+                                "siteId=" + site_id + ", " + eventRef.toString(), site_id, true, NotificationService.NOTI_REQUIRED);
+                      EventTrackingService.post(event);
+                      lrssMetaInfo.append(", Assesment taken via URL.");
+                      if (null != lrss) {
+                          lrss.registerStatement(getStatementForTakeAssessment(lrss.getEventActor(event), event, lrssMetaInfo.toString()), "samigo");
+                      }
             	  }
               }
               else {
@@ -2085,7 +2109,7 @@ public class DeliveryActionListener
 
   }
 */
-  
+
   /**
    * CALCULATED_QUESTION
    * This method essentially will convert a CalculatedQuestion item which is initially structured
@@ -2094,104 +2118,103 @@ public class DeliveryActionListener
    */
   public void populateCalculatedQuestion(ItemDataIfc item, ItemContentsBean bean, DeliveryBean delivery)
   {
-	long gradingId = determineCalcQGradingId(delivery);
-	String agentId = determineCalcQAgentId(delivery, bean);
-	  
-	HashMap answersMap = new HashMap();
-	GradingService service = new GradingService();
-	// texts is the display text that will show in the question. AnswersMap gets populated with
-	// pairs such as key:x, value:42.0
-	ArrayList<String> texts = service.extractCalcQAnswersArray(answersMap, item, gradingId, agentId);
-	String questionText = texts.get(0);
-	
-	ItemTextIfc text = (ItemTextIfc) item.getItemTextArraySorted().toArray()[0];
-    List<FinBean> fins = new ArrayList<FinBean>();
-    bean.setInstruction(questionText); // will be referenced in table of contents
-    
-    int numOfAnswers = answersMap.size();
-    
-    int i = 0;
-    ArrayList calcQuestionEntities = text.getAnswerArraySorted();
-    
-    // Here's where I had to do it a little messy, so I'll explain. The variable are like
-    // matching pairs so they are stored as answers. But this question has real answers
-    // too. So I recycle the answer object I stored the variables in again to represent
-    // answers too.
-    // I sort this list by answer id so that it will come back from the student in a 
-    // predictable order.
-    Collections.sort(calcQuestionEntities, new Comparator<AnswerIfc>(){
-    	public int compare(AnswerIfc a1, AnswerIfc a2) {
-    		return a1.getId().compareTo(a2.getId());
-    	}
-    });
-    
-    Iterator<AnswerIfc> iter = calcQuestionEntities.iterator();
-    while (iter.hasNext())
-    {
-    	if (i == numOfAnswers) break; // AnswerArray holds the vars so there may be more than we need
-    	
-      AnswerIfc answer = iter.next();
-      
-      answer.setIsCorrect(true);
-      
-      FinBean fbean = new FinBean();
-      fbean.setItemContentsBean(bean);
-      fbean.setAnswer(answer);
-      if(texts.toArray().length>i)
-        fbean.setText( (String) texts.toArray()[i++]);
-      else
-        fbean.setText("");
-      fbean.setHasInput(true); // input box
+      long gradingId = determineCalcQGradingId(delivery);
+      String agentId = determineCalcQAgentId(delivery, bean);
 
-      ArrayList<ItemGradingData> datas = bean.getItemGradingDataArray();
-      if (datas == null || datas.isEmpty())
-      {
-        fbean.setIsCorrect(false);
-      }
-      else
-      {
-        for (ItemGradingData data : datas) {
-          
-          if ((data.getPublishedAnswerId()!=null) && (data.getPublishedAnswerId().equals(answer.getId())))
-          {
-        	fbean.setItemGradingData(data);
-            fbean.setResponse(FormattedText.convertFormattedTextToPlaintext(data.getAnswerText()));
-            fbean.setIsCorrect(false);
-            if (answer.getText() == null)
-            {
-              answer.setText("");
-            }
-            StringTokenizer st2 = new StringTokenizer(answer.getText(), "|");
-            while (st2.hasMoreTokens())
-            {
-              String nextT = st2.nextToken();
-              log.debug("nextT = " + nextT);
-              //  mark answer as correct if autoscore > 0
+      HashMap<Integer, String> answersMap = new HashMap<Integer, String>();
+      GradingService service = new GradingService();
+      // texts is the display text that will show in the question. AnswersMap gets populated with
+      // pairs such as key:x, value:42.0
+      List<String> texts = service.extractCalcQAnswersArray(answersMap, item, gradingId, agentId);
+      String questionText = texts.get(0);
 
-              if (data.getAutoScore() != null &&
-                  data.getAutoScore().doubleValue() > 0.0)
-               {
-                fbean.setIsCorrect(true);
-              }
-            }
+      ItemTextIfc text = (ItemTextIfc) item.getItemTextArraySorted().toArray()[0];
+      List<FinBean> fins = new ArrayList<FinBean>();
+      bean.setInstruction(questionText); // will be referenced in table of contents
+
+      int numOfAnswers = answersMap.size();
+
+      int i = 0;
+      List<AnswerIfc> calcQuestionEntities = text.getAnswerArraySorted();
+
+      // Here's where I had to do it a little messy, so I'll explain. The variable are like
+      // matching pairs so they are stored as answers. But this question has real answers
+      // too. So I recycle the answer object I stored the variables in again to represent
+      // answers too.
+      // I sort this list by answer id so that it will come back from the student in a 
+      // predictable order.
+      Collections.sort(calcQuestionEntities, new Comparator<AnswerIfc>(){
+          public int compare(AnswerIfc a1, AnswerIfc a2) {
+              return a1.getId().compareTo(a2.getId());
           }
-        }
+      });
+
+      Iterator<AnswerIfc> iter = calcQuestionEntities.iterator();
+      while (iter.hasNext())
+      {
+          if (i == numOfAnswers) break; // AnswerArray holds the vars so there may be more than we need
+
+          AnswerIfc answer = iter.next();
+
+          answer.setIsCorrect(true);
+
+          FinBean fbean = new FinBean();
+          fbean.setItemContentsBean(bean);
+          fbean.setAnswer(answer);
+          if (texts.toArray().length>i) {
+              fbean.setText( (String) texts.toArray()[i++]);
+          } else {
+              fbean.setText("");
+          }
+          fbean.setHasInput(true); // input box
+
+          ArrayList<ItemGradingData> datas = bean.getItemGradingDataArray();
+          if (datas == null || datas.isEmpty())
+          {
+              fbean.setIsCorrect(false);
+          } else {
+              for (ItemGradingData data : datas) {
+
+                  if ((data.getPublishedAnswerId()!=null) && (data.getPublishedAnswerId().equals(answer.getId())))
+                  {
+                      fbean.setItemGradingData(data);
+                      fbean.setResponse(FormattedText.convertFormattedTextToPlaintext(data.getAnswerText()));
+                      fbean.setIsCorrect(false);
+                      if (answer.getText() == null)
+                      {
+                          answer.setText("");
+                      }
+                      StringTokenizer st2 = new StringTokenizer(answer.getText(), "|");
+                      while (st2.hasMoreTokens())
+                      {
+                          String nextT = st2.nextToken();
+                          log.debug("nextT = " + nextT);
+                          //  mark answer as correct if autoscore > 0
+
+                          if (data.getAutoScore() != null &&
+                                  data.getAutoScore().doubleValue() > 0.0)
+                          {
+                              fbean.setIsCorrect(true);
+                          }
+                      }
+                  }
+              }
+          }
+          fins.add(fbean);
       }
+
+      FinBean fbean = new FinBean();
+      if(texts.toArray().length>i)
+          fbean.setText( (String) texts.toArray()[i]);
+      else
+          fbean.setText("");
+      fbean.setHasInput(false);
       fins.add(fbean);
-    }
 
-    FinBean fbean = new FinBean();
-    if(texts.toArray().length>i)
-      fbean.setText( (String) texts.toArray()[i]);
-     else
-      fbean.setText("");
-    fbean.setHasInput(false);
-    fins.add(fbean);
+      bean.setFinArray((ArrayList) fins);
 
-    bean.setFinArray((ArrayList) fins);
-	    
   }
-  
+
   public String getAgentString(){
     PersonBean person = (PersonBean) ContextUtil.lookupBean("person");
     String agentString = person.getId();
@@ -2616,8 +2639,8 @@ public class DeliveryActionListener
 	  String keysString = "";
 	  GradingService service = new GradingService();
 	
-	HashMap answersMap = new HashMap();
-	ArrayList texts = service.extractCalcQAnswersArray(answersMap, item, gradingId, agentId);
+	HashMap<Integer, String> answersMap = new HashMap<Integer, String>();
+	service.extractCalcQAnswersArray(answersMap, item, gradingId, agentId); // return value not used, answersMap is populated
 	
 	int answerSequence = 1; // this corresponds to the sequence value assigned in extractCalcQAnswersArray()
 	while(answerSequence <= answersMap.size()) {
@@ -2676,5 +2699,17 @@ public class DeliveryActionListener
 	  return gradingId;
   }
   
+    protected LRS_Statement getStatementForTakeAssessment(LRS_Actor actor, Event event, String assessmentName) {
+      String url = ServerConfigurationService.getPortalUrl();
+      LRS_Verb verb = new LRS_Verb(SAKAI_VERB.attempted);
+      LRS_Object lrsObject = new LRS_Object(url + "/assessment", "attempted-assessment");
+      HashMap<String, String> nameMap = new HashMap<String, String>();
+      nameMap.put("en-US", "User attempted assessment");
+      lrsObject.setActivityName(nameMap);
+      HashMap<String, String> descMap = new HashMap<String, String>();
+      descMap.put("en-US", "User attempted assessment: " + assessmentName);
+      lrsObject.setDescription(descMap);
+      return new LRS_Statement(actor, verb, lrsObject);
+  }
 }
 

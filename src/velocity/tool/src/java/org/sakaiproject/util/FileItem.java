@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/velocity/trunk/tool/src/java/org/sakaiproject/util/FileItem.java $
- * $Id: FileItem.java 105080 2012-02-24 23:10:31Z ottenhoff@longsight.com $
+ * $Id: FileItem.java 123550 2013-05-02 23:09:33Z matthew@longsight.com $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008 The Sakai Foundation

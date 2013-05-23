@@ -44,6 +44,7 @@
         anonymous bool,
         showComments bool,
         forcedCommentsAnonymous bool,
+        showPeerEval bool,
         gradebookId varchar(35),
         gradebookPoints int4,
         gradebookTitle varchar(200),
@@ -87,15 +88,19 @@
         primary key (pageId)
     );
 
-    create table lesson_builder_qr_totals (
-        id int8 not null,
-        questionId int8,
-        responseId int8,
-        count int8,
-        primary key (id)
+    create table lesson_builder_peer_eval_results (
+        PEER_EVAL_RESULT_ID int8 not null,
+        PAGE_ID int8 not null,
+        TIME_POSTED timestamp,
+        GRADER varchar(255) not null,
+        GRADEE varchar(255) not null,
+        ROW_TEXT varchar(255) not null,
+        COLUMN_VALUE int4 not null,
+        SELECTED bool,
+        primary key (PEER_EVAL_RESULT_ID)
     );
 
-    create table lesson_builder_question_responses (
+    create table lesson_builder_q_responses (
         id int8 not null,
         timeAnswered timestamp not null,
         questionId int8 not null,
@@ -106,6 +111,14 @@
         originalText text,
         overridden bool not null,
         points float8,
+        primary key (id)
+    );
+
+    create table lesson_builder_qr_totals (
+        id int8 not null,
+        questionId int8,
+        responseId int8,
+        respcount int8,
         primary key (id)
     );
 
@@ -124,5 +137,7 @@
         points float8,
         primary key (id)
     );
+
+    create sequence LB_PEER_EVAL_RESULT_S;
 
     create sequence hibernate_sequence;

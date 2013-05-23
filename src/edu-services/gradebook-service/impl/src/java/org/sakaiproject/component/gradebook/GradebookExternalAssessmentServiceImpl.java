@@ -1,6 +1,6 @@
 /**********************************************************************************
 *
-* $Id: GradebookExternalAssessmentServiceImpl.java 121000 2013-03-11 07:27:04Z david.horwitz@uct.ac.za $
+* $Id: GradebookExternalAssessmentServiceImpl.java 122905 2013-04-17 14:39:21Z azeckoski@unicon.net $
 *
 ***********************************************************************************
 *
@@ -64,8 +64,6 @@ public class GradebookExternalAssessmentServiceImpl extends BaseHibernateManager
     // Special logger for data contention analysis.
     private static final Log logData = LogFactory.getLog(GradebookExternalAssessmentServiceImpl.class.getName() + ".GB_DATA");
 
-    private NumberFormat numberFormat;
-    
     private EventTrackingService eventTrackingService;
 	
     public void setEventTrackingService(EventTrackingService eventTrackingService) {
@@ -759,11 +757,7 @@ public class GradebookExternalAssessmentServiceImpl extends BaseHibernateManager
 	}
 
 	private NumberFormat getNumberFormat() {
-	    if (numberFormat == null) {
-	        numberFormat = NumberFormat.getInstance(new ResourceLoader().getLocale());
-	    }
-
-	    return numberFormat;
+	    return NumberFormat.getInstance(new ResourceLoader().getLocale());
 	}
 
 }

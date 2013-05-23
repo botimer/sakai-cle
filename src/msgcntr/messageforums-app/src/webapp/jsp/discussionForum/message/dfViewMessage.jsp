@@ -227,10 +227,12 @@
 						<h:outputText 	rendered="#{ForumTool.allowedToApproveMsg && ForumTool.allowedToDenyMsg}" value="#{msgs.cdfm_msg_pending_label}" styleClass="messagePending"/>
 						<h:outputText value="#{ForumTool.selectedMessage.message.title}"  styleClass="title" />
 						<h:outputText value="<br />" escape="false" />
-						<h:outputLink value="#{ForumTool.serverUrl}/direct/profile/#{ForumTool.selectedMessage.message.authorId}/formatted" styleClass="authorProfile" rendered="#{ForumTool.showProfileLink}">
-							<h:outputText value="#{ForumTool.selectedMessage.message.author}" styleClass="textPanelFooter"/>
-						</h:outputLink>
-						<h:outputText value="#{ForumTool.selectedMessage.message.author}" styleClass="textPanelFooter" rendered="#{!ForumTool.showProfileLink}"/>
+						<h:outputText value="#{ForumTool.selectedMessage.message.author}" styleClass="textPanelFooter" rendered="#{!ForumTool.instructor}"/>
+                        <h:commandLink action="#{mfStatisticsBean.processActionStatisticsUser}" immediate="true" title=" #{ForumTool.selectedMessage.message.author }" styleClass="textPanelFooter" rendered="#{ForumTool.instructor}">
+                        	<f:param value="#{ForumTool.selectedMessage.authorEid}" name="siteUserId"/>
+                        	<f:param value="#{ForumTool.selectedMessage.message.author}" name="siteUser"/>
+                        	<h:outputText value="#{ForumTool.selectedMessage.message.author}"/>
+                        </h:commandLink>
 						<h:outputText value=" #{msgs.cdfm_openb} "  styleClass="textPanelFooter" />
 						<h:outputText value="#{ForumTool.selectedMessage.message.created}"  styleClass="textPanelFooter" >
 							<f:convertDateTime pattern="#{msgs.date_format}" timeZone="#{ForumTool.userTimeZone}" locale="#{ForumTool.userLocale}"/>  
@@ -252,6 +254,21 @@
 						<h:outputText value="#{msgs.cdfm_next_msg}" rendered="#{!ForumTool.selectedMessage.hasNext}" />
 					</h:panelGroup>
 				</h:panelGrid>
+ 
+			                                        <%-- Rank IMAGE --%>
+                        <f:verbatim><div></f:verbatim>
+                    <h:panelGroup rendered="#{ForumTool.selectedMessage.authorRank != null}">
+                        <h:outputText escape="false" value="<img src=\"#{ForumTool.selectedMessage.authorRank.rankImage.attachmentUrl}\" height=\"35\" width=\"35\" />" />
+                    </h:panelGroup>
+                        <f:verbatim></div></f:verbatim>
+
+                                        <%-- Rank NAME--%>
+                        <h:outputText value="#{ForumTool.selectedMessage.authorRank.title}" styleClass="forumsRankName"/>
+			<h:outputText value="#{msgs.num_of_posts} #{ForumTool.selectedMessage.authorPostCount}" styleClass="forumsRankName" rendered="#{ForumTool.selectedMessage.authorRank.type == 2}"/>
+			
+			
+
+	
 				<f:verbatim><div class="textPanel"></f:verbatim>
 					<h:outputText escape="false" value="#{ForumTool.selectedMessage.message.body}" id="messageBody" 
 							rendered="#{!ForumTool.selectedMessage.message.deleted}" />
@@ -280,7 +297,7 @@
 			<h:inputHidden value="#{ForumTool.fromPage}" />
 		
 			<sakai:button_bar rendered="#{ForumTool.deleteMsg}" > 
-				<sakai:button_bar_item action="#{ForumTool.processDfMsgDeleteConfirmYes}" value="#{msgs.cdfm_button_bar_delete}" accesskey="x" styleClass ="blockMe"/>
+				<sakai:button_bar_item action="#{ForumTool.processDfMsgDeleteConfirmYes}" value="#{msgs.cdfm_button_bar_delete}" accesskey="x" styleClass ="blockMeOnClick"/>
 				<sakai:button_bar_item action="#{ForumTool.processDfMsgDeleteCancel}" value="#{msgs.cdfm_button_bar_cancel}" accesskey="c" />
                 <h:outputText styleClass="messageProgress" style="display:none" value="#{msgs.cdfm_processing_submit_message}" />
 			</sakai:button_bar>

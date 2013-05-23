@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/kernel/trunk/kernel-impl/src/main/java/org/sakaiproject/site/impl/DbSiteService.java $
- * $Id: DbSiteService.java 120411 2013-02-23 01:14:26Z botimer@umich.edu $
+ * $Id: DbSiteService.java 122028 2013-04-01 19:49:35Z azeckoski@unicon.net $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008 Sakai Foundation
@@ -26,7 +26,6 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -45,8 +44,6 @@ import org.sakaiproject.javax.PagingPosition;
 import org.sakaiproject.site.api.Group;
 import org.sakaiproject.site.api.Site;
 import org.sakaiproject.site.api.SitePage;
-import org.sakaiproject.site.api.SiteService.SelectionType;
-import org.sakaiproject.site.api.SiteService.SortType;
 import org.sakaiproject.site.api.ToolConfiguration;
 import org.sakaiproject.time.api.Time;
 import org.sakaiproject.util.BaseDbFlatStorage;
@@ -2512,8 +2509,9 @@ public abstract class DbSiteService extends BaseSiteService
 				Date softlyDeletedDate = result.getDate(21);
 
 				// create the Resource from these fields
-				return new BaseSite(DbSiteService.this,id, title, type, shortDesc, description, icon, info, skin, published, joinable, pubView, joinRole, isSpecial,
-						isUser, createdBy, createdOn, modifiedBy, modifiedOn, customPageOrdered, isSoftlyDeleted, softlyDeletedDate, includeDescription);
+				return new BaseSite(DbSiteService.this, id, title, type, shortDesc, description, icon, info, skin, published, joinable,
+						pubView, joinRole, isSpecial, isUser, createdBy, createdOn, modifiedBy, modifiedOn, customPageOrdered,
+						isSoftlyDeleted, softlyDeletedDate, includeDescription, sessionManager(), userDirectoryService());
 			}
 			catch (SQLException e)
 			{

@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/sam/trunk/samigo-qti/src/java/org/sakaiproject/tool/assessment/qti/helper/ExtractionHelper.java $
- * $Id: ExtractionHelper.java 121258 2013-03-15 15:03:36Z ottenhoff@longsight.com $
+ * $Id: ExtractionHelper.java 124466 2013-05-17 23:11:31Z ktsao@stanford.edu $
  ***********************************************************************************
  *
  * Copyright (c) 2005, 2006, 2007, 2008, 2009 The Sakai Foundation
@@ -99,7 +99,7 @@ import org.xml.sax.SAXException;
  * <p> </p>
  * <p>Copyright: Copyright (c) 2005 Sakai</p>
  * @author Ed Smiley esmiley@stanford.edu
- * @version $Id: ExtractionHelper.java 121258 2013-03-15 15:03:36Z ottenhoff@longsight.com $
+ * @version $Id: ExtractionHelper.java 124466 2013-05-17 23:11:31Z ktsao@stanford.edu $
  */
 
 public class ExtractionHelper
@@ -1542,7 +1542,12 @@ public class ExtractionHelper
           for(int i = 0; i < allFeedbackList.size(); i++) {   
         	  s = (String) allFeedbackList.get(i);
           	  af = s.split(":::");
-          	  allFeedbacksMap.put(af[0], af[1]);
+		  if (af.length == 2) {
+		    allFeedbacksMap.put(af[0], af[1]);
+		  }
+		  else {
+		    log.warn("allFeedbackMap size != 2 on "+s);
+		  }
           }
       }
 

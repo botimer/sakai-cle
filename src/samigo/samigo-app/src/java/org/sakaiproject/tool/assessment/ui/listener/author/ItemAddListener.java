@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/sam/trunk/samigo-app/src/java/org/sakaiproject/tool/assessment/ui/listener/author/ItemAddListener.java $
- * $Id: ItemAddListener.java 121258 2013-03-15 15:03:36Z ottenhoff@longsight.com $
+ * $Id: ItemAddListener.java 122050 2013-04-02 13:32:36Z ottenhoff@longsight.com $
  ***********************************************************************************
  *
  * Copyright (c) 2004, 2005, 2006, 2007, 2008, 2009 The Sakai Foundation
@@ -2240,7 +2240,7 @@ public class ItemAddListener
   
   private void updateItemFeedback(ItemFacade item, String feedbackTypeId, String feedbackText) {
 	  Set itemFeedbackSet = item.getItemFeedbackSet();
-	  if ((itemFeedbackSet == null || itemFeedbackSet.size() == 0) || !item.getItemFeedbackMap(itemFeedbackSet).containsKey(feedbackTypeId)) {
+	  if ((itemFeedbackSet == null || itemFeedbackSet.size() == 0)) {
 		  item.addItemFeedback(feedbackTypeId, feedbackText);
 	  }
 	  else {
@@ -2249,7 +2249,6 @@ public class ItemAddListener
 			  ItemFeedbackIfc itemFeedback = (ItemFeedbackIfc) iter.next();
 			  if (itemFeedback.getTypeId().equals(feedbackTypeId)) {
 				  itemFeedback.setText(feedbackText);
-				  item.getItemFeedbackMap(itemFeedbackSet).put(feedbackTypeId, feedbackText);
 			  }
 		  }
 	  }

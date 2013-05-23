@@ -1,5 +1,5 @@
 /**
- * $Id: EntityBrokerImpl.java 105077 2012-02-24 22:54:29Z ottenhoff@longsight.com $
+ * $Id: EntityBrokerImpl.java 123125 2013-04-23 01:03:34Z azeckoski@unicon.net $
  * $URL: https://source.sakaiproject.org/svn/entitybroker/trunk/impl/src/java/org/sakaiproject/entitybroker/impl/EntityBrokerImpl.java $
  * EntityBrokerImpl.java - entity-broker - Apr 6, 2008 9:03:03 AM - azeckoski
  **************************************************************************
@@ -325,6 +325,14 @@ public class EntityBrokerImpl implements EntityBroker, PropertiesProvider {
     public List<BrowseEntity> getBrowseableEntities(String parentPrefix) {
         List<BrowseEntity> l = entityBrokerManager.getBrowseableEntities(parentPrefix);
         return l;
+    }
+
+
+    /* (non-Javadoc)
+     * @see org.sakaiproject.entitybroker.entityprovider.extension.LearningTrackingProvider#registerStatement(java.lang.String, java.lang.String, java.lang.String, java.lang.String, java.lang.Boolean, java.lang.Float)
+     */
+    public void registerStatement(String prefix, String actorEmail, String verbStr, String objectURI, Boolean resultSuccess, Float resultScaledScore) {
+        externalIntegrationProvider.registerStatement(prefix, actorEmail, verbStr, objectURI, resultSuccess, resultScaledScore);
     }
 
 

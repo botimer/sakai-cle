@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/syllabus/trunk/syllabus-impl/src/java/org/sakaiproject/component/app/syllabus/SyllabusManagerImpl.java $
- * $Id: SyllabusManagerImpl.java 120625 2013-03-04 14:51:03Z holladay@longsight.com $
+ * $Id: SyllabusManagerImpl.java 122347 2013-04-08 14:25:17Z holladay@longsight.com $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2008 The Sakai Foundation
@@ -191,7 +191,7 @@ public class SyllabusManagerImpl extends HibernateDaoSupport implements Syllabus
   
   public SyllabusData createSyllabusDataObject(String title, Integer position,
 	        String asset, String view, String status, String emailNotification,
-	        Date startDate, Date endDate, boolean linkCalendar)      
+	        Date startDate, Date endDate, boolean linkCalendar, SyllabusItem syllabusItem)      
 	  {
 	    if (position == null)
 	    {
@@ -210,6 +210,7 @@ public class SyllabusManagerImpl extends HibernateDaoSupport implements Syllabus
 	      data.setStartDate(startDate);
 	      data.setEndDate(endDate);
 	      data.setLinkCalendar(linkCalendar);
+	      data.setSyllabusItem(syllabusItem);
 	            
 	      saveSyllabus(data);
 	      return data;
@@ -259,6 +260,14 @@ public class SyllabusManagerImpl extends HibernateDaoSupport implements Syllabus
     }
   }    
 
+  public void updateSyllabudDataPosition(final SyllabusData d, final Integer position){
+	  if(d == null || position == null){
+		  throw new IllegalArgumentException("Null Argument");
+	  }else{
+		  d.setPosition(position);
+	      getHibernateTemplate().update(d);
+	  }
+  }
 
   /**
    * findLargestSyllabusPosition finds the largest syllabus data position for an item
@@ -395,6 +404,10 @@ public class SyllabusManagerImpl extends HibernateDaoSupport implements Syllabus
    */
   public void addSyllabusToSyllabusItem(final SyllabusItem syllabusItem, final SyllabusData syllabusData)
   {
+	  addSyllabusToSyllabusItem(syllabusItem, syllabusData, true);
+  }
+  
+  public void addSyllabusToSyllabusItem(final SyllabusItem syllabusItem, final SyllabusData syllabusData, boolean updateCalendar){
              
     if (syllabusItem == null || syllabusData == null)
     {
@@ -418,9 +431,11 @@ public class SyllabusManagerImpl extends HibernateDaoSupport implements Syllabus
     getHibernateTemplate().execute(hcb);    
     updateSyllabusAttachmentsViewState(syllabusData);
     syllabusData.setSyllabusItem(syllabusItem);
-    boolean modified = updateCalendarSettings(syllabusData);
-    if(modified){
-    	getHibernateTemplate().saveOrUpdate(syllabusData);
+    if(updateCalendar){
+    	boolean modified = updateCalendarSettings(syllabusData);
+    	if(modified){
+    		getHibernateTemplate().saveOrUpdate(syllabusData);
+    	}
     }
   }  
   
@@ -541,6 +556,28 @@ public class SyllabusManagerImpl extends HibernateDaoSupport implements Syllabus
 
   }  
 
+  public SyllabusItem getSyllabusItem(final Long itemId)
+  {
+    if (itemId == null)
+    {
+      throw new IllegalArgumentException("Null Argument");
+    }
+    else
+    {                 
+      HibernateCallback hcb = new HibernateCallback()
+      {
+        public Object doInHibernate(Session session) throws HibernateException,
+            SQLException
+        {
+          SyllabusItem returnedData = (SyllabusItem) session.get(SyllabusItemImpl.class, itemId);
+          return returnedData;
+        }
+      }; 
+      return (SyllabusItem) getHibernateTemplate().execute(hcb);
+    }
+
+  }
+  
   public SyllabusAttachment createSyllabusAttachmentObject(String attachId, String name)      
   {
     try

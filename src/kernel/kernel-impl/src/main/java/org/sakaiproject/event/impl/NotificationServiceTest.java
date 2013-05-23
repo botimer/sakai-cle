@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/kernel/trunk/kernel-impl/src/main/java/org/sakaiproject/event/impl/NotificationServiceTest.java $
- * $Id: NotificationServiceTest.java 105077 2012-02-24 22:54:29Z ottenhoff@longsight.com $
+ * $Id: NotificationServiceTest.java 122028 2013-04-01 19:49:35Z azeckoski@unicon.net $
  ***********************************************************************************
  *
  * Copyright (c) 2006, 2008 Sakai Foundation
@@ -21,10 +21,12 @@
 
 package org.sakaiproject.event.impl;
 
+import org.sakaiproject.component.api.ComponentManager;
 import org.sakaiproject.component.api.ServerConfigurationService;
 import org.sakaiproject.db.api.SqlService;
 import org.sakaiproject.event.api.EventTrackingService;
 import org.sakaiproject.id.api.IdManager;
+import org.sakaiproject.memory.api.MemoryService;
 
 /**
  * <p>
@@ -62,6 +64,13 @@ public class NotificationServiceTest extends DbNotificationService
 	 */
 	protected SqlService sqlService()
 	{
+		return null;
+	}
+
+	/**
+	 * @see org.sakaiproject.event.impl.BaseNotificationService#memoryService()
+	 */
+	protected MemoryService memoryService() {
 		return null;
 	}
 }

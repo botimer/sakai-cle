@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/sam/trunk/samigo-app/src/java/org/sakaiproject/tool/assessment/ui/listener/author/ItemModifyListener.java $
- * $Id: ItemModifyListener.java 121258 2013-03-15 15:03:36Z ottenhoff@longsight.com $
+ * $Id: ItemModifyListener.java 124154 2013-05-16 14:04:00Z azeckoski@unicon.net $
  ***********************************************************************************
  *
  * Copyright (c) 2004, 2005, 2006, 2008 The Sakai Foundation
@@ -540,7 +540,7 @@ public class ItemModifyListener implements ActionListener
   }
 
   private void populateItemTextForCalculatedQuestion(ItemAuthorBean itemauthorbean, ItemFacade itemfacade, ItemBean bean) {
-      CalculatedQuestionBean calcQuestionBean = new CalculatedQuestionBean(); 
+      CalculatedQuestionBean calcQuestionBean = new CalculatedQuestionBean();
       String instructions = itemfacade.getInstruction();
       GradingService gs = new GradingService();
       List<String> variables = gs.extractVariables(instructions);
@@ -584,6 +584,9 @@ public class ItemModifyListener implements ActionListener
               }
           }
       }
+      // extract the calculation formulas and populate the calcQuestionBean (we are ignoring the error returns for now)
+      CalculatedQuestionExtractListener.createCalculationsFromInstructions(calcQuestionBean, instructions, gs);
+      CalculatedQuestionExtractListener.validateCalculations(calcQuestionBean, gs);
       bean.setCalculatedQuestion(calcQuestionBean);
   }
   

@@ -108,7 +108,7 @@
 			var warn = true;
 			window.onbeforeunload = function (evt) {
 				if(warn && '<h:outputText value="#{mfStatisticsBean.selectedAssign}"/>' != 'Default_0'){
-					var message = '<h:outputText value="#{msgs.confirm_navigation}"/>';
+					var message = "<h:outputText value="#{msgs.confirm_navigation}" escape="false"/>";
 					if (typeof evt == "undefined") {
 					evt = window.event;
 					}
@@ -125,7 +125,7 @@
 			<link rel="stylesheet" type="text/css" href="/messageforums-tool/css/dialog.css" />
 		<script type="text/javascript">		
 			function toggleComments(link){
-				if(link.innerHTML == '<h:outputText value="#{msgs.stat_forum_comments_show}"/>'){
+				if(link.innerHTML == "<h:outputText value="#{msgs.stat_forum_comments_show}" escape="false"/>"){
 					$('.comments').fadeIn();
 					$('.commentsHidden').fadeOut();
 					link.innerHTML = '<h:outputText value="#{msgs.stat_forum_comments_hide}"/>';
@@ -320,13 +320,14 @@
 						<h:graphicImage value="/images/sortascending.gif" rendered="#{mfStatisticsBean.gradeSort && mfStatisticsBean.ascending}" alt="#{mfStatisticsBean.selAssignName}"/>
 						<h:graphicImage value="/images/sortdescending.gif" rendered="#{mfStatisticsBean.gradeSort && !mfStatisticsBean.ascending}" alt="#{mfStatisticsBean.selAssignName}"/>
 						<f:verbatim><br/></f:verbatim>
-						<h:outputFormat value=" #{msgs.cdfm_points_possible}">
+						<h:outputFormat value=" #{msgs.cdfm_points_possible}" rendered="#{mfStatisticsBean.gradeByPoints}">
 							<f:param value="#{mfStatisticsBean.gbItemPointsPossible}"/>
 						</h:outputFormat>
 					</h:commandLink>
   				</f:facet>
   				<h:inputText size="5" value="#{stat.gradebookAssignment.score}" rendered="#{stat.gradebookAssignment.allowedToGrade}" styleClass="gradeInput"/>
   				<h:outputText value="#{msgs.stat_forum_na}" rendered="#{!stat.gradebookAssignment.allowedToGrade}"/>
+  				<h:outputText value=" %" rendered="#{mfStatisticsBean.gradeByPercent && stat.gradebookAssignment.allowedToGrade}" />
   			</h:column>
   			<h:column rendered="#{mfStatisticsBean.selectedAssign != 'Default_0'}"	>
   				<f:facet name="header">  		

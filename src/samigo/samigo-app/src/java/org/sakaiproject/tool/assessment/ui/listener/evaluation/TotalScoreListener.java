@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/sam/trunk/samigo-app/src/java/org/sakaiproject/tool/assessment/ui/listener/evaluation/TotalScoreListener.java $
- * $Id: TotalScoreListener.java 121258 2013-03-15 15:03:36Z ottenhoff@longsight.com $
+ * $Id: TotalScoreListener.java 121792 2013-03-26 16:07:29Z azeckoski@unicon.net $
  ***********************************************************************************
  *
  * Copyright (c) 2004, 2005, 2006, 2007, 2008, 2009 The Sakai Foundation
@@ -82,7 +82,7 @@ import org.sakaiproject.util.FormattedText;
  * <p>Copyright: Copyright (c) 2004</p>
  * <p>Organization: Sakai Project</p>
  * @author Ed Smiley
- * @version $Id: TotalScoreListener.java 121258 2013-03-15 15:03:36Z ottenhoff@longsight.com $
+ * @version $Id: TotalScoreListener.java 121792 2013-03-26 16:07:29Z azeckoski@unicon.net $
  */
 
 public class TotalScoreListener
@@ -182,7 +182,7 @@ public class TotalScoreListener
     questionbean.setTypeId("0");   // if setting "", QuestionScoreBean.getTypeId will default to 1. Thus setting it to 0. 
     questionbean.setMaxScore("");
     questionbean.setDeliveryItem(new ArrayList());
-    questionbean.setSelectedSARationaleView(QuestionScoresBean.SHOW_SA_RATIONALE_RESPONSES_POPUP);
+    questionbean.setSelectedSARationaleView(QuestionScoresBean.SHOW_SA_RATIONALE_RESPONSES_INLINE);
     
     // if comes from scores link in author index (means to view the score of a different assessment)
     // we reset the following values for paging (for audio, displays 5 records; for others, display all)

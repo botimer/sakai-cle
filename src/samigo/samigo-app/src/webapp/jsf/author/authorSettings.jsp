@@ -4,9 +4,11 @@
 <%@ taglib uri="http://www.sakaiproject.org/samigo" prefix="samigo" %>
 <%@ taglib uri="http://sakaiproject.org/jsf/sakai" prefix="sakai" %>
 
-
+<!DOCTYPE html
+     PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <!--
-* $Id: authorSettings.jsp 115704 2012-11-05 12:37:08Z steve.swinsburg@gmail.com $
+* $Id: authorSettings.jsp 121791 2013-03-26 16:03:44Z azeckoski@unicon.net $
 <%--
 ***********************************************************************************
 *
@@ -27,9 +29,6 @@
 **********************************************************************************/
 --%>
 -->
-<!DOCTYPE html
-     PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
   <f:view>
     <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
       <head><%= request.getAttribute("html.head") %>
@@ -450,7 +449,7 @@ function setBlockDivs()
     <h:selectBooleanCheckbox id="checkUncheckAllReleaseGroups" onclick="checkUncheckAllReleaseGroups();"/>
       
   <f:verbatim></td><td></f:verbatim>
-  <h:outputText value="#{assessmentSettingsMessages.title_description}" />
+  <h:outputText value="#{assessmentSettingsMessages.select_all_groups}" />
   <f:verbatim></td></tr></table></f:verbatim>
   
     <h:selectManyCheckbox id="groupsForSite" layout="pagedirection" value="#{assessmentSettings.groupsAuthorized}">

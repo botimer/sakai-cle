@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/access/trunk/access-impl/impl/src/java/org/sakaiproject/access/tool/AccessServlet.java $
- * $Id: AccessServlet.java 105078 2012-02-24 23:00:38Z ottenhoff@longsight.com $
+ * $Id: AccessServlet.java 124735 2013-05-21 14:02:42Z steve.swinsburg@gmail.com $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008, 2009 The Sakai Foundation
@@ -340,6 +340,7 @@ public class AccessServlet extends VmServlet
 		catch (EntityNotDefinedException e)
 		{
 			// the request was not valid in some way
+			M_log.error("dispatch(): ref: " + ref.getReference() + e);
 			sendError(res, HttpServletResponse.SC_NOT_FOUND);
 			return;
 		}
@@ -357,6 +358,7 @@ public class AccessServlet extends VmServlet
 			}
 
 			// otherwise reject the request
+			M_log.error("dispatch(): ref: " + ref.getReference() + e);
 			sendError(res, HttpServletResponse.SC_FORBIDDEN);
 		}
 

@@ -1,5 +1,5 @@
 /**
- * $Id: EntityBroker.java 105077 2012-02-24 22:54:29Z ottenhoff@longsight.com $
+ * $Id: EntityBroker.java 123125 2013-04-23 01:03:34Z azeckoski@unicon.net $
  * $URL: https://source.sakaiproject.org/svn/entitybroker/trunk/api/src/java/org/sakaiproject/entitybroker/EntityBroker.java $
  * AutoRegister.java - entity-broker - 31 May 2007 7:01:11 PM - azeckoski
  **************************************************************************
@@ -34,6 +34,7 @@ import org.sakaiproject.entitybroker.entityprovider.extension.ActionReturn;
 import org.sakaiproject.entitybroker.entityprovider.extension.BrowseEntity;
 import org.sakaiproject.entitybroker.entityprovider.extension.EntityData;
 import org.sakaiproject.entitybroker.entityprovider.extension.Formats;
+import org.sakaiproject.entitybroker.entityprovider.extension.LearningTrackingProvider;
 import org.sakaiproject.entitybroker.entityprovider.extension.PropertiesProvider;
 import org.sakaiproject.entitybroker.entityprovider.extension.SearchProvider;
 import org.sakaiproject.entitybroker.entityprovider.extension.TagProvider;
@@ -46,10 +47,10 @@ import org.sakaiproject.entitybroker.util.EntityResponse;
  * This service interface defines the capabilities of the entity broker system<br/> 
  * It allows Sakai system methods, developers, etc. to access Sakai entity information (new and old)
  * 
- * @author Aaron Zeckoski (aaronz@vt.edu)
+ * @author Aaron Zeckoski (azeckoski @ unicon.net) (azeckoski @ vt.edu)
  * @author Antranig Basman (antranig@caret.cam.ac.uk)
  */
-public interface EntityBroker extends PropertiesProvider, TagProvider, SearchProvider {
+public interface EntityBroker extends PropertiesProvider, TagProvider, SearchProvider, LearningTrackingProvider {
 
     /**
      * Check if an entity exists by the globally unique reference string, (the global reference

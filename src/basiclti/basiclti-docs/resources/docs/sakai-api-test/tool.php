@@ -25,6 +25,7 @@ if (get_magic_quotes_gpc()) $sourcedid = stripslashes($sourcedid);
 $sourcedid = htmlentities($sourcedid);
 
 if ( $context->valid ) {
+   print "<p style=\"color:green\">Launch Validated.<p>\n";
    if ( $_POST['launch_presentation_return_url']) {
      $msg = 'A%20message%20from%20the%20tool%20provider.';
      $error_msg = 'An%20error%20message%20from%20the%20tool%20provider.';
@@ -43,6 +44,7 @@ if ( $context->valid ) {
         print '&seret=secret';
         print '&url='.urlencode($_POST['lis_outcome_service_url']).'">';
         print 'Test LTI 1.1 Outcome Service</a>.</p>'."\n";
+		$found = true;
     }
 
     if ( $_POST['context_id'] && $_POST['ext_lori_api_url_xml'] && $_POST['lis_result_sourcedid'] ) {
@@ -82,10 +84,7 @@ if ( $context->valid ) {
 		$found = true;
     }
     if ( ! $found ) {
-		echo("<p>This launch did not include the necessary settings for any of the ");
-		echo("Sakai External Tool API such as:\n<pre>\n");
-		echo("ext_ims_lis_memberships_url\next_ims_lis_basic_outcome_url\next_ims_lti_tool_setting_url\n");
-		echo("</pre>\n</p>\n");
+		echo("<p>No Services are available for this launch.</p>\n");
 	}
     print "<pre>\n";
     print "Context Information:\n\n";

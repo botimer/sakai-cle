@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/portal/trunk/portal-api/api/src/java/org/sakaiproject/portal/api/PortalService.java $
- * $Id: PortalService.java 117617 2012-12-12 16:13:37Z bkirschn@umich.edu $
+ * $Id: PortalService.java 122221 2013-04-04 21:24:12Z ottenhoff@longsight.com $
  ***********************************************************************************
  *
  * Copyright (c) 2005, 2006, 2007, 2008 The Sakai Foundation
@@ -35,7 +35,7 @@ import org.sakaiproject.tool.api.Placement;
  * 
  * @author ieb
  * @since Sakai 2.4
- * @version $Rev: 117617 $
+ * @version $Rev: 122221 $
  */
 public interface PortalService
 {
@@ -309,5 +309,10 @@ public interface PortalService
 	 * @return The configured Editor instance for this placement.
 	 */
 	Editor getActiveEditor(Placement placement);
+	
+	/**
+	 * @return the skin prefix. Will return empty string if no prefix is set. 
+	 */
+	public String getSkinPrefix();
 
 }

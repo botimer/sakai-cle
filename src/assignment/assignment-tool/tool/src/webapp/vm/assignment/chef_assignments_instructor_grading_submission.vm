@@ -1,4 +1,4 @@
-<!-- $Id: chef_assignments_instructor_grading_submission.vm 120595 2013-03-01 20:33:37Z azeckoski@unicon.net $ -->
+<!-- $Id: chef_assignments_instructor_grading_submission.vm 122725 2013-04-12 21:05:51Z ottenhoff@longsight.com $ -->
 <!-- start: check_assignments_instructor_grading_submission.vm  -->
 ##<!-- $Header: /cvs/sakai2/legacy/tools/src/webapp/vm/assignment/chef_assignments_instructor_grading_submission.vm,v 1.10 2005/06/03 15:32:15 zqian.umich.edu Exp $ -->
 <script type="text/javascript">
@@ -62,7 +62,7 @@ function handleEnterKeyPress(ev)
 			$!tlang.getString("saved_grading")
 		</div>
 	#end
-	#if ($alertMessage)<div class="alertMessage">$tlang.getString("gen.alert") $validator.escapeHtml($alertMessage)</div><div style="display:block;clear:both"></div>#end
+	#if ($alertMessage)<div class="alertMessage">$tlang.getString("gen.alert") $alertMessage</div><div style="display:block;clear:both"></div>#end
 	
 	## the form
 	<form name="gradeForm" id="gradeForm" action="#toolForm("AssignmentAction")" method="post" onsubmit="return true;">
@@ -650,7 +650,7 @@ function handleEnterKeyPress(ev)
 							&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<label for="allowResubmitNumberSelect">
 								$tlang.getString("allow.resubmit.number")
 							</label>&nbsp;
-							<select name="$name_allowResubmitNumber" id="allowResubmitNumberSelect" onchange="if (document.getElementById('allowResubmitNumber').value!=0 && document.getElementById('closeTime') !=null){document.getElementById('closeTime').style.display = 'block';}else {document.getElementById('closeTime').style.display = 'none';}">
+							<select name="$name_allowResubmitNumber" id="allowResubmitNumberSelect">
 								#foreach ($i in [1..10])
 									<option value="$i" #if($i==$!value_allowResubmitNumber)selected="selected"#end>
 										$i

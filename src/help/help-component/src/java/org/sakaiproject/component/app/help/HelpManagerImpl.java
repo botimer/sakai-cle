@@ -1,10 +1,10 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/help/trunk/help-component/src/java/org/sakaiproject/component/app/help/HelpManagerImpl.java $
- * $Id: HelpManagerImpl.java 106387 2012-03-29 21:24:19Z matthew.buckett@oucs.ox.ac.uk $
+ * $Id: HelpManagerImpl.java 122161 2013-04-03 21:17:07Z azeckoski@unicon.net $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008, 2009 The Sakai Foundation
- *locales
+ *
  * Licensed under the Educational Community License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -111,7 +111,7 @@ import org.xml.sax.SAXException;
 /**
  * HelpManager provides database and search capabilitites for the Sakai help tool.
  * @author <a href="mailto:jlannan.iupui.edu">Jarrod Lannan</a>
- * @version $Id: HelpManagerImpl.java 106387 2012-03-29 21:24:19Z matthew.buckett@oucs.ox.ac.uk $
+ * @version $Id: HelpManagerImpl.java 122161 2013-04-03 21:17:07Z azeckoski@unicon.net $
  *
  */
 public class HelpManagerImpl extends HibernateDaoSupport implements HelpManager
@@ -931,14 +931,9 @@ public class HelpManagerImpl extends HibernateDaoSupport implements HelpManager
 
 					// Get all supported locales
 					locales = new ArrayList<String>();
-					StringTokenizer st =
-						new StringTokenizer(
-								getServerConfigurationService().getString("locales"), ",");
-					while (st.hasMoreTokens()) {
-						String token = st.nextToken().trim();
-						if (token.length() > 0) {
-							locales.add(token);
-						}
+					Locale[] sl = serverConfigurationService.getSakaiLocales();
+					for (int i = 0; i < sl.length; i++) {
+					    locales.add(sl[i].toString()); // Locale toString should generate en_GB type identifiers
 					}
 
 					// Add default locale
@@ -1146,15 +1141,8 @@ public class HelpManagerImpl extends HibernateDaoSupport implements HelpManager
 	/**
 	 ** @return Locale based on its string representation (language_region)
 	 **/
-	private Locale getLocaleFromString(String localeString)
-	{
-		String[] locValues = localeString.trim().split("_");
-		if (locValues.length > 1)
-			return new Locale(locValues[0], locValues[1]); // language, country
-		else if (locValues.length == 1)
-			return new Locale(locValues[0]); // just language
-		else
-			return Locale.getDefault();
+	private Locale getLocaleFromString(String localeString) {
+		return serverConfigurationService.getLocaleFromString(localeString);
 	}
 
 	/**

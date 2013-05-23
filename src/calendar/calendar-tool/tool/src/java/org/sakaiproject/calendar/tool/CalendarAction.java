@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/calendar/trunk/calendar-tool/tool/src/java/org/sakaiproject/calendar/tool/CalendarAction.java $
- * $Id: CalendarAction.java 118119 2013-01-07 15:28:42Z bkirschn@umich.edu $
+ * $Id: CalendarAction.java 123511 2013-05-02 13:39:14Z azeckoski@unicon.net $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008, 2009 The Sakai Foundation
@@ -61,6 +61,7 @@ import org.sakaiproject.calendar.api.RecurrenceRule;
 import org.sakaiproject.calendar.cover.CalendarImporterService;
 import org.sakaiproject.calendar.cover.CalendarService;
 import org.sakaiproject.calendar.cover.ExternalCalendarSubscriptionService;
+import org.sakaiproject.calendar.tool.CalendarActionState.LocalEvent;
 import org.sakaiproject.cheftool.Context;
 import org.sakaiproject.cheftool.JetspeedRunData;
 import org.sakaiproject.cheftool.RunData;
@@ -80,6 +81,7 @@ import org.sakaiproject.entity.cover.EntityManager;
 import org.sakaiproject.entitybroker.EntityBroker;
 import org.sakaiproject.entitybroker.entityprovider.extension.ActionReturn;
 import org.sakaiproject.entitybroker.EntityReference;
+import org.sakaiproject.event.api.EventTrackingService;
 import org.sakaiproject.event.api.SessionState;
 import org.sakaiproject.exception.IdInvalidException;
 import org.sakaiproject.exception.IdUnusedException;
@@ -2424,6 +2426,27 @@ extends VelocityPortletStateAction
 			buildFrequencyContext(portlet, context, runData, state);
 		}
 
+		if (stateName.equals("description") 
+		        || stateName.equals("year") 
+		        || stateName.equals("month") 
+		        || stateName.equals("day") 
+		        || stateName.equals("week")
+		        || stateName.equals("list")
+		        ) {
+		    // SAK-23566 capture the view calendar events
+		    EventTrackingService ets = (EventTrackingService) ComponentManager.get(EventTrackingService.class);
+		    String calendarRef = state.getPrimaryCalendarReference();
+		    if (ets != null && calendarRef != null) {
+		        // need to cleanup the cal references which look like /calendar/calendar/4ea74c4d-3f9e-4c32-b03f-15e7915e6051/main
+		        String eventRef = StringUtils.replace(calendarRef, "/main", "/"+stateName);
+		        String calendarEventId = state.getCalendarEventId();
+		        if (StringUtils.isNotBlank(calendarEventId)) {
+		            eventRef += "/"+calendarEventId;
+		        }
+		        ets.post(ets.newEvent("calendar.read", eventRef, false));
+		    }
+		}
+
 		TimeZone timeZone = TimeService.getLocalTimeZone();
 		context.put("timezone", timeZone.getDisplayName(timeZone.inDaylightTime(new Date()), TimeZone.SHORT) );
 		
@@ -2440,6 +2463,7 @@ extends VelocityPortletStateAction
 		context.put("tlang",rb);
 		context.put("config",configProps);
 		context.put("dateFormat", getDateFormatString());
+		context.put("timeFormat", getTimeFormatString());
       
 		return template;
 		
@@ -2581,6 +2605,12 @@ extends VelocityPortletStateAction
 		
 		context.put("realDate", TimeService.newTime());
 				
+		if (DEFAULT_FREQ.equals(freq))
+		{
+			LocalEvent savedData = state.getNewData();
+			Time m_time = TimeService.newTimeLocal(savedData.getYearInt(), savedData.getMonth(), savedData.getDay(), 0, 0, 0, 0);
+			context.put("freqOnceDate", m_time.toStringLocalDate());
+		}
 	} // buildFrequencyContext
 	
 	/**

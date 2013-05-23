@@ -21,6 +21,7 @@
 
 package org.sakaiproject.util.impl;
 
+import java.io.File;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.util.HashSet;
@@ -82,22 +83,47 @@ public class FormattedTextImpl implements FormattedText
     private Pattern[] M_evilValuePatterns;
 
     /**
-     * This is the html cleaner object
+     * This is the high level html cleaner object
      */
-    private AntiSamy antiSamy = null;
+    private AntiSamy antiSamyHigh = null;
+    /**
+     * This is the low level html cleaner object
+     */
+    private AntiSamy antiSamyLow = null;
 
     public void init() {
         boolean useLegacyCleaner = useLegacyCleaner();
 
         if (!useLegacyCleaner) {
             // INIT Antisamy
-            // added in support for antisamy html cleaner
+            // added in support for antisamy html cleaner - KNL-1015
+            // https://www.owasp.org/index.php/Category:OWASP_AntiSamy_Project
             try {
-                URL policyURL = FormattedTextImpl.class.getClassLoader().getResource("antisamy/policy.xml");
-                Policy policy = Policy.getInstance(policyURL);
-                antiSamy = new AntiSamy(policy);
+                ClassLoader current = FormattedTextImpl.class.getClassLoader();
+                URL lowPolicyURL = current.getResource("antisamy/low-security-policy.xml");
+                URL highPolicyURL = current.getResource("antisamy/high-security-policy.xml");
+                // Allow lookup of the policy files in sakai home - KNL-1047
+                String sakaiHomePath = getSakaiHomeDir();
+                File lowFile = new File(sakaiHomePath, "antisamy"+File.separator+"low-security-policy.xml");
+                if (lowFile.canRead()) {
+                    lowPolicyURL = lowFile.toURI().toURL();
+                    M_log.info("AntiSamy found override for low policy file at: "+lowPolicyURL);
+                }
+                File highFile = new File(sakaiHomePath, "antisamy"+File.separator+"high-security-policy.xml");
+                if (highFile.canRead()) {
+                    highPolicyURL = highFile.toURI().toURL();
+                    M_log.info("AntiSamy found override for high policy file at: "+highPolicyURL);
+                }
+                Policy policyHigh = Policy.getInstance(highPolicyURL);
+                antiSamyHigh = new AntiSamy(policyHigh);
+                Policy policyLow = Policy.getInstance(lowPolicyURL);
+                antiSamyLow = new AntiSamy(policyLow);
+                // TODO should we attempt to fallback to internal files if the parsing/init fails of external ones?
+                M_log.info("AntiSamy INIT default security level ("+(defaultLowSecurity()?"LOW":"high")+"), policy files: high="+highPolicyURL+", low="+lowPolicyURL);
             } catch (Exception e) {
                 useLegacyCleaner = true;
+                antiSamyHigh = null;
+                antiSamyLow = null;
                 M_log.warn("Unable to startup the antisamy html code cleanup handler (using the legacy cleaner): " + e, e);
             }
         }
@@ -170,16 +196,73 @@ public class FormattedTextImpl implements FormattedText
 
     }
 
+    boolean defaultUseLegacyCleaner = false;
     /**
-     * Asks SCS for the value of the "content.use.legacy.html.cleaner", DEFAULT is false
+     * For TESTING
+     * Sets the default - if not set, this will be "false"
+     * @param defaultUseLegacyCleaner if true, use the old legacy security cleaner (no longer supported), if false use the new antisamy based cleaner
+     */
+    void setDefaultUseLegacyCleaner(boolean defaultUseLegacyCleaner) {
+        this.defaultUseLegacyCleaner = defaultUseLegacyCleaner;
+    }
+    /**
+     * Asks SCS for the value of the "content.cleaner.use.legacy.html", DEFAULT is false
      * @return true if the legacy HTML cleaner is used OR false use the antiSamy html cleaner
      */
     private boolean useLegacyCleaner() {
-        boolean useLegacy = false;
+        boolean useLegacy = this.defaultUseLegacyCleaner;
         if (serverConfigurationService != null) { // this keeps the tests from dying
-            useLegacy = serverConfigurationService.getBoolean("content.use.legacy.html.cleaner", useLegacy);
+            useLegacy = serverConfigurationService.getBoolean("content.cleaner.use.legacy.html", useLegacy);
         }
         return useLegacy;
+    }
+
+    boolean defaultAddBlankTargetToLinks = true;
+    /**
+     * For TESTING
+     * Sets the default - if not set, this will be "true"
+     * @param addBlankTargetToLinks if we should add ' target="_blank" ' to all A tags which contain no target, false if they should not be touched
+     */
+    void setDefaultAddBlankTargetToLinks(boolean addBlankTargetToLinks) {
+        this.defaultAddBlankTargetToLinks = addBlankTargetToLinks;
+    }
+    /**
+     * Asks SCS for the value of the "content.cleaner.add.blank.target", DEFAULT is true (match legacy)
+     * @return true if we should add ' target="_blank" ' to all A tags which contain no target, false if they should not be touched
+     */
+    private boolean addBlankTargetToLinks() {
+        boolean add = defaultAddBlankTargetToLinks;
+        if (serverConfigurationService != null) { // this keeps the tests from dying
+            add = serverConfigurationService.getBoolean("content.cleaner.add.blank.target", defaultAddBlankTargetToLinks);
+        }
+        return add;
+    }
+
+    /**
+     * Asks SCS for the value of the "content.cleaner.default.low.security", DEFAULT is false
+     * @return true if low security is on be default for the scanner OR false to use high security scan (no unsafe embeds or objects)
+     */
+    private boolean defaultLowSecurity() {
+        boolean defaultLowSecurity = false;
+        if (serverConfigurationService != null) { // this keeps the tests from dying
+            defaultLowSecurity = serverConfigurationService.getBoolean("content.cleaner.default.low.security", defaultLowSecurity);
+        }
+        return defaultLowSecurity;
+    }
+
+    /**
+     * @return the path to the sakai home directory on the server
+     */
+    private String getSakaiHomeDir() {
+        String sakaiHome = ""; // current dir (should be tomcat home) - this failsafe should not be used
+        if (serverConfigurationService != null) { // this keeps the tests from dying
+            String sh = serverConfigurationService.getSakaiHomePath();
+            if (sh != null) {
+                sakaiHome = sh;
+            }
+        }
+        sakaiHome = new File(sakaiHome).getAbsolutePath(); // standardize
+        return sakaiHome;
     }
 
     /** Matches HTML-style line breaks like &lt;br&gt; */
@@ -240,7 +323,16 @@ public class FormattedTextImpl implements FormattedText
     {
         boolean checkForEvilTags = true;
         boolean replaceWhitespaceTags = true;
-        return processFormattedText(strFromBrowser, errorMessages, checkForEvilTags, replaceWhitespaceTags, useLegacyCleaner());
+        return processFormattedText(strFromBrowser, errorMessages, null, checkForEvilTags, replaceWhitespaceTags, useLegacyCleaner());
+    }
+
+    /* (non-Javadoc)
+     * @see org.sakaiproject.util.api.FormattedText#processFormattedText(java.lang.String, java.lang.StringBuilder, org.sakaiproject.util.api.FormattedText.Level)
+     */
+    public String processFormattedText(String strFromBrowser, StringBuilder errorMessages, Level level) {
+        boolean checkForEvilTags = true;
+        boolean replaceWhitespaceTags = true;
+        return processFormattedText(strFromBrowser, errorMessages, level, checkForEvilTags, replaceWhitespaceTags, useLegacyCleaner());
     }
 
     /* (non-Javadoc)
@@ -250,7 +342,7 @@ public class FormattedTextImpl implements FormattedText
             StringBuilder errorMessages, boolean useLegacySakaiCleaner) {
         boolean checkForEvilTags = true;
         boolean replaceWhitespaceTags = true;
-        return processFormattedText(strFromBrowser, errorMessages, checkForEvilTags,
+        return processFormattedText(strFromBrowser, errorMessages, null, checkForEvilTags,
                 replaceWhitespaceTags, useLegacySakaiCleaner);
     }
 
@@ -268,24 +360,29 @@ public class FormattedTextImpl implements FormattedText
     public String processFormattedText(final String strFromBrowser, StringBuilder errorMessages, boolean checkForEvilTags,
             boolean replaceWhitespaceTags)
     {
-        return processFormattedText(strFromBrowser, errorMessages, checkForEvilTags, replaceWhitespaceTags, useLegacyCleaner());
+        return processFormattedText(strFromBrowser, errorMessages, null, checkForEvilTags, replaceWhitespaceTags, useLegacyCleaner());
     }
 
     /* (non-Javadoc)
-     * @see org.sakaiproject.utils.impl.FormattedText#processFormattedText(java.lang.String, java.lang.StringBuilder, boolean, boolean, boolean)
+     * @see org.sakaiproject.util.api.FormattedText#processFormattedText(java.lang.String, java.lang.StringBuilder, org.sakaiproject.util.api.FormattedText.Level, boolean, boolean, boolean)
      */
-    public String processFormattedText(final String strFromBrowser,
-            StringBuilder errorMessages, boolean checkForEvilTags, boolean replaceWhitespaceTags,
-            boolean useLegacySakaiCleaner) {
-
-        if (useLegacySakaiCleaner && antiSamy == null) {
+    public String processFormattedText(final String strFromBrowser, StringBuilder errorMessages, Level level,
+            boolean checkForEvilTags, boolean replaceWhitespaceTags, boolean useLegacySakaiCleaner) {
+        if (level == null || Level.DEFAULT.equals(level)) {
+            // Select the default policy as high or low - KNL-1015
+            level = defaultLowSecurity() ? Level.LOW : Level.HIGH; // default to system setting
+        } else if (Level.NONE.equals(level)) {
+            checkForEvilTags = false; // disable scan
+        }
+        if (!useLegacySakaiCleaner && antiSamyHigh == null) {
             useLegacySakaiCleaner = false;
             M_log.warn("Cannot use the new html cleaner (useLegacySakaiCleaner=false), Antisamy cleaner not available, falling back to the legacy cleaner");
         }
 
         String val = strFromBrowser;
-        if (val == null || val.length() == 0)
+        if (val == null || val.length() == 0) {
             return val;
+        }
 
         try {
             if (replaceWhitespaceTags) {
@@ -299,20 +396,31 @@ public class FormattedTextImpl implements FormattedText
             }
 
             if (checkForEvilTags) {
-                if (useLegacySakaiCleaner || antiSamy == null) {
+                if (useLegacySakaiCleaner || antiSamyHigh == null) {
                     val = processHtml(strFromBrowser, errorMessages);
                 } else {
                     // use the owasp antisamy processor
+                    AntiSamy as = antiSamyHigh;
+                    if (Level.LOW.equals(level)) {
+                        as = antiSamyLow;
+                    }
                     try {
-                        CleanResults cr = antiSamy.scan(strFromBrowser);
+                        CleanResults cr = as.scan(strFromBrowser);
                         if (cr.getNumberOfErrors() > 0) {
+                            // TODO currently no way to get internationalized versions of error messages
                             for (Object errorMsg : cr.getErrorMessages()) {
-                                errorMessages.append("<div class=\"error\">");
-                                errorMessages.append(errorMsg.toString());
-                                errorMessages.append("</div>");
+                                errorMessages.append(errorMsg.toString()+"\n\r");
                             }
                         }
                         val = cr.getCleanHTML();
+
+                        // now replace all the A tags WITHOUT a target with _blank (to match the old functionality)
+                        if (addBlankTargetToLinks() && StringUtils.isNotBlank(val)) {
+                            Matcher m = M_patternAnchorTagWithOutTarget.matcher(val);
+                            if (m.find()) {
+                                val = m.replaceAll("$1$2 target=\"_blank\">"); // adds a target to A tags without one
+                            }
+                        }
                     } catch (ScanException e) {
                         // this will match the legacy behavior
                         val = "";
@@ -329,7 +437,7 @@ public class FormattedTextImpl implements FormattedText
                 val = "";
             }
 
-            if (useLegacySakaiCleaner || antiSamy == null) {
+            if (useLegacySakaiCleaner || antiSamyHigh == null) {
                 // close any open HTML tags (that the user may have accidentally left open)
                 StringBuilder buf = new StringBuilder();
                 trimFormattedText(val, Integer.MAX_VALUE, buf);
@@ -396,9 +504,11 @@ public class FormattedTextImpl implements FormattedText
         //value = M_patternAnchorTag.matcher(value).replaceAll("$1$2$3 target=\"_blank\">"); // adds in blank targets
         // added for KNL-526
 
-        Matcher m = M_patternAnchorTagWithOutTarget.matcher(value);
-        if (m.find()) {
-            value = m.replaceAll("$1$2 target=\"_blank\">"); // adds a target to A tags without one
+        if (addBlankTargetToLinks()) {
+            Matcher m = M_patternAnchorTagWithOutTarget.matcher(value);
+            if (m.find()) {
+                value = m.replaceAll("$1$2 target=\"_blank\">"); // adds a target to A tags without one
+            }
         }
 
         return value;
@@ -551,8 +661,10 @@ public class FormattedTextImpl implements FormattedText
             hrefTarget = hrefTarget.replaceFirst("target=", ""); // slightly paranoid
             hrefTarget = " target=\"" + hrefTarget + "\"";
         } else {
-            // default to _blank
-            hrefTarget = " target=\"_blank\"";
+            // default to _blank if not set and configured to force
+            if (addBlankTargetToLinks()) {
+                hrefTarget = " target=\"_blank\"";
+            }
         }
 
         if (hrefTitle != null) {
@@ -1287,9 +1399,9 @@ public class FormattedTextImpl implements FormattedText
     }
 
     /**
-     * HTML character entity references. These abreviations are used in HTML to escape certain Unicode characters, including characters used in HTML markup. These character entity references were taken directly from the HTML 4.0 specification at:
+     * HTML character entity references. These abbreviations are used in HTML to escape certain Unicode characters, including characters used in HTML markup. These character entity references were taken directly from the HTML 4.0 specification at:
      * 
-     * @link http://www.w3.org/TR/REC-html40/sgml/entities.html
+     * http://www.w3.org/TR/REC-html40/sgml/entities.html
      */
     private final String[] M_htmlCharacterEntityReferences = { "&nbsp;", "&iexcl;", "&cent;", "&pound;", "&curren;",
             "&yen;", "&brvbar;", "&sect;", "&uml;", "&copy;", "&ordf;", "&laquo;", "&not;", "&shy;", "&reg;", "&macr;", "&deg;",
@@ -1319,7 +1431,7 @@ public class FormattedTextImpl implements FormattedText
     /**
      * These character entity references were taken directly from the HTML 4.0 specification at:
      * 
-     * @link http://www.w3.org/TR/REC-html40/sgml/entities.html
+     * http://www.w3.org/TR/REC-html40/sgml/entities.html
      */
     private final char[] M_htmlCharacterEntityReferencesUnicode = { 160, 161, 162, 163, 164, 165, 166, 167, 168, 169, 170,
             171, 172, 173, 174, 175, 176, 177, 178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190, 191, 192, 193, 194,

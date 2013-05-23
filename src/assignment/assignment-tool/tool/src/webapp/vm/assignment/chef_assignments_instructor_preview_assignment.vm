@@ -1,4 +1,4 @@
-<!-- $Id: chef_assignments_instructor_preview_assignment.vm 113077 2012-09-18 16:42:38Z gsilver@umich.edu $ -->
+<!-- $Id: chef_assignments_instructor_preview_assignment.vm 122725 2013-04-12 21:05:51Z ottenhoff@longsight.com $ -->
 <!-- start: chef_assignments_instructor_preview_assignment.vm  -->
 ##<!-- $Header: /cvs/sakai2/legacy/tools/src/webapp/vm/assignment/chef_assignments_instructor_preview_assignment.vm,v 1.9 2005/06/14 14:47:34 zqian.umich.edu Exp $ -->
 <div class="portletBody">
@@ -35,7 +35,7 @@
 		$tlang.getString("prevassig.preass")
 	</h3>
 	
-		#if ($alertMessage)<div class="alertMessage">$tlang.getString("gen.alert") $validator.escapeHtml($alertMessage)</div>#end
+		#if ($alertMessage)<div class="alertMessage">$tlang.getString("gen.alert") $alertMessage</div>#end
 		<div class="clear"></div>
 		<form name="previewAssignmentsForm" action="#toolForm("AssignmentAction")" method="post" onsubmit="return true;"> 
 			<input type="hidden" name="assignmentId" value="$!value_assignment_id" />

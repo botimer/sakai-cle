@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/user/trunk/user-tool/tool/src/java/org/sakaiproject/user/tool/UsersAction.java $
- * $Id: UsersAction.java 117667 2012-12-13 19:59:03Z ottenhoff@longsight.com $
+ * $Id: UsersAction.java 123370 2013-04-29 19:13:08Z matthew@longsight.com $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008 The Sakai Foundation
@@ -1258,6 +1258,14 @@ public class UsersAction extends PagedResourceActionII
 					return false;
 				}
 			}
+
+                  // Still needs super user to change super user password
+                  // If the current user isn't a super user but is trying to change the password or email of a super user print an error
+			if (!SecurityService.isSuperUser() && SecurityService.isSuperUser(user.getId())) {
+			    addAlert(state, rb.getString("useact.youdonot4"));
+			    return false;
+			}
+
 			
 			// eid, pw, type might not be editable
 			if (eid != null) user.setEid(eid);

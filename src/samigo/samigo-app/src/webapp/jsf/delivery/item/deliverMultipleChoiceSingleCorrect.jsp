@@ -1,9 +1,9 @@
-<%-- $Id: deliverMultipleChoiceSingleCorrect.jsp 115677 2012-11-02 18:50:01Z ktsao@stanford.edu $
+<%-- $Id: deliverMultipleChoiceSingleCorrect.jsp 124187 2013-05-17 00:03:14Z ktsao@stanford.edu $
 include file for delivering multiple choice questions
 should be included in file importing DeliveryMessages
 --%>
 <!--
-* $Id: deliverMultipleChoiceSingleCorrect.jsp 115677 2012-11-02 18:50:01Z ktsao@stanford.edu $
+* $Id: deliverMultipleChoiceSingleCorrect.jsp 124187 2013-05-17 00:03:14Z ktsao@stanford.edu $
 <%--
 ***********************************************************************************
 *
@@ -24,6 +24,12 @@ should be included in file importing DeliveryMessages
 **********************************************************************************/
 --%>
 -->
+
+<script type="text/javascript" language="JavaScript"
+	src="/samigo-app/js/jquery-1.3.2.min.js"></script>
+<script type="text/javascript" language="JavaScript"
+	src="/samigo-app/js/jquery-ui-1.7.2.custom.min.js"></script>
+	
 <h:outputText value="<script type='text/javascript'>" escape="false" />
 <h:outputText value="var selectedRadioButton#{question.itemData.itemId};" escape="false" />
 <h:outputText value="function uncheckRadioButtons#{question.itemData.itemId}(radioButton) {" escape="false" />
@@ -49,7 +55,7 @@ should be included in file importing DeliveryMessages
   <f:verbatim></div></f:verbatim>
 
 
-  <h:dataTable value="#{question.selectionArray}" var="selection">
+  <h:dataTable value="#{question.selectionArray}" var="selection" width="100%">
     <h:column rendered="#{delivery.feedback eq 'true' &&
        delivery.feedbackComponent.showCorrectResponse && !delivery.noFeedback=='true'}">
       <h:graphicImage id="image"
@@ -66,8 +72,8 @@ should be included in file importing DeliveryMessages
 	</h:column> 	 
 	<h:column> 	 
 	  <h:outputText value=" #{selection.answer.label}" escape="false" /> 	 
-	  <h:outputText value="." rendered="#{selection.answer.label ne ''}" /> 	 
-	  <h:outputText value="#{selection.answer.text}" escape="false" >
+	  <h:outputText value=". " rendered="#{selection.answer.label ne ''}" /> 	 
+	  <h:outputText value="#{selection.answer.text}" styleClass="mcAnswerText" escape="false" >
      	<f:converter converterId="org.sakaiproject.tool.assessment.jsf.convert.AnswerSurveyConverter" />
       </h:outputText>
     </h:column>

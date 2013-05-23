@@ -1,9 +1,9 @@
-<%-- $Id: deliverShortAnswer.jsp 98973 2011-10-05 05:52:39Z ktsao@stanford.edu $
+<%-- $Id: deliverShortAnswer.jsp 121788 2013-03-26 15:51:03Z azeckoski@unicon.net $
 include file for delivering short answer essay questions
 should be included in file importing DeliveryMessages
 --%>
 <!--
-* $Id: deliverShortAnswer.jsp 98973 2011-10-05 05:52:39Z ktsao@stanford.edu $
+* $Id: deliverShortAnswer.jsp 121788 2013-03-26 15:51:03Z azeckoski@unicon.net $
 <%--
 ***********************************************************************************
 *
@@ -60,7 +60,7 @@ should be included in file importing DeliveryMessages
 <h:inputTextarea rows="20" cols="80" value="#{question.responseText}" 
    rendered="#{delivery.actionString!='reviewAssessment'
             && delivery.actionString!='gradeAssessment' && !delivery.studentRichText}">
-<f:validateLength maximum="60000"/>
+<f:validateLength maximum="32000"/>
 </h:inputTextarea>
 <h:outputText value="#{question.responseTextForDisplay}" 
    rendered="#{delivery.actionString=='reviewAssessment'

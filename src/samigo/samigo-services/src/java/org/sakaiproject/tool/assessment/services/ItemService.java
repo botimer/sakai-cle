@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/sam/trunk/samigo-services/src/java/org/sakaiproject/tool/assessment/services/ItemService.java $
- * $Id: ItemService.java 120471 2013-02-26 19:27:57Z ktsao@stanford.edu $
+ * $Id: ItemService.java 122568 2013-04-11 09:52:12Z david.horwitz@uct.ac.za $
  ***********************************************************************************
  *
  * Copyright (c) 2004, 2005, 2006, 2008 The Sakai Foundation
@@ -61,6 +61,10 @@ public class ItemService
 
   /**
    * Get a particular item from the backend, with all questions.
+   * @param itemId
+   * @param agentId
+   * @return
+   * @deprecated 
    */
   public ItemFacade getItem(Long itemId, String agentId)
   {
@@ -199,6 +203,11 @@ public class ItemService
     }
   }
 
+  /**
+   *  Get a particular item from the backend, with all questions.
+   * @param itemId
+   * @return
+   */
   public ItemFacade getItem(String itemId) {
     try{
       return PersistenceService.getInstance().getItemFacadeQueries().

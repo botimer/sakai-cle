@@ -38,11 +38,27 @@
 	}
 	
 	$(function() {
-		setupAccordion('<%= org.sakaiproject.util.Web.escapeJavascript(thisId)%>');
+		setupAccordion('<%= org.sakaiproject.util.Web.escapeJavascript(thisId)%>'<h:outputText value=", true" rendered="#{SyllabusTool.editAble == 'true'}"/>);
 	});
 	
 	
 </script>
+<style>
+	a.draft{
+		color: grey !important
+	}
+	.ui-accordion .ui-accordion-header{
+		overflow: auto !important;
+	}
+	 /* IE has layout issues when sorting (see #5413) */
+	.group { zoom: 1 }
+	
+	.imgMove{
+		position: relative;
+		top: 2px;
+		right: 8px;
+	}
+</style>
 
 <%-- gsilver: global things about syllabus tool:
 1 ) what happens to empty lists - still generate a table?
@@ -87,26 +103,47 @@
 			<syllabus:syllabus_if test="#{SyllabusTool.syllabusItem.redirectURL}">
 					<f:verbatim>
 						<br/>
+						<a href="#" id="expandLink" style="float: right" onclick="expandAccordion('<%= org.sakaiproject.util.Web.escapeJavascript(thisId)%>')">
+						</f:verbatim>
+							<h:outputText value="#{msgs.expandAll}"/>
+						<f:verbatim>
+						</a>
+						<a href="#" id="collapseLink" style="float: right; display:none" onclick="collapseAccordion('<%= org.sakaiproject.util.Web.escapeJavascript(thisId)%>')">
+						</f:verbatim>
+							<h:outputText value="#{msgs.collapseAll}"/>
+						<f:verbatim>
+						</a>
+						<br/>
 						<br/>
 						<div id="accordion">
 					</f:verbatim>
 					<t:dataList value="#{SyllabusTool.entries}" var="eachEntry" layout="simple">
-						<f:verbatim><h3><a href="#"></f:verbatim>		  
+						<f:verbatim><div class="group" syllabusItem="</f:verbatim>
+						<h:outputText value="#{eachEntry.entry.syllabusId}"/>
+						<f:verbatim>"><h3></f:verbatim>
+						<h:graphicImage url="/images/cursor_drag_arrow.png" rendered="#{SyllabusTool.editAble == 'true'}" styleClass="imgMove"/>
+						<f:verbatim><a href="#" </f:verbatim>
+							<f:subview id="draftclass" rendered="#{eachEntry.status == eachEntry.draftStatus}">
+								<f:verbatim>class="draft"</f:verbatim>
+							</f:subview>
+							<f:verbatim>></f:verbatim>		 
+							<h:outputText rendered="#{eachEntry.status == eachEntry.draftStatus}" value="#{msgs.mainDraft} - "/> 
 							<h:outputText value="#{eachEntry.entry.title}" />
 							<f:subview id="date" rendered="#{eachEntry.entry.startDate != null || eachEntry.entry.endDate != null}">
-								<f:verbatim><br/><span style="font-weight: normal"></f:verbatim>
-									<h:outputText value="("/>
+								<f:verbatim><span style="font-weight: normal; color: grey; float: right"></f:verbatim>
 									<h:outputText value="#{eachEntry.entry.startDate}">
 										<f:convertDateTime type="date" pattern="EEE MMM dd, yyyy hh:mm a"/>
 									</h:outputText>
 									<h:outputText value=" - " rendered="#{eachEntry.entry.startDate != null && eachEntry.entry.endDate != null}"/>
-									<h:outputText value="#{eachEntry.entry.endDate}">
+									<h:outputText value="#{eachEntry.entry.endDate}" rendered="#{!eachEntry.startAndEndDatesSameDay}">
 								  		<f:convertDateTime type="date" pattern="EEE MMM dd, yyyy hh:mm a"/>
 									</h:outputText>
-									<h:outputText value=")"/>
+									<h:outputText value="#{eachEntry.entry.endDate}" rendered="#{eachEntry.startAndEndDatesSameDay}">
+								  		<f:convertDateTime type="date" pattern="hh:mm a"/>
+									</h:outputText>
 								<f:verbatim></span></f:verbatim>
 							</f:subview>
-							<h:outputText rendered="#{eachEntry.status == 'draft'}" value="#{msgs.mainDraft}"/>
+							
 						<f:verbatim></a></h3></f:verbatim>
 						<f:verbatim><div></f:verbatim>
 							<f:verbatim><div></f:verbatim>
@@ -124,7 +161,7 @@
 									</h:outputLink>
 								</h:column>
 							</h:dataTable>
-						<f:verbatim></div></f:verbatim>
+						<f:verbatim></div></div></f:verbatim>
 					</t:dataList>
 				<f:verbatim></div></f:verbatim>
 				<h:outputText value="#{msgs.syllabus_noEntry}" styleClass="instruction" rendered="#{SyllabusTool.displayNoEntryMsg}"/>

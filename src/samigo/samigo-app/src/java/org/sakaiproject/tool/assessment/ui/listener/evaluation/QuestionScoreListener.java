@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/sam/trunk/samigo-app/src/java/org/sakaiproject/tool/assessment/ui/listener/evaluation/QuestionScoreListener.java $
- * $Id: QuestionScoreListener.java 121258 2013-03-15 15:03:36Z ottenhoff@longsight.com $
+ * $Id: QuestionScoreListener.java 121792 2013-03-26 16:07:29Z azeckoski@unicon.net $
  ***********************************************************************************
  *
  * Copyright (c) 2004, 2005, 2006, 2007, 2008, 2009 The Sakai Foundation
@@ -245,8 +245,7 @@ public class QuestionScoreListener implements ActionListener,
 			if (bean.getSelectedSARationaleView() == null) {
 				// if bean.showSARationaleInLine is null, then set inline to be
 				// the default
-				bean
-						.setSelectedSARationaleView(QuestionScoresBean.SHOW_SA_RATIONALE_RESPONSES_POPUP);
+				bean.setSelectedSARationaleView(QuestionScoresBean.SHOW_SA_RATIONALE_RESPONSES_INLINE);
 			}
 
 			if ("true".equalsIgnoreCase(totalBean.getAnonymous())) {

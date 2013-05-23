@@ -202,7 +202,7 @@
 								<h:outputText value="#{msgs.linkcalendartitle}"/>
 							</h:outputLabel>
 						</h:panelGroup>
-						<h:panelGroup styleClass="shorttext" rendered="#{SyllabusTool.calendarExistsForSite}">
+						<h:panelGroup styleClass="shorttext">
 							<h:selectBooleanCheckbox id="monday" value="#{SyllabusTool.bulkEntry.monday}" />
 							<h:outputText value="#{msgs.monday}"/>
 							<h:outputText value=" | "/>
@@ -237,6 +237,12 @@
 						value="#{msgs.bar_post}" 
 						accesskey="s"
 						title="#{msgs.button_post}" />
+					<sakai:button_bar_item
+						action="#{SyllabusTool.processEditBulkDraft}"
+						styleClass="active"
+						value="#{msgs.bar_save_draft}" 
+						accesskey="s"
+						title="#{msgs.button_save}" />
 					<sakai:button_bar_item
 						action="#{SyllabusTool.processEditBulkCancel}"
 						value="#{msgs.cancel}" 

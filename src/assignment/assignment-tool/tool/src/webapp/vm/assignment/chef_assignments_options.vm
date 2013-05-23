@@ -1,4 +1,4 @@
-<!-- $Id: chef_assignments_options.vm 105820 2012-03-15 17:32:44Z matthew.buckett@oucs.ox.ac.uk $ -->
+<!-- $Id: chef_assignments_options.vm 122725 2013-04-12 21:05:51Z ottenhoff@longsight.com $ -->
 <!-- start: chef_assignments_options.vm  -->
 <script type="text/javascript">
 	focus_path = [ "$form-notify" ];
@@ -7,7 +7,7 @@
 	<h3>
 		$tlang.getString("options")
 	</h3>
-	#if ($alertMessage)<div class="alertMessage">$tlang.getString("gen.alert") $validator.escapeHtml($alertMessage)</div><div class="clear"></div>#end	
+	#if ($alertMessage)<div class="alertMessage">$tlang.getString("gen.alert") $alertMessage</div><div class="clear"></div>#end	
 	<form action="#toolForm("$action")" method="post" name="optionsForm">
 		<h4>
 			$tlang.getString("options_instruction") 

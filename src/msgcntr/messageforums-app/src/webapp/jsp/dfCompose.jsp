@@ -17,7 +17,7 @@
 				$(document).ready(function() {
 					$('#openLinkBlock').hide();
 					jQuery('.toggle').click(function(e) { 
-						$('#replytomessage').toggle('slow');
+						$('#fullTopicDescription').toggle('slow');
 						$('.toggleParent').toggle();					
 						 resizeFrame('grow')
 				});						
@@ -35,35 +35,28 @@
 	  <h:outputText value="#{ForumTool.selectedTopic.topic.shortDescription}" />
 	  </div>
 						<div>
-        <h:commandLink immediate="true" 
-		                  action="#{ForumTool.processDfComposeToggle}" 
-					  			     onmousedown="document.forms[0].onsubmit();"
-						  		     rendered="#{ForumTool.selectedTopic.hasExtendedDesciption}" 
-									title="#{msgs.cdfm_read_full_description}"
-									styleClass="show">
-								<h:graphicImage url="/images/collapse.gif"/>
-								<h:outputText value="#{msgs.cdfm_read_full_description}" />
-		      <f:param value="dfCompose" name="redirectToProcessAction"/>
-		      <f:param value="true" name="composeExpand"/>
-		    </h:commandLink>
-		    <h:commandLink immediate="true" 
-		                action="#{ForumTool.processDfComposeToggle}" 
-								   onmousedown="document.forms[0].onsubmit();"
-			  					   rendered="#{ForumTool.selectedTopic.readFullDesciption}"
-									title=" #{msgs.cdfm_hide_full_description}"
-									styleClass="hide">
-								<h:graphicImage url="/images/expand.gif"/>
-								<h:outputText value="#{msgs.cdfm_hide_full_description}" />
-		       <f:param value="dfCompose" name="redirectToProcessAction"/>
-		     </h:commandLink>					
-			 			 
+		     <p style="padding:0;margin:.5em 0" id="openLinkBlock" class="toggleParent">
+					<a href="#" id="showMessage" class="toggle show">
+						<h:graphicImage url="/images/expand.gif"/>	
+						<h:outputText value=" #{msgs.cdfm_hide_full_description}" />
+					</a>
+				</p>
+				<p style="padding:0;margin:.5em 0" id="hideLinkBlock" class="toggleParent">
+					<a href="#" id="hideMessage" class="toggle show">
+						<h:graphicImage url="/images/collapse.gif" />					
+						<h:outputText value=" #{msgs.cdfm_read_full_description}"/>
+					</a>
+				</p>
+		     
+		     
 							<%-- //designNote: am assuming that the thinking is that once the user is here 
 								there is no longer need for the long description context (or as much), so do not put it in
 								the response by default - same goes for attachment list if any --%>
+			<div id="fullTopicDescription" style="display: none">
 			<mf:htmlShowArea value="#{ForumTool.selectedTopic.topic.extendedDescription}" 
-		                   rendered="#{ForumTool.selectedTopic.readFullDesciption}"
 		                   id="topic_extended_description" 
 									hideBorder="true" />
+			</div>
 						</div>
 					</td>
 				</tr>
@@ -164,7 +157,7 @@
 --%>		        
 			<h:outputText value="#{msgs.cdfm_reply_message_note}" styleClass="highlight" rendered="#{ForumTool.selectedTopic.moderated == 'true' }" /><h:outputText value="#{msgs.cdfm_reply_message_mod_inst}" styleClass="instruction" rendered="#{ForumTool.selectedTopic.moderated == 'true' }" />
 			<p style="padding:0" class="act">
-				<h:commandButton id="post" action="#{ForumTool.processDfMsgPost}" value="#{msgs.cdfm_button_bar_post_message}" accesskey="s" styleClass="active blockMe"/>
+				<h:commandButton id="post" action="#{ForumTool.processDfMsgPost}" value="#{msgs.cdfm_button_bar_post_message}" accesskey="s" styleClass="active blockMeOnClick"/>
 				<%--  <sakai:button_bar_item action="#{ForumTool.processDfMsgSaveDraft}" value="#{msgs.cdfm_button_bar_save_draft}" /> --%>
 				<h:commandButton action="#{ForumTool.processDfMsgCancel}" value="#{msgs.cdfm_button_bar_cancel}" immediate="true" accesskey="x" />
                 <h:outputText styleClass="messageProgress" style="display:none" value="#{msgs.cdfm_processing_submit_message}" />

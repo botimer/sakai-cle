@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/rwiki/trunk/rwiki-impl/impl/src/java/uk/ac/cam/caret/sakai/rwiki/component/macros/BlockMacro.java $
- * $Id: BlockMacro.java 120998 2013-03-10 19:18:29Z ottenhoff@longsight.com $
+ * $Id: BlockMacro.java 124104 2013-05-15 16:38:44Z matthew@longsight.com $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006 The Sakai Foundation.
@@ -91,7 +91,7 @@ public class BlockMacro extends BaseMacro
 		writer.write("<div"); //$NON-NLS-1$
 		if (cssClass != null && !"".equals(cssClass)) //$NON-NLS-1$
 		{
-			cssClass = cssClass.replaceAll("[^A-Za-z0-9]", "");
+			cssClass = cssClass.replaceAll("[^A-Za-z0-9-_]", "");
 			writer.write(" class='"); //$NON-NLS-1$
 			writer.write(cssClass); //$NON-NLS-1$ //$NON-NLS-2$
 			writer.write('\'');

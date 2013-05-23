@@ -61,6 +61,7 @@
         <lookup-method name="serverConfigurationService" bean="org.sakaiproject.component.api.ServerConfigurationService"/>
         <lookup-method name="idManager"                  bean="org.sakaiproject.id.api.IdManager"/>
         <lookup-method name="sqlService"                 bean="org.sakaiproject.db.api.SqlService"/>
+        <lookup-method name="memoryService"              bean="org.sakaiproject.memory.api.MemoryService"/>
 
         <property name="tableName">          <value>SAKAI_NOTIFICATION</value>  </property>
         <property name="locksInDb">          <value>false</value>               </property>
@@ -114,6 +115,15 @@
 	 	<property name="usageSessionService" ref="org.sakaiproject.event.api.UsageSessionService"/>
 	 	
 	 </bean>
-    
+
+    <bean id="org.sakaiproject.event.api.LearningResourceStoreService"
+            class="org.sakaiproject.event.impl.BaseLearningResourceStoreService"
+            init-method="init" destroy-method="destroy" singleton="true">
+        <property name="eventTrackingService" ref="org.sakaiproject.event.api.EventTrackingService"/>
+        <property name="serverConfigurationService" ref="org.sakaiproject.component.api.ServerConfigurationService"/>
+        <property name="sessionManager" ref="org.sakaiproject.tool.api.SessionManager"/>
+        <!-- property name="siteService" ref="org.sakaiproject.site.api.SiteService"/ -->
+        <property name="userDirectoryService" ref="org.sakaiproject.user.api.UserDirectoryService"/>
+    </bean>
 
 </beans>

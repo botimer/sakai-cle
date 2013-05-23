@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/kernel/trunk/kernel-util/src/main/java/org/sakaiproject/util/BaseResourceProperties.java $
- * $Id: BaseResourceProperties.java 105077 2012-02-24 22:54:29Z ottenhoff@longsight.com $
+ * $Id: BaseResourceProperties.java 124158 2013-05-16 15:37:05Z ottenhoff@longsight.com $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008 Sakai Foundation
@@ -21,6 +21,7 @@
 
 package org.sakaiproject.util;
 
+import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Hashtable;
@@ -472,6 +473,13 @@ public class BaseResourceProperties implements ResourceProperties, SerializableP
 
 	} // getTimeProperty
 
+	
+	public Date getDateProperty(String name) throws EntityPropertyNotDefinedException, EntityPropertyTypeException
+	{
+		Time time = getTimeProperty(name);
+		return new Date(time.getTime());
+	}
+	
 	/**
 	 * Access a named property as a User.
 	 * 

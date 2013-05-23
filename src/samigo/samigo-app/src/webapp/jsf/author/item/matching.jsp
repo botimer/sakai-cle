@@ -7,7 +7,7 @@
      PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
      "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <!--
-* $Id: matching.jsp 115704 2012-11-05 12:37:08Z steve.swinsburg@gmail.com $
+* $Id: matching.jsp 124679 2013-05-20 17:09:41Z ktsao@stanford.edu $
 <%--
 ***********************************************************************************
 *
@@ -33,15 +33,7 @@
     <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
       <head><%= request.getAttribute("html.head") %>
       <title><h:outputText value="#{authorMessages.item_display_author}"/></title>
-      <!-- HTMLAREA -->
-      <samigo:stylesheet path="/htmlarea/htmlarea.css"/>
-      <samigo:script path="/htmlarea/htmlarea.js"/>
-      <samigo:script path="/htmlarea/lang/en.js"/>
-      <samigo:script path="/htmlarea/dialog.js"/>
-      <samigo:script path="/htmlarea/popupwin.js"/>
-      <samigo:script path="/htmlarea/popups/popup.js"/>
-      <samigo:script path="/htmlarea/navigo_js/navigo_editor.js"/>
-      <samigo:script path="/jsf/widget/wysiwyg/samigo/wysiwyg.js"/>
+      
       <!-- AUTHORING -->
       <samigo:script path="/js/jquery-1.3.2.min.js" />
       <samigo:script path="/js/authoring.js"/>

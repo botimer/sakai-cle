@@ -35,6 +35,7 @@ import java.net.URLConnection;
 import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -54,6 +55,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
 import org.sakaiproject.authz.api.SecurityAdvisor;
 import org.sakaiproject.authz.api.SecurityService;
 import org.sakaiproject.authz.cover.AuthzGroupService;
@@ -79,6 +81,7 @@ import org.sakaiproject.lessonbuildertool.SimplePage;
 import org.sakaiproject.lessonbuildertool.SimplePageComment;
 import org.sakaiproject.lessonbuildertool.SimplePageGroup;
 import org.sakaiproject.lessonbuildertool.SimplePageItem;
+import org.sakaiproject.lessonbuildertool.SimplePageItemImpl;
 import org.sakaiproject.lessonbuildertool.SimplePageLogEntry;
 import org.sakaiproject.lessonbuildertool.SimplePageQuestionAnswer;
 import org.sakaiproject.lessonbuildertool.SimplePageQuestionResponse;
@@ -88,6 +91,7 @@ import org.sakaiproject.lessonbuildertool.cc.CartridgeLoader;
 import org.sakaiproject.lessonbuildertool.cc.Parser;
 import org.sakaiproject.lessonbuildertool.cc.PrintHandler;
 import org.sakaiproject.lessonbuildertool.cc.ZipLoader;
+import org.sakaiproject.lessonbuildertool.ccexport.CCExport;
 import org.sakaiproject.lessonbuildertool.model.SimplePageToolDao;
 import org.sakaiproject.lessonbuildertool.service.BltiInterface;
 import org.sakaiproject.lessonbuildertool.service.GradebookIfc;
@@ -121,6 +125,8 @@ import uk.org.ponder.messageutil.MessageLocator;
 import uk.org.ponder.rsf.components.UIContainer;
 import uk.org.ponder.rsf.components.UIInternalLink;
 
+import org.sakaiproject.lessonbuildertool.SimplePagePeerEval;
+import org.sakaiproject.lessonbuildertool.SimplePagePeerEvalResult;
 /**
  * Backing bean for Simple pages
  * 
@@ -149,7 +155,7 @@ public class SimplePageBean {
 	private static Log log = LogFactory.getLog(SimplePageBean.class);
 
 	public enum Status {
-		NOT_REQUIRED, REQUIRED, DISABLED, COMPLETED, FAILED
+	    NOT_REQUIRED, REQUIRED, DISABLED, COMPLETED, FAILED, NEEDSGRADING
 	}
 	
     // from ResourceProperites. This isn't in 2.7.1, so define it here. Let's hope it doesn't change...
@@ -182,7 +188,7 @@ public class SimplePageBean {
 	private List<GroupEntry> currentGroups = null;
 	private Set<String> myGroups = null;
 
-	private boolean filterHtml = ServerConfigurationService.getBoolean(FILTERHTML, false);
+	private String filterHtml = ServerConfigurationService.getString(FILTERHTML);
 
 	public String selectedAssignment = null;
 	public String selectedBlti = null;
@@ -274,13 +280,80 @@ public class SimplePageBean {
 	private String quiztool = null;
 	private String topictool = null;
 	private String assigntool = null;
+        private boolean importtop = false;
 	
 	private Integer editPrivs = null;
 	private String currentSiteId = null;
 
 	public Map<String, MultipartFile> multipartMap;
-
-    // Caches
+	
+	public String rubricSelections;
+	
+	public boolean peerEval;
+	public String rubricTitle;
+	public String rubricRow;
+	private HashMap<Integer, String> rubricRows = null;
+	
+	private Date peerEvalDueDate;
+	private Date peerEvalOpenDate;
+	private boolean peerEvalAllowSelfGrade;
+	
+	public void setPeerEval(boolean peerEval) {
+		this.peerEval = peerEval;
+	}
+	
+	public void setRubricTitle(String rubricTitle) {
+		this.rubricTitle = rubricTitle;
+	}
+	
+	public void setRubricRow(String rubricRow) {
+		this.rubricRow = rubricRow;
+		
+		if(rubricRows==null) {
+			rubricRows = new HashMap<Integer, String>();
+		}
+		rubricRows.put(rubricRows.size(), rubricRow);
+	}
+	
+	public Date getPeerEvalDueDate () {
+		return peerEvalDueDate;
+	}
+	
+	public void setPeerEvalDueDate(Date date){
+		this.peerEvalDueDate = date;
+	}
+	
+	public Date getPeerEvalOpenDate() {
+		return peerEvalOpenDate;
+	}
+	
+	public void setPeerEvalOpenDate(Date date) {
+		this.peerEvalOpenDate = date;
+	}
+	
+	public boolean getPeerEvalAllowSelfGrade(){
+		return peerEvalAllowSelfGrade;
+	}
+	
+	public void setPeerEvalAllowSelfGrade(boolean self){
+		this.peerEvalAllowSelfGrade = self;
+	}
+	ArrayList<String> rubricPeerGrades, rubricPeerCategories;
+	public String rubricPeerGrade;
+	
+	public void setRubricPeerGrade(String rubricPeerGrade) {
+		this.rubricPeerGrade = rubricPeerGrade;
+		
+		if(rubricPeerGrades==null) {
+			rubricPeerGrades = new ArrayList<String>();
+			rubricPeerCategories = new ArrayList<String>();
+		}
+		int theColon=rubricPeerGrade.lastIndexOf(":");
+		rubricPeerGrades.add(rubricPeerGrade.substring(theColon + 1));
+		rubricPeerCategories.add(rubricPeerGrade.substring(0,theColon));
+	}
+    
+	// Caches
 
     // The following caches are used only during a single display of the page. I believe they
     // are so transient that we don't have to worry about synchronizing them or keeping them up to date.
@@ -415,6 +488,29 @@ public class SimplePageBean {
 	}
 
     // End Injection
+    
+	static Class levelClass = null;
+	static Object[] levels = null;
+	static Class ftClass = null;
+	static Method ftMethod = null;
+	static Object ftInstance = setupFtStuff();
+
+	static Object setupFtStuff () {
+	    Object ret = null;
+	    try {
+		levelClass = Class.forName("org.sakaiproject.util.api.FormattedText$Level");
+		levels = levelClass.getEnumConstants();
+		ftClass = Class.forName("org.sakaiproject.util.api.FormattedText");
+		ftMethod = ftClass.getMethod("processFormattedText", 
+		   new Class[] { String.class, StringBuilder.class, levelClass }); 
+		ret = org.sakaiproject.component.cover.ComponentManager.get("org.sakaiproject.util.api.FormattedText");
+		return ret;
+	    } catch (Exception e) {
+		log.error("Formatted Text with levels not available: " + e);
+		return null;
+	    }
+	}
+
 
 	public void init () {	
 		if (groupCache == null) {
@@ -424,10 +520,11 @@ public class SimplePageBean {
 		if (resourceCache == null) {
 			resourceCache = memoryService.newCache("org.sakaiproject.lessonbuildertool.tool.beans.SimplePageBean.resourceCache");
 		}
+	
 	}
 
     // no destroy. We want to leave the cache intact when we exit, because there's one of us
-    // per request.
+    // per request. 
 
 	public SimplePageItem findItem(long itId) {
 		Long itemId = itId;
@@ -543,6 +640,10 @@ public class SimplePageBean {
 		this.hasReleaseDate = hasReleaseDate;
 	}
 
+        public void setImporttop(boolean i) {
+	    this.importtop = i;
+	}
+
     // gets called for non-checked boxes also, but q will be null
 	public void setQuiztool(String q) {
 	    if (q != null)
@@ -582,7 +683,7 @@ public class SimplePageBean {
 	public void setPrerequisite(boolean prerequisite) {
 		this.prerequisite = prerequisite;
 	}
-
+	
 	public void setNewWindow(boolean newWindow) {
 		this.newWindow = newWindow;
 	}
@@ -726,6 +827,7 @@ public class SimplePageBean {
 		if (itemId == null || itemId == -1)
 			return true;
 		SimplePageItem item = findItem(itemId);
+		
 		if (item.getPageId() != getCurrentPageId()) {
 			return false;
 		}
@@ -748,21 +850,87 @@ public class SimplePageBean {
 			// a lot of people feel users shouldn't be able to add javascript, etc
 			// to their HTML. I think enforcing that makes Sakai less than useful.
 			// So check config options to see whether to do that check
+			final Integer FILTER_DEFAULT=0;
+			final Integer FILTER_HIGH=1;
+			final Integer FILTER_LOW=2;
+			final Integer FILTER_NONE=3;
+
 			String html = contents;
-			if (getCurrentPage().getOwner() != null || filterHtml 
-					&& !"false".equals(placement.getPlacementConfig().getProperty("filterHtml")) ||
-					"true".equals(placement.getPlacementConfig().getProperty("filterHtml"))) {
-				html = FormattedText.processFormattedText(contents, error);
+
+			// figure out how to filter
+			Integer filter = FILTER_DEFAULT;
+			if (getCurrentPage().getOwner() != null) {
+			    filter = FILTER_DEFAULT; // always filter student content
 			} else {
+			    // this is instructor content.
+			    // see if specified
+			    String filterSpec = placement.getPlacementConfig().getProperty("filterHtml");
+			    if (filterSpec == null)
+				filterSpec = filterHtml;
+			    // no, default to LOW. That will allow embedding but not Javascript
+			    if (filterSpec == null) // should never be null. unspeciifed should give ""
+				filter = FILTER_LOW;
+			    // old specifications
+			    else if (filterSpec.equalsIgnoreCase("true"))
+				filter = FILTER_LOW; // old value of true produced the same result as missing
+			    else if (filterSpec.equalsIgnoreCase("false"))			    
+				filter = FILTER_NONE;
+			    // new ones
+			    else if (filterSpec.equalsIgnoreCase("default"))			    
+				filter = FILTER_DEFAULT;
+			    else if (filterSpec.equalsIgnoreCase("high")) 
+				filter = FILTER_HIGH;
+			    else if (filterSpec.equalsIgnoreCase("low")) 
+				filter = FILTER_LOW;
+			    else if (filterSpec.equalsIgnoreCase("none")) 
+				filter = FILTER_NONE;
+			    // unspecified
+			    else
+				filter = FILTER_LOW;
+			}			    
+			if (filter.equals(FILTER_NONE)) {
+			    html = FormattedText.processHtmlDocument(contents, error);
+			} else if (filter.equals(FILTER_DEFAULT)) {
+			    html = FormattedText.processFormattedText(contents, error);
+			} else if (ftInstance != null) {
+			    try {
+				// now filter is set. Implement it. Depends upon whether we have the anti-samy code
+				Object level = null;
+				if (filter.equals(FILTER_HIGH))
+				    level = levels[1];
+				else
+				    level = levels[2];
+
+				html = (String)ftMethod.invoke(ftInstance, new Object[] { contents, error, level });
+			    } catch (Exception e) {
+				// this should never happen. If it does, emulate what the anti-samy
+				// code does if antisamy is disabled. It always filters
+				html = FormattedText.processFormattedText(contents, error);
+			    }
+			} else {
+			    // don't have antisamy. For LOW, use old instructor behavior, since
+			    // LOW is the default. For high, it makes sense to filter
+			    if (filter.equals(FILTER_HIGH))
+				html = FormattedText.processFormattedText(contents, error);
+			    else
 				html = FormattedText.processHtmlDocument(contents, error);
+
 			}
-			
+
+			// if (getCurrentPage().getOwner() != null || filterHtml 
+			//		&& !"false".equals(placement.getPlacementConfig().getProperty("filterHtml")) ||
+			//		"true".equals(placement.getPlacementConfig().getProperty("filterHtml"))) {
+			//	html = FormattedText.processFormattedText(contents, error);
+			//} else {
+			//	html = FormattedText.processHtmlDocument(contents, error);
+
 			if (html != null) {
 				SimplePageItem item;
 				// itemid -1 means we're adding a new item to the page, 
 				// specified itemid means we're updating an existing one
 				if (itemId != null && itemId != -1) {
 					item = findItem(itemId);
+					
 				} else {
 					item = appendItem("", "", SimplePageItem.TEXT);
 				}
@@ -1107,12 +1275,25 @@ public class SimplePageBean {
 		// already and the instructor has enabled the option.
 		if(items.size() > 0) {
 			SimplePage page = getPage(pageid);
-			if(page.getOwner() != null) {
+				if(page.getOwner() != null) {
 				SimpleStudentPage student = simplePageToolDao.findStudentPage(page.getTopParent());
 				if(student != null && student.getCommentsSection() != null) {
 					SimplePageItem item = simplePageToolDao.findItem(student.getItemId());
 					if(item != null && item.getShowComments() != null && item.getShowComments()) {
+						//copy the attribute string from the top student section page  to each student page
 						items.add(0, simplePageToolDao.findItem(student.getCommentsSection()));
+					}
+				
+					if(item != null && item.getShowPeerEval() != null && item.getShowPeerEval()) {
+						String peerEval=item.getAttributeString();
+						SimplePageItem studItem =  new SimplePageItemImpl();
+						studItem.setSakaiId(page.getTopParent().toString());
+						
+						studItem.setAttributeString(peerEval);
+						studItem.setName("peerEval");
+						studItem.setPageId(-10L);
+						studItem.setType(SimplePageItem.PEEREVAL); // peer eval defined in SimplePageItem.java
+						items.add(0,studItem);
 					}
 				}
 			}
@@ -1412,8 +1593,7 @@ public class SimplePageBean {
 
 		PathEntry prevEntry = backPath.get(backPath.size()-2);
 		SimplePageItem prevItem = findItem(prevEntry.pageItemId);
-
-		GeneralViewParameters view = new GeneralViewParameters();
+				GeneralViewParameters view = new GeneralViewParameters();
 		int itemType = prevItem.getType();
 		if (itemType == SimplePageItem.PAGE) {
 			view.setSendingPage(Long.valueOf(prevItem.getSakaiId()));
@@ -1504,7 +1684,7 @@ public class SimplePageBean {
     // so we need to know which in order to check availability
 	public void updatePageItem(long item) throws PermissionException {
 		SimplePageItem i = findItem(item);
-		if (i != null) {
+			if (i != null) {
 			if (i.getType() != SimplePageItem.STUDENT_CONTENT && (long)currentPageId != (long)Long.valueOf(i.getSakaiId())) {
 				log.warn("updatePageItem permission failure " + i + " " + Long.valueOf(i.getSakaiId()) + " " + currentPageId);
 				throw new PermissionException(getCurrentUserId(), "set item", Long.toString(item));
@@ -1941,9 +2121,10 @@ public class SimplePageBean {
 		SimplePageItem i = null;
 		if (makeNewItem)
 		    i = appendItem(selectedEntity, subpage.getTitle(), SimplePageItem.PAGE);
-		else
+		else {
 		    i = findItem(itemId);
-
+		   
+		}
 		if (i == null)
 		    return "failure";
 
@@ -2077,6 +2258,7 @@ public class SimplePageBean {
 		}
 
 		SimplePageItem i = findItem(itemId);
+		
 		if (i == null) {
 			return "failure";
 		} else {
@@ -3944,8 +4126,8 @@ public class SimplePageBean {
 				completeCache.put(itemId, true);
 				return true;
 			} else {
-				Float grade = submission.getGrade();
-			    if (grade >= Float.valueOf(item.getRequirementText())) {
+				Double grade = submission.getGrade();
+			    if (grade >= Double.valueOf(item.getRequirementText())) {
 			    	completeCache.put(itemId, true);
 			    	return true;
 			    } else {
@@ -3998,7 +4180,13 @@ public class SimplePageBean {
 				completeCache.put(itemId, false);
 				return false;
 			}
-		} else {
+		} else if (item.getType() == SimplePageItem.PEEREVAL){
+			SimplePagePeerEval peerEval = simplePageToolDao.findPeerEval(item.getId());
+			boolean result = peerEval ==null? true:false;
+				completeCache.put(itemId, result);
+				return result;
+		}
+		else {
 			completeCache.put(itemId, false);
 			return false;
 		}
@@ -4851,23 +5039,23 @@ public class SimplePageBean {
 			    topicobject = q;
 		    }
 
-		    parser.parse(new PrintHandler(this, cartridgeLoader, simplePageToolDao, quizobject, topicobject, bltiEntity, assignobject));
+		    parser.parse(new PrintHandler(this, cartridgeLoader, simplePageToolDao, quizobject, topicobject, bltiEntity, assignobject, importtop));
 		    setTopRefresh();
 		} catch (Exception e) {
 		    setErrKey("simplepage.cc-error", "");
-		    System.out.println("exception in importcc, backtrace follows " + e);
+		  
 		    e.printStackTrace();
 		} finally {
 		    if (cc != null)
 			try {
 			    deleteRecursive(cc);
 			} catch (Exception e){
-			    System.out.println("Unable to delete temp file " + cc);
+			    
 			}
 			try {
 			    deleteRecursive(root);
 			} catch (Exception e){
-			    System.out.println("Unable to delete temp file " + cc);
+			    
 			}
 		}
 	    }
@@ -5111,6 +5299,7 @@ public class SimplePageBean {
 	public String updateComments() {
 		if(canEditPage()) {
 			SimplePageItem comment = findItem(itemId);
+			
 			comment.setAnonymous(anonymous);
 			setItemGroups(comment, selectedGroups);
 			comment.setRequired(required);
@@ -5155,6 +5344,7 @@ public class SimplePageBean {
 						// Must be a student page comments tool.
 						SimpleStudentPage studentPage = simplePageToolDao.findStudentPage(Long.valueOf(comment.getSakaiId()));
 						SimplePageItem studentPageItem = simplePageToolDao.findItem(studentPage.getItemId());
+						
 						
 						//pageTitle = simplePageToolDao.findStudentPage(Long.valueOf(comment.getSakaiId())).getTitle();
 						gradebookId = "lesson-builder:page-comment:" + studentPageItem.getId();
@@ -5234,6 +5424,7 @@ public class SimplePageBean {
 		// Need to make sure the section exists
 		SimplePageItem containerItem = simplePageToolDao.findItem(itemId);
 		
+		
 		// We want to make sure each student only has one top level page per section.
 		SimpleStudentPage page = findStudentPage(containerItem);
 		
@@ -5293,6 +5484,7 @@ public class SimplePageBean {
 			newPage.setGroup(groupId);
 			saveItem(newPage, false);
 			
+			// Then attach the lesson_builder_student_pages item.
 			// Then attach the lesson_builder_student_pages item.
 			page = simplePageToolDao.makeStudentPage(itemId, newPage.getPageId(), title, user.getId(), groupId);
 						
@@ -5383,6 +5575,7 @@ public class SimplePageBean {
 		// so this should be safe.
 		if(questionAnswers == null) {
 			questionAnswers = new HashMap<Integer, String>();
+			log.info("setAddAnswer: it was null");
 		}
 		
 		// We store with the index so that we can maintain the order
@@ -5422,6 +5615,13 @@ public class SimplePageBean {
 		item.setAttribute("questionType", questionType);
 		
 		if(questionType.equals("shortanswer")) {
+			String shortAnswers[] = questionAnswer.split("\n");
+			questionAnswer = "";
+			for (int i = 0; i < shortAnswers.length; i ++) {
+			    String a = shortAnswers[i].trim();
+			    if (! a.equals(""))
+				questionAnswer = questionAnswer + a + "\n";
+			}
 			item.setAttribute("questionAnswer", questionAnswer);
 		}else if(questionType.equals("multipleChoice")) {
 			Long max = simplePageToolDao.maxQuestionAnswer(item);
@@ -5442,8 +5642,8 @@ public class SimplePageBean {
 				    answerId = ++max;
 				Boolean correct = fields[1].equals("true");
 				String text = fields[2];
-				
-			        Long id = simplePageToolDao.addQuestionAnswer(item, answerId, text, correct);
+				if (text != null && !text.trim().equals(""))
+				    simplePageToolDao.addQuestionAnswer(item, answerId, text, correct);
 
 			}
 			
@@ -5463,7 +5663,10 @@ public class SimplePageBean {
 			}
 		}
 		
-		if(graded && (item.getGradebookId() == null || item.getGradebookId().equals(""))) {
+		if (!graded || (gradebookTitle != null && gradebookTitle.trim().equals("")))
+		    gradebookTitle = null;
+
+		if(gradebookTitle != null && (item.getGradebookId() == null || item.getGradebookId().equals(""))) {
 			// Creating new gradebook entry
 			
 			String gradebookId = "lesson-builder:question:" + item.getId();
@@ -5479,25 +5682,28 @@ public class SimplePageBean {
 			}else {
 				item.setGradebookId(gradebookId);
 				item.setGradebookTitle(title);
-				item.setGradebookPoints(pointsInt);
 			}
-		}else if(graded) {
+		}else if(gradebookTitle != null) {
 			// Updating an old gradebook entry
 			
 			gradebookIfc.updateExternalAssessment(getCurrentSiteId(), item.getGradebookId(), null, gradebookTitle, pointsInt, null);
 			
 			item.setGradebookTitle(gradebookTitle);
-			item.setGradebookPoints(pointsInt);
-		}else if(!graded && (item.getGradebookId() != null && !item.getGradebookId().equals(""))) {
+		}else if(gradebookTitle == null && (item.getGradebookId() != null && !item.getGradebookId().equals(""))) {
 			// Removing an existing gradebook entry
 			
 			gradebookIfc.removeExternalAssessment(getCurrentSiteId(), item.getGradebookId());
 			item.setGradebookId(null);
 			item.setGradebookTitle(null);
-			item.setGradebookPoints(null);
+
 		}
 		
+		item.setAttribute("questionGraded", String.valueOf(graded));
 		item.setRequired(required);
+		if (graded)
+		    item.setGradebookPoints(pointsInt);
+		else
+		    item.setGradebookPoints(null);
 		item.setPrerequisite(prerequisite);
 		
 		update(item);
@@ -5514,7 +5720,7 @@ public class SimplePageBean {
 			update(response);
 		}
 	}
-	
+	 
 	private boolean gradeQuestionResponse(SimplePageQuestionResponse response) {
 		SimplePageItem question = findItem(response.getQuestionId());
 		if(question == null) {
@@ -5522,12 +5728,10 @@ public class SimplePageBean {
 			return false;
 		}
 		
-		Double gradebookPoints;
-		if(question.getGradebookId() != null && !question.getGradebookId().equals("")) {
-			gradebookPoints = (double) question.getGradebookPoints();
-		}else {
-			gradebookPoints = null;
-		}
+		Double gradebookPoints = null;
+		if (question.getGradebookPoints() != null)
+		    gradebookPoints = (double)question.getGradebookPoints();
+
 		boolean correct = true;
 		if(response.isOverridden()) {
 			// The teacher set this score manually, so we'd rather not mess with it.
@@ -5572,14 +5776,14 @@ public class SimplePageBean {
 		}
 		
 		response.setCorrect(correct);
+		if ("true".equals(question.getAttribute("questionGraded")))
+		    response.setPoints(gradebookPoints);
 		
 		if(question.getGradebookId() != null && !question.getGradebookId().equals("")) {
 			gradebookIfc.updateExternalAssessmentScore(getCurrentSiteId(), question.getGradebookId(),
 			       response.getUserId(), String.valueOf(gradebookPoints));
-			
-			response.setPoints(gradebookPoints);
 		}
-		
+
 		return correct;
 	}
 	
@@ -5645,12 +5849,16 @@ public class SimplePageBean {
 	public String updateStudent() {
 		if(canEditPage()) {
 			SimplePageItem page = findItem(itemId);
+			
 			page.setAnonymous(anonymous);
 			page.setShowComments(comments);
 			page.setForcedCommentsAnonymous(forcedAnon);
 			page.setRequired(required);
 			page.setPrerequisite(prerequisite);
 			page.setGroupOwned(groupOwned);
+			
+			page.setShowPeerEval(peerEval);
+			
 			setItemGroups(page, selectedGroups);
 			if (studentSelectedGroups == null || studentSelectedGroups.length == 0)
 			    page.setOwnerGroups("");
@@ -5670,14 +5878,24 @@ public class SimplePageBean {
 				for(SimpleStudentPage p : pages) {
 					if(p.getCommentsSection() != null) {
 						SimplePageItem item = simplePageToolDao.findItem(p.getCommentsSection());
-						if(item.isAnonymous() != forcedAnon) {
-							item.setAnonymous(forcedAnon);
-							update(item);
-						}
+						//if(item.isAnonymous() != forcedAnon) {
+							//item.setAnonymous(forcedAnon);
+							//update(item);
+						//}
 					}
 				}
 			}
 			
+			// RU Rubrics
+			// This function is called last. By the time this function is called, rubricRows has been created. 
+			//the peerEval should not be in here 
+		
+			if(rubricRows==null)log.info("rubricRows is null");else	log.info("rubricRows is not null");
+			if(peerEval){
+				String result = addPeerEval();
+				log.info("peerEval"+result);
+			}
+		
 			if(maxPoints == null || maxPoints.equals("")) {
 				maxPoints = "1";
 			}
@@ -5759,7 +5977,7 @@ public class SimplePageBean {
 			update(page);
 			
 			return "success";
-		}else {
+		} else {
 			setErrMessage(messageLocator.getMessage("simplepage.permissions-general"));
 			return "failure";
 		}
@@ -6127,4 +6345,152 @@ public class SimplePageBean {
 				
 		return null;
 	}
+	/** Used for both adding and updating peer evaluation on a page. */
+	public String addPeerEval() {
+		if (!itemOk(itemId)) {
+		    setErrMessage(messageLocator.getMessage("simplepage.permissions-general"));
+		    return "permission-failed";
+		}
+		if(!canEditPage()) {
+			setErrMessage(messageLocator.getMessage("simplepage.permissions-general"));
+			return "failure";
+		}
+		
+		SimplePageItem item;
+		if(itemId != null && itemId != -1) {
+			item = findItem(Long.valueOf(itemId));
+			
+		}else {
+			
+			item = appendItem("", messageLocator.getMessage("simplepage.peerEval"), SimplePageItem.PEEREVAL);
+		}
+	
+		Long max = simplePageToolDao.maxPeerEvalRow(item);
+		simplePageToolDao.clearPeerEvalRows(item);
+		if (rubricRows == null){
+			return "failure";
+		}
+		
+		item.setAttribute("rubricTitle", rubricTitle);
+		
+		Calendar peerevalcal = Calendar.getInstance();
+		
+		
+		peerevalcal.setTime(peerEvalOpenDate);
+		long peerEvalDate = peerevalcal.getTimeInMillis();
+		item.setAttribute("rubricOpenDate",String.valueOf(peerEvalDate));
+		Date openDate = peerevalcal.getTime();
+		peerevalcal.setTime(peerEvalDueDate);
+		peerEvalDate = peerevalcal.getTimeInMillis();
+		item.setAttribute("rubricDueDate",String.valueOf(peerEvalDate));
+		Date dueDate = peerevalcal.getTime();
+		if (openDate.after(dueDate) ) {
+			//error message for dueDate before openDate
+			setErrMessage(messageLocator.getMessage("simplepage.dueDatebeforopenDate"));
+			return "failure";
+			
+		}
+		item.setAttribute("rubricAllowSelfGrade",String.valueOf(peerEvalAllowSelfGrade));
+		
+		for(int i = 0; rubricRows.get(i) != null; i++) {
+			// get data sent from post operation for this answer
+			String data = rubricRows.get(i);
+			
+			// split the data into the actual fields
+			String[] fields = data.split(":", 2);
+			Long rowId= 0L;
+			if (("").equals(fields[0]))
+			    rowId = -1L;
+			else
+			   rowId = Long.valueOf(fields[0]);
+			if (rowId <= 0L)
+			    rowId = ++max;
+			String text = fields[1];
+			simplePageToolDao.addPeerEvalRow(item, rowId, text);
+		}
+		update(item);
+		return "success";
+	}
+	public String savePeerEvalResult() {
+		
+		String userId = getCurrentUserId();
+		String gradeeId= getCurrentPage().getOwner();
+		
+		if (!itemOk(itemId)) {
+		    setErrMessage(messageLocator.getMessage("simplepage.permissions-general"));
+		    return "permission-failed";
+		}
+		
+		List<SimplePagePeerEvalResult> result = simplePageToolDao.findPeerEvalResult(getCurrentPage().getPageId(), userId, gradeeId); 
+		if(result != null) {
+			//set the existing deleted flag=true;
+			for(int i=0; i<result.size(); i++){
+				SimplePagePeerEvalResult rst = result.get(i);
+				rst.setSelected(false);
+				update(rst,false);
+			}
+		}
+		//rubricPeerGrades, rubricPeerCategories
+			for(int i=0; i<rubricPeerGrades.size(); i++){
+				String rowText = rubricPeerCategories.get(i);
+				int columnValue =Integer.parseInt(rubricPeerGrades.get(i));
+				SimplePagePeerEvalResult ret = simplePageToolDao.makePeerEvalResult(getCurrentPage().getPageId(), getCurrentPage().getOwner(),userId, rowText, columnValue);
+				saveItem(ret,false);		
+			}
+		return "success";
+	}
+	
+	// May add or edit comments
+		public String addComment1() {
+			boolean html = false;
+			
+			// Patch in the fancy editor's comment, if it's been used
+			if(formattedComment != null && !formattedComment.equals("")) {
+				comment = formattedComment;
+				html = true;
+			}
+			
+			StringBuilder error = new StringBuilder();
+			comment = FormattedText.processFormattedText(comment, error);
+			
+			if(comment == null || comment.equals("")) {
+				setErrMessage(messageLocator.getMessage("simplepage.empty-comment-error"));
+				return "failure";
+			}
+			
+			if(editId == null || editId.equals("")) {
+				String userId = UserDirectoryService.getCurrentUser().getId();
+				
+				Double grade = null;
+				if(findItem(itemId).getGradebookId() != null) {
+					List<SimplePageComment> comments = simplePageToolDao.findCommentsOnItemByAuthor(itemId, userId);
+					if(comments != null && comments.size() > 0) {
+						grade = comments.get(0).getPoints();
+					}
+				}
+				
+				SimplePageComment commentObject = simplePageToolDao.makeComment(itemId, getCurrentPage().getPageId(), userId, comment, IdManager.getInstance().createUuid(), html);
+				commentObject.setPoints(grade);
+				
+				saveItem(commentObject, false);
+			}else {
+				SimplePageComment commentObject = simplePageToolDao.findCommentById(Long.valueOf(editId));
+				if(commentObject != null && canModifyComment(commentObject)) {
+					commentObject.setComment(comment);
+					update(commentObject, false);
+				}else {
+					setErrMessage(messageLocator.getMessage("simplepage.permissions-general"));
+					return "failure";
+				}
+			}
+			
+			if(getCurrentPage().getOwner() != null) {
+				SimpleStudentPage student = simplePageToolDao.findStudentPage(getCurrentPage().getTopParent());
+				student.setLastCommentChange(new Date());
+				update(student, false);
+			}
+			
+			return "added-comment";
+		}
+
 }

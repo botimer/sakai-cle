@@ -101,6 +101,22 @@ public class QuestionGradingPaneProducer implements ViewComponentProducer, ViewP
 		ArrayList<String> userIds = new ArrayList<String>();
 		HashMap<String, SimpleUser> users = new HashMap<String, SimpleUser>();
 		
+		// logic is from SimplePageBean.getQuestionStatus
+
+		String questionType = questionItem.getAttribute("questionType");
+		boolean noSpecifiedAnswers = false;
+		boolean manuallyGraded = false;
+
+		if ("multipleChoice".equals(questionType) &&
+		    !simplePageToolDao.hasCorrectAnswer(questionItem))
+		    noSpecifiedAnswers = true;
+		else if ("shortanswer".equals(questionType) &&
+			 "".equals(questionItem.getAttribute("questionAnswer")))
+		    noSpecifiedAnswers = true;
+
+		if (noSpecifiedAnswers && "true".equals(questionItem.getAttribute("questionGraded")))
+		    manuallyGraded = true;
+
 		for(SimplePageQuestionResponse response : responses) {			
 			if(!userIds.contains(response.getUserId())) {
 				userIds.add(response.getUserId());
@@ -108,7 +124,10 @@ public class QuestionGradingPaneProducer implements ViewComponentProducer, ViewP
 					SimpleUser user = new SimpleUser();
 					user.displayName = UserDirectoryService.getUser(response.getUserId()).getDisplayName();
 					user.userId = response.getUserId();
-					user.grade = response.getPoints();
+					if (manuallyGraded && !response.isOverridden())
+					    user.grade = null;
+					else
+					    user.grade = response.getPoints();
 					user.response = response;
 					
 					users.put(response.getUserId(), user);
@@ -125,10 +144,16 @@ public class QuestionGradingPaneProducer implements ViewComponentProducer, ViewP
 			UIOutput.make(tofill, "noEntriesWarning");
 		}
 
-		UIOutput.make(tofill, "clickToSubmit", messageLocator.getMessage("simplepage.update-points")).
+		boolean graded = "true".equals(questionItem.getAttribute("questionGraded")) || questionItem.getGradebookId() != null;
+		
+		if (graded) {
+		    UIOutput.make(tofill, "clickToSubmit", messageLocator.getMessage("simplepage.update-points")).
 			    decorate(new UIFreeAttributeDecorator("title", 
 								  messageLocator.getMessage("simplepage.update-points")));
-
+		    UIOutput.make(tofill, "grade-header",  messageLocator.getMessage("simplepage.grading-grade"));
+		}
+		
+		String pointsText = messageLocator.getMessage("simplepage.question-points");
 		for(SimpleUser user : simpleUsers) {
 			UIBranchContainer branch = UIBranchContainer.make(tofill, "student-row:");
 			
@@ -145,12 +170,15 @@ public class QuestionGradingPaneProducer implements ViewComponentProducer, ViewP
 			UIOutput.make(branch, "student-grade");
 			UIOutput.make(branch, "gradingSpan");
 			UIOutput.make(branch, "responseId", String.valueOf(user.response.getId()));
-			UIOutput.make(branch, "responsePoints",
-					(user.grade == null? "" : String.valueOf(user.grade)));
-			UIOutput.make(branch, "pointsBox").
-			    decorate(new UIFreeAttributeDecorator("title", 
-				    messageLocator.getMessage("simplepage.grade-for-student").replace("{}", user.displayName)));
-			UIOutput.make(branch, "maxpoints", " / " + (questionItem.getGradebookPoints()));
+			if (graded) {
+			    UIOutput.make(branch, "points-text", pointsText);
+			    UIOutput.make(branch, "responsePoints",
+					  (user.grade == null? "" : String.valueOf(user.grade)));
+			    UIOutput.make(branch, "pointsBox").
+				decorate(new UIFreeAttributeDecorator("title", 
+								      messageLocator.getMessage("simplepage.grade-for-student").replace("{}", user.displayName)));
+			    UIOutput.make(branch, "maxpoints", " / " + (questionItem.getGradebookPoints()));
+			}
 		}
 		
 		UIForm gradingForm = UIForm.make(tofill, "gradingForm");
