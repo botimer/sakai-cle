@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/sam/trunk/samigo-api/src/java/org/sakaiproject/tool/assessment/data/ifc/assessment/PublishedAssessmentIfc.java $
- * $Id: PublishedAssessmentIfc.java 106463 2012-04-02 12:20:09Z david.horwitz@uct.ac.za $
+ * $Id: PublishedAssessmentIfc.java 121258 2013-03-15 15:03:36Z ottenhoff@longsight.com $
  ***********************************************************************************
  *
  * Copyright (c) 2004, 2005, 2006, 2008 The Sakai Foundation
@@ -44,7 +44,7 @@ public interface PublishedAssessmentIfc
 
   public void setAssessmentId(Long assessmentId);
 
-  Float getTotalScore();
+  Double getTotalScore();
   
   Date getLastNeedResubmitDate();
 

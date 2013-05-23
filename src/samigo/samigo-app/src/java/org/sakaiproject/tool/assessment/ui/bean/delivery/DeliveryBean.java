@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/sam/trunk/samigo-app/src/java/org/sakaiproject/tool/assessment/ui/bean/delivery/DeliveryBean.java $
- * $Id: DeliveryBean.java 120911 2013-03-07 22:32:47Z ktsao@stanford.edu $
+ * $Id: DeliveryBean.java 121258 2013-03-15 15:03:36Z ottenhoff@longsight.com $
  ***********************************************************************************
  *
  * Copyright (c) 2004, 2005, 2006, 2007, 2008, 2009 The Sakai Foundation
@@ -104,7 +104,7 @@ import uk.org.ponder.rsf.state.support.TMLFixer;
  *
  * @author casong
  * @author esmiley@stanford.edu added agentState
- * $Id: DeliveryBean.java 120911 2013-03-07 22:32:47Z ktsao@stanford.edu $
+ * $Id: DeliveryBean.java 121258 2013-03-15 15:03:36Z ottenhoff@longsight.com $
  *
  * Used to be org.navigoproject.ui.web.asi.delivery.XmlDeliveryForm.java
  */
@@ -269,6 +269,9 @@ public class DeliveryBean
   private String secureDeliveryHTMLFragment; 
   
   private boolean isFromPrint;
+
+  private static String ACCESSBASE = ServerConfigurationService.getAccessUrl();
+  private static String RECPATH = ServerConfigurationService.getString("samigo.recommendations.path"); 
   
   private static ResourceBundle eventLogMessages = ResourceBundle.getBundle("org.sakaiproject.tool.assessment.bundle.EventLogMessages");
   
@@ -560,13 +563,13 @@ public class DeliveryBean
     try{
       if (timeElapse!=null && !("").equals(timeElapse)
           && getTimeLimit()!=null && !("").equals(getTimeLimit())){
-        float limit = (new Float(getTimeLimit())).floatValue();
-        float elapsed = (new Float(timeElapse)).floatValue();
+        double limit = (new Double(getTimeLimit())).doubleValue();
+        double elapsed = (new Double(timeElapse)).doubleValue();
         if (limit > elapsed)
           this.timeElapse = timeElapse;
         else
           this.timeElapse = getTimeLimit();
-        setTimeElapseFloat((new Float(timeElapse)).floatValue());
+        setTimeElapseDouble((new Double(timeElapse)).doubleValue());
       }
     }
     catch (Exception e){
@@ -2341,9 +2344,9 @@ public class DeliveryBean
       itemGradingData.setPublishedItemTextId(itemText.getId());
       itemGradingData.setSubmittedDate(new Date());
       itemGradingData.setAgentId(agent);
-      itemGradingData.setOverrideScore( Float.valueOf(0));
+      itemGradingData.setOverrideScore( Double.valueOf(0));
     }
-    itemGradingData.setAutoScore(Float.valueOf(0));
+    itemGradingData.setAutoScore(Double.valueOf(0));
     setAssessmentGrading(adata);
 
     // 5. save ItemGradingData alone 'cos assessmentGrading score won't be changed
@@ -2928,27 +2931,27 @@ public class DeliveryBean
   {
     this.timeElapseAfterFileUpload = timeElapseAfterFileUpload;
     if (timeElapseAfterFileUpload!=null && !("").equals(timeElapseAfterFileUpload))
-      setTimeElapseAfterFileUploadFloat(( Float.valueOf(timeElapseAfterFileUpload)).floatValue());
+      setTimeElapseAfterFileUploadDouble(( Double.valueOf(timeElapseAfterFileUpload)).doubleValue());
   }
 
-  private float timeElapseFloat=0;
-  public float getTimeElapseFloat()
+  private double timeElapseDouble=0;
+  public double getTimeElapseDouble()
   {
-    return timeElapseFloat;
+    return timeElapseDouble;
   }
-  public void setTimeElapseFloat(float timeElapseFloat)
+  public void setTimeElapseDouble(double timeElapseDouble)
   {
-    this.timeElapseFloat = timeElapseFloat;
+    this.timeElapseDouble = timeElapseDouble;
   }
 
-  private float timeElapseAfterFileUploadFloat;
-  public float getTimeElapseAfterFileUploadFloat()
+  private double timeElapseAfterFileUploadDouble;
+  public double getTimeElapseAfterFileUploadDouble()
   {
-    return timeElapseAfterFileUploadFloat;
+    return timeElapseAfterFileUploadDouble;
   }
-  public void setTimeElapseAfterFileUploadFloat(float timeElapseAfterFileUploadFloat)
+  public void setTimeElapseAfterFileUploadDouble(double timeElapseAfterFileUploadDouble)
   {
-    this.timeElapseAfterFileUploadFloat = timeElapseAfterFileUploadFloat;
+    this.timeElapseAfterFileUploadDouble = timeElapseAfterFileUploadDouble;
   }
 
   private String protocol;
@@ -3644,5 +3647,14 @@ public class DeliveryBean
 	    this.redrawAnchorName = redrawAnchorName;
 	  }
 	 
+	  public String getRecURL()
+	  {
+  	    if (RECPATH == null || RECPATH.trim().equals("")) {
+  	    	return "";
+  	    }
+		String recURL = ACCESSBASE + RECPATH;
+	    return recURL;
+	  }
+
 }
 

@@ -1,7 +1,7 @@
 /**********************************************************************************
 
  * $URL: https://source.sakaiproject.org/svn/site-manage/trunk/site-manage-tool/tool/src/java/org/sakaiproject/site/tool/SiteAction.java $
- * $Id: SiteAction.java 120450 2013-02-25 20:22:00Z gsilver@umich.edu $
+ * $Id: SiteAction.java 121194 2013-03-14 15:27:29Z azeckoski@unicon.net $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008, 2009 The Sakai Foundation
@@ -2790,6 +2790,7 @@ public class SiteAction extends PagedResourceActionII {
 			context.put("check_home", state
 					.getAttribute(STATE_TOOL_HOME_SELECTED));
 			context.put("importSupportedTools", importTools());
+			context.put("hideImportedContent", ServerConfigurationService.getBoolean("content.import.hidden", false));
 
 			if(ServerConfigurationService.getBoolean("site-manage.importoption.siteinfo", false)){
 				try{

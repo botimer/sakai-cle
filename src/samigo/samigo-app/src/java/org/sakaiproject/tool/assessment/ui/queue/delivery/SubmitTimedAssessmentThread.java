@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/sam/trunk/samigo-app/src/java/org/sakaiproject/tool/assessment/ui/queue/delivery/SubmitTimedAssessmentThread.java $
- * $Id: SubmitTimedAssessmentThread.java 120911 2013-03-07 22:32:47Z ktsao@stanford.edu $
+ * $Id: SubmitTimedAssessmentThread.java 121258 2013-03-15 15:03:36Z ottenhoff@longsight.com $
  ***********************************************************************************
  *
  * Copyright (c) 2004, 2005, 2006, 2007, 2008, 2009 The Sakai Foundation
@@ -49,7 +49,7 @@ import java.util.ResourceBundle;
 /**
  * <p>Title: Samigo</p>
  * <p>Description: Sakai Assessment Manager</p>
- * @version $Id: SubmitTimedAssessmentThread.java 120911 2013-03-07 22:32:47Z ktsao@stanford.edu $
+ * @version $Id: SubmitTimedAssessmentThread.java 121258 2013-03-15 15:03:36Z ottenhoff@longsight.com $
  */
 
 public class SubmitTimedAssessmentThread extends TimerTask
@@ -92,8 +92,8 @@ public class SubmitTimedAssessmentThread extends TimerTask
             ag.setSubmittedDate(submitDate);
             // SAK-7302, users taking a timed assessment may exit without completing the assessment
             // set these two scores to 0 instaed of null
-    	    if (ag.getFinalScore() == null) ag.setFinalScore(Float.valueOf("0"));
-    	    if (ag.getTotalAutoScore() == null) ag.setTotalAutoScore(Float.valueOf("0"));
+    	    if (ag.getFinalScore() == null) ag.setFinalScore(Double.valueOf("0"));
+    	    if (ag.getTotalAutoScore() == null) ag.setTotalAutoScore(Double.valueOf("0"));
     	    service.completeItemGradingData(ag);
             service.saveOrUpdateAssessmentGrading(ag);
           EventLogService eventService = new EventLogService();

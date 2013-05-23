@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/sam/trunk/samigo-app/src/java/org/sakaiproject/tool/assessment/ui/listener/evaluation/TotalScoreListener.java $
- * $Id: TotalScoreListener.java 107566 2012-04-25 14:16:22Z david.horwitz@uct.ac.za $
+ * $Id: TotalScoreListener.java 121258 2013-03-15 15:03:36Z ottenhoff@longsight.com $
  ***********************************************************************************
  *
  * Copyright (c) 2004, 2005, 2006, 2007, 2008, 2009 The Sakai Foundation
@@ -82,7 +82,7 @@ import org.sakaiproject.util.FormattedText;
  * <p>Copyright: Copyright (c) 2004</p>
  * <p>Organization: Sakai Project</p>
  * @author Ed Smiley
- * @version $Id: TotalScoreListener.java 107566 2012-04-25 14:16:22Z david.horwitz@uct.ac.za $
+ * @version $Id: TotalScoreListener.java 121258 2013-03-15 15:03:36Z ottenhoff@longsight.com $
  */
 
 public class TotalScoreListener
@@ -727,7 +727,7 @@ log.debug("totallistener: firstItem = " + bean.getFirstItem());
     	Iterator it=agents.iterator();
     	while(it.hasNext()){
     		AgentResults ar=(AgentResults)it.next();
-    		Float averageScore=ar.getScoreSummation()/ar.getSubmissionCount();
+    		Double averageScore=ar.getScoreSummation()/ar.getSubmissionCount();
     		ar.setFinalScore(averageScore.toString());
     		ar.setComments(null);
     		ar.setSubmittedDate(new Date());

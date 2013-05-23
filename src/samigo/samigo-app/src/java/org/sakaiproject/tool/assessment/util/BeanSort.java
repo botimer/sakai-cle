@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/sam/trunk/samigo-app/src/java/org/sakaiproject/tool/assessment/util/BeanSort.java $
- * $Id: BeanSort.java 113856 2012-10-01 18:52:04Z holladay@longsight.com $
+ * $Id: BeanSort.java 121258 2013-03-15 15:03:36Z ottenhoff@longsight.com $
  ***********************************************************************************
  *
  * Copyright (c) 2005, 2006, 2008, 2009 The Sakai Foundation
@@ -29,7 +29,7 @@ import java.util.Collection;
  * DOCUMENTATION PENDING
  *
  * @author $author$
- * @version $Id: BeanSort.java 113856 2012-10-01 18:52:04Z holladay@longsight.com $
+ * @version $Id: BeanSort.java 121258 2013-03-15 15:03:36Z ottenhoff@longsight.com $
  */
 public class BeanSort
 {
@@ -128,7 +128,7 @@ public class BeanSort
     	  bsc = new BeanIntegerComparator(property);
       }
       else {
-    	  bsc = new BeanFloatComparator(property);
+    	  bsc = new BeanDoubleComparator(property);
       }
     }
     else if(date)

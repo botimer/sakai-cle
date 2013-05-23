@@ -1,6 +1,6 @@
 /**********************************************************************************
- * $URL: https://source.sakaiproject.org/svn/sam/trunk/samigo-app/src/java/org/sakaiproject/tool/assessment/util/BeanFloatComparator.java $
- * $Id: BeanFloatComparator.java 107561 2012-04-25 09:52:33Z david.horwitz@uct.ac.za $
+ * $URL: https://source.sakaiproject.org/svn/sam/trunk/samigo-app/src/java/org/sakaiproject/tool/assessment/util/BeanDoubleComparator.java $
+ * $Id: BeanDoubleComparator.java 121258 2013-03-15 15:03:36Z ottenhoff@longsight.com $
  ***********************************************************************************
  *
  * Copyright (c) 2005, 2006, 2008 The Sakai Foundation
@@ -28,9 +28,9 @@ import java.util.Map;
  * DOCUMENTATION PENDING
  *
  * @author $author$
- * @version $Id: BeanFloatComparator.java 107561 2012-04-25 09:52:33Z david.horwitz@uct.ac.za $
+ * @version $Id: BeanDoubleComparator.java 121258 2013-03-15 15:03:36Z ottenhoff@longsight.com $
  */
-public class BeanFloatComparator
+public class BeanDoubleComparator
   extends BeanSortComparator
 {
   private String propertyName;
@@ -41,15 +41,15 @@ public class BeanFloatComparator
    *
    * @param propertyName the property name for Java Bean to sort by
    */
-  public BeanFloatComparator(String propertyName)
+  public BeanDoubleComparator(String propertyName)
   {
     this.propertyName = propertyName;
   }
 
   /**
-   * Creates a new BeanFloatComparator object.
+   * Creates a new BeanDoubleComparator object.
    */
-  protected BeanFloatComparator()
+  protected BeanDoubleComparator()
   {
   }
   ;
@@ -70,38 +70,38 @@ public class BeanFloatComparator
     Map m2 = describeBean(o2);
     String s1 = (String) m1.get(propertyName);
     String s2 = (String) m2.get(propertyName);
-    Float i1 = null;
-    Float i2 = null;
-    boolean firstFloatValid = true;
-    boolean secondFloatValid = true;
+    Double i1 = null;
+    Double i2 = null;
+    boolean firstDoubleValid = true;
+    boolean secondDoubleValid = true;
 
     try
     {
-    	i1 = new Float(s1);
+    	i1 = new Double(s1);
     }
     catch (NumberFormatException e)
     {
-    	firstFloatValid = false;
+    	firstDoubleValid = false;
     }
 
     try
     {
-    	i2 = new Float(s2);
+    	i2 = new Double(s2);
     }
     catch (NumberFormatException e)
     {
-    	secondFloatValid = false;
+    	secondDoubleValid = false;
     }
 
     int returnValue=0;
-    if (firstFloatValid && secondFloatValid) {
+    if (firstDoubleValid && secondDoubleValid) {
     	if (i1 != null) {
     		returnValue = i1.compareTo(i2);
     	}
     }
-    if (firstFloatValid && !secondFloatValid) returnValue = 1;
-    if (!firstFloatValid && secondFloatValid) returnValue = -1;
-    if (!firstFloatValid && !secondFloatValid) returnValue = 0;
+    if (firstDoubleValid && !secondDoubleValid) returnValue = 1;
+    if (!firstDoubleValid && secondDoubleValid) returnValue = -1;
+    if (!firstDoubleValid && !secondDoubleValid) returnValue = 0;
 
     return returnValue;
   }

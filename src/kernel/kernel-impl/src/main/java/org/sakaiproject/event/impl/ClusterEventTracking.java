@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/kernel/trunk/kernel-impl/src/main/java/org/sakaiproject/event/impl/ClusterEventTracking.java $
- * $Id: ClusterEventTracking.java 105077 2012-02-24 22:54:29Z ottenhoff@longsight.com $
+ * $Id: ClusterEventTracking.java 121046 2013-03-12 02:26:54Z ottenhoff@longsight.com $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008 Sakai Foundation
@@ -462,7 +462,8 @@ public abstract class ClusterEventTracking extends BaseEventTrackingService impl
 		}
 
 		fields[0] = ((BaseEvent) event).m_time;
-		fields[1] = event.getEvent();
+		fields[1] = event.getEvent() != null && event.getEvent().length() > 32 ?
+				event.getEvent().substring(0, 32) : event.getEvent();
 		fields[2] = event.getResource() != null && event.getResource().length() > 255 ? 
 				event.getResource().substring(0, 255) : event.getResource();
 		fields[3] = reportId;

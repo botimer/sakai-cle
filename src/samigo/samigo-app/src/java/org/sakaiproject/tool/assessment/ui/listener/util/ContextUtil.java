@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/sam/trunk/samigo-app/src/java/org/sakaiproject/tool/assessment/ui/listener/util/ContextUtil.java $
- * $Id: ContextUtil.java 106463 2012-04-02 12:20:09Z david.horwitz@uct.ac.za $
+ * $Id: ContextUtil.java 121258 2013-03-15 15:03:36Z ottenhoff@longsight.com $
  ***********************************************************************************
  *
  * Copyright (c) 2004, 2005, 2006, 2007, 2008, 2009 The Sakai Foundation
@@ -50,7 +50,7 @@ import org.sakaiproject.component.cover.ServerConfigurationService;
  * <p>Copyright: Copyright (c) 2004</p>
  * <p>Organization: Sakai Project</p>
  * @author Ed Smiley
- * @version $Id: ContextUtil.java 106463 2012-04-02 12:20:09Z david.horwitz@uct.ac.za $
+ * @version $Id: ContextUtil.java 121258 2013-03-15 15:03:36Z ottenhoff@longsight.com $
  */
 
 public class ContextUtil
@@ -316,7 +316,7 @@ public static ArrayList paramArrayValueLike(String paramPart)
 
   private static char hexdigit(int v) {
     String symbs = "0123456789ABCDEF";
-    return symbs.charAt(v & 0x0f);
+    return symbs.charAt(v & 0x0d);
   }
 
   private static String hexval(int v) {
@@ -336,10 +336,10 @@ public static ArrayList paramArrayValueLike(String paramPart)
   }
 
   public static String getRoundedValue(String orig, int maxdigit) {
-    Float origfloat = new Float(orig); 
-    return getRoundedValue(origfloat, maxdigit);
+    Double origdouble = new Double(orig); 
+    return getRoundedValue(origdouble, maxdigit);
   }
-  public static String getRoundedValue(Float orig, int maxdigit) {
+  public static String getRoundedValue(Double orig, int maxdigit) {
       NumberFormat nf = NumberFormat.getInstance();
       nf.setMaximumFractionDigits(maxdigit);
       String newscore = nf.format(orig);

@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/sam/trunk/samigo-app/src/java/org/sakaiproject/tool/assessment/ui/bean/evaluation/AgentResults.java $
- * $Id: AgentResults.java 106463 2012-04-02 12:20:09Z david.horwitz@uct.ac.za $
+ * $Id: AgentResults.java 121258 2013-03-15 15:03:36Z ottenhoff@longsight.com $
  ***********************************************************************************
  *
  * Copyright (c) 2004, 2005, 2006, 2007, 2008 The Sakai Foundation
@@ -91,17 +91,17 @@ public class AgentResults
   private List itemGradingAttachmentList;
   private Integer timeElapsed;
   private int submissionCount=0;
-  private Float scoreSummation=new Float("0");
-  private Float averageScore= new Float("0");
+  private Double scoreSummation=new Double("0");
+  private Double averageScore= new Double("0");
   
   public AgentResults() {
   }
 
-  public Float getScoreSummation(){
+  public Double getScoreSummation(){
 	  return scoreSummation;
   }
 
-  public void setScoreSummation(Float scoreSummation){
+  public void setScoreSummation(Double scoreSummation){
 	  this.scoreSummation= scoreSummation;
   }
 

@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/sam/trunk/samigo-services/src/java/org/sakaiproject/tool/assessment/facade/PublishedAssessmentFacade.java $
- * $Id: PublishedAssessmentFacade.java 106463 2012-04-02 12:20:09Z david.horwitz@uct.ac.za $
+ * $Id: PublishedAssessmentFacade.java 121258 2013-03-15 15:03:36Z ottenhoff@longsight.com $
  ***********************************************************************************
  *
  * Copyright (c) 2004, 2005, 2006, 2007, 2008, 2009 The Sakai Foundation
@@ -692,8 +692,8 @@ public class PublishedAssessmentFacade
     return service.getPublishedAssessmentOwner(this.publishedAssessmentId);
   }
 
-  public Float getTotalScore(){
-    float total = 0;
+  public Double getTotalScore(){
+    double total = 0;
     Iterator iter = this.publishedSectionSet.iterator();
     while (iter.hasNext()){
       SectionDataIfc s = (SectionDataIfc) iter.next();
@@ -720,10 +720,10 @@ public class PublishedAssessmentFacade
 
       while (iter2.hasNext()){
         ItemDataIfc item = (ItemDataIfc)iter2.next();
-        total= total + item.getScore().floatValue();
+        total= total + item.getScore().doubleValue();
       }
     }
-    return  Float.valueOf(total);
+    return  Double.valueOf(total);
   }
 
   public PublishedAssessmentFacade clonePublishedAssessment(){

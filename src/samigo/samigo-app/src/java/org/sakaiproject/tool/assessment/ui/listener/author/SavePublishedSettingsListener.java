@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/sam/trunk/samigo-app/src/java/org/sakaiproject/tool/assessment/ui/listener/author/SavePublishedSettingsListener.java $
- * $Id: SavePublishedSettingsListener.java 107319 2012-04-17 13:39:00Z david.horwitz@uct.ac.za $
+ * $Id: SavePublishedSettingsListener.java 121258 2013-03-15 15:03:36Z ottenhoff@longsight.com $
  ***********************************************************************************
  *
  * Copyright (c) 2004, 2005, 2006, 2007, 2008, 2009 The Sakai Foundation
@@ -84,7 +84,7 @@ import org.sakaiproject.tool.assessment.ui.bean.author.PublishRepublishNotificat
  * <p>Title: Samigo</p>2
  * <p>Description: Sakai Assessment Manager</p>
  * @author Ed Smiley
- * @version $Id: SavePublishedSettingsListener.java 107319 2012-04-17 13:39:00Z david.horwitz@uct.ac.za $
+ * @version $Id: SavePublishedSettingsListener.java 121258 2013-03-15 15:03:36Z ottenhoff@longsight.com $
  */
 
 public class SavePublishedSettingsListener
@@ -584,7 +584,7 @@ implements ActionListener
 		boolean gbError = false;
 
 		if (assessmentSettings.getToDefaultGradebook() != null && assessmentSettings.getToDefaultGradebook().equals("1")) {
-			if (assessment.getTotalScore().floatValue() <= 0) {
+			if (assessment.getTotalScore().doubleValue() <= 0) {
 				String gb_err = (String) ContextUtil.getLocalizedString(
 						"org.sakaiproject.tool.assessment.bundle.AuthorMessages","gradebook_exception_min_points");
 				context.addMessage(null, new FacesMessage(gb_err));
@@ -692,7 +692,7 @@ implements ActionListener
 									if(ag.getStatus() ==5) {
 										ag.setFinalScore(ag.getFinalScore());
 									} else {
-										Float averageScore = PersistenceService.getInstance().getAssessmentGradingFacadeQueries().
+										Double averageScore = PersistenceService.getInstance().getAssessmentGradingFacadeQueries().
 										getAverageSubmittedAssessmentGrading(Long.valueOf(assessment.getPublishedAssessmentId()), ag.getAgentId());
 										ag.setFinalScore(averageScore);
 									}

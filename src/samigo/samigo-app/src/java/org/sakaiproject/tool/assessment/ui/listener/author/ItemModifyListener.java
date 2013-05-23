@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/sam/trunk/samigo-app/src/java/org/sakaiproject/tool/assessment/ui/listener/author/ItemModifyListener.java $
- * $Id: ItemModifyListener.java 113840 2012-10-01 14:49:26Z holladay@longsight.com $
+ * $Id: ItemModifyListener.java 121258 2013-03-15 15:03:36Z ottenhoff@longsight.com $
  ***********************************************************************************
  *
  * Copyright (c) 2004, 2005, 2006, 2008 The Sakai Foundation
@@ -142,7 +142,7 @@ public class ItemModifyListener implements ActionListener
         itemauthorbean.setItemNo(String.valueOf(itemfacade.getSequence().intValue() ));
       }
 
-      Float points = itemfacade.getScore();
+      Double points = itemfacade.getScore();
       String score;
       if (points!=null)
        {
@@ -154,7 +154,7 @@ public class ItemModifyListener implements ActionListener
        }
       bean.setItemScore(score);
 
-      Float discountpoints = itemfacade.getDiscount();
+      Double discountpoints = itemfacade.getDiscount();
       String discount;
       if (discountpoints!=null)
       {

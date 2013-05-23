@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/sam/trunk/samigo-app/src/java/org/sakaiproject/tool/assessment/ui/bean/author/AssessmentBean.java $
- * $Id: AssessmentBean.java 113840 2012-10-01 14:49:26Z holladay@longsight.com $
+ * $Id: AssessmentBean.java 121258 2013-03-15 15:03:36Z ottenhoff@longsight.com $
  ***********************************************************************************
  *
  * Copyright (c) 2004, 2005, 2006, 2007, 2008 The Sakai Foundation
@@ -68,7 +68,7 @@ public class AssessmentBean  implements Serializable {
   private ArrayList otherSectionList = new ArrayList(); // contains SectionItem of section except the current section
   private ArrayList partNumbers = new ArrayList();
   private int questionSize=0;
-  private float totalScore=0;
+  private double totalScore=0;
   private String newQuestionTypeId;
   private String firstSectionId;
   private boolean hasRandomDrawPart;
@@ -180,7 +180,7 @@ public class AssessmentBean  implements Serializable {
       for (int j=0; j<itemsInThisSection; j++){
           ItemContentsBean item = (ItemContentsBean)items.get(j);
           if (item.getItemData().getScore()!=null){
-            this.totalScore += item.getItemData().getScore().floatValue();
+            this.totalScore += item.getItemData().getScore().doubleValue();
           }
       }
     }
@@ -209,11 +209,11 @@ public class AssessmentBean  implements Serializable {
 	  return AssessmentService.UPDATE_SUCCESS;
   }
 
-  public float getTotalScore() {
+  public double getTotalScore() {
     return this.totalScore;
   }
   
-  public void setTotalScore(float totalScore) {
+  public void setTotalScore(double totalScore) {
 	  this.totalScore = totalScore;
   }
 

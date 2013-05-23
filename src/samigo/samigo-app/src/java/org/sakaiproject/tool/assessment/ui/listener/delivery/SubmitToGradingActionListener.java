@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/sam/trunk/samigo-app/src/java/org/sakaiproject/tool/assessment/ui/listener/delivery/SubmitToGradingActionListener.java $
- * $Id: SubmitToGradingActionListener.java 120911 2013-03-07 22:32:47Z ktsao@stanford.edu $
+ * $Id: SubmitToGradingActionListener.java 121258 2013-03-15 15:03:36Z ottenhoff@longsight.com $
  ***********************************************************************************
  *
  * Copyright (c) 2004, 2005, 2006, 2007, 2008, 2009 The Sakai Foundation
@@ -408,7 +408,7 @@ public class SubmitToGradingActionListener implements ActionListener {
 			adata.setGradedBy(null);
 			adata.setGradedDate(null);
 			adata.setComments(null);
-			adata.setTotalOverrideScore(Float.valueOf(0f));
+			adata.setTotalOverrideScore(Double.valueOf(0d));
 		}
 	
 		log.debug("*** 2b. before storingGrades, did all the removes and adds "
@@ -561,7 +561,7 @@ public class SubmitToGradingActionListener implements ActionListener {
 		adata.setAttemptDate(new Date());
 		adata.setIsLate(Boolean.FALSE);
 		adata.setStatus(Integer.valueOf(0));
-		adata.setTotalOverrideScore(Float.valueOf(0));
+		adata.setTotalOverrideScore(Double.valueOf(0));
 		adata.setTimeElapsed(Integer.valueOf("0"));
 		return adata;
 	}

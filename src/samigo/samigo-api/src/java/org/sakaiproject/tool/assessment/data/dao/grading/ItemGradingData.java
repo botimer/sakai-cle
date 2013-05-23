@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/sam/trunk/samigo-api/src/java/org/sakaiproject/tool/assessment/data/dao/grading/ItemGradingData.java $
- * $Id: ItemGradingData.java 119797 2013-02-08 23:28:38Z ktsao@stanford.edu $
+ * $Id: ItemGradingData.java 121258 2013-03-15 15:03:36Z ottenhoff@longsight.com $
  ***********************************************************************************
  *
  * Copyright (c) 2004, 2005, 2006, 2008 The Sakai Foundation
@@ -45,8 +45,8 @@ public class ItemGradingData implements java.io.Serializable {
 	private String rationale;
 	private String answerText;
 	private Date submittedDate;
-	private Float autoScore;
-	private Float overrideScore;
+	private Double autoScore;
+	private Double overrideScore;
 	private String comments;
 	private String gradedBy;
 	private Date gradedDate;
@@ -138,19 +138,19 @@ public class ItemGradingData implements java.io.Serializable {
 		this.submittedDate = submittedDate;
 	}
 
-	public Float getAutoScore() {
+	public Double getAutoScore() {
 		return autoScore;
 	}
 
-	public void setAutoScore(Float autoScore) {
+	public void setAutoScore(Double autoScore) {
 		this.autoScore = autoScore;
 	}
 
-	public Float getOverrideScore() {
+	public Double getOverrideScore() {
 		return overrideScore;
 	}
 
-	public void setOverrideScore(Float overrideScore) {
+	public void setOverrideScore(Double overrideScore) {
 		this.overrideScore = overrideScore;
 	}
 
