@@ -9,7 +9,7 @@ cleanup across all modules without needing to commit to all of the directories
 in the SVN repository or manage the many externals.
 
 When I say trunk-all, I mean the CLE Subversion repository's /sakai/trunk as it
-stands today in January 2013, with all of the "core" svn:externals in full
+stands in May 2013, with all of the "core" svn:externals in full
 glory:
 
 https://source.sakaiproject.org/svn/sakai/trunk
