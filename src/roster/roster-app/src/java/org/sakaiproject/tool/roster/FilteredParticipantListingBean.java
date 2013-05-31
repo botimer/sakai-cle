@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/roster/trunk/roster-app/src/java/org/sakaiproject/tool/roster/FilteredParticipantListingBean.java $
- * $Id: FilteredParticipantListingBean.java 112234 2012-09-09 02:28:43Z matthew@longsight.com $
+ * $Id: FilteredParticipantListingBean.java 125011 2013-05-27 16:44:48Z matthew@longsight.com $
  ***********************************************************************************
  *
  * Copyright (c) 2007, 2008 The Sakai Foundation
@@ -104,12 +104,18 @@ public class FilteredParticipantListingBean implements Serializable {
 
 	protected List<Participant> findParticipants() {
 		// Only get the participants we need
-		List<Participant> participants;
-		if(sectionFilter != null && isDisplaySectionsFilter()) {
+		List<Participant> participants = new ArrayList();
+		try {
+		    if(sectionFilter != null && isDisplaySectionsFilter()) {
 			participants = services.rosterManager.getRoster(sectionFilter);
-		} else {
+		    } else {
 			participants = services.rosterManager.getRoster();
+		    }
 		}
+		catch (Exception e) {
+		    log.warn("Exception getting Roster",e);
+		}
+
 		for(Iterator<Participant> iter = participants.iterator(); iter.hasNext();) {
 			Participant participant = iter.next();
 			if(filterParticipant(participant)) iter.remove();

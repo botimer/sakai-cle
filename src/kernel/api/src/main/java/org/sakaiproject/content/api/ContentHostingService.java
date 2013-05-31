@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/kernel/trunk/api/src/main/java/org/sakaiproject/content/api/ContentHostingService.java $
- * $Id: ContentHostingService.java 119793 2013-02-08 19:27:22Z bkirschn@umich.edu $
+ * $Id: ContentHostingService.java 124939 2013-05-23 22:12:00Z azeckoski@unicon.net $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008 Sakai Foundation
@@ -1206,6 +1206,7 @@ public interface ContentHostingService extends EntityProducer
 	 *            if copied item is a collection and the new id is already in use or if the copied item is not a collection and a unique id cannot be found in some arbitrary number of attempts (@see MAXIMUM_ATTEMPTS_FOR_UNIQUENESS).
 	 * @exception ServerOverloadException
 	 *            if the server is configured to write the resource body to the filesystem and the save fails.
+	 * @deprecated DO NOT USE THIS, it does not work and will ALWAYS throw an UnsupportedOperationException - https://jira.sakaiproject.org/browse/KNL-1078
 	 */
 	public String rename(String id, String new_id) throws PermissionException, IdUnusedException, TypeException, InUseException,
 			OverQuotaException, InconsistentException, IdUsedException, ServerOverloadException;
