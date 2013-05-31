@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/content/trunk/content-tool/tool/src/java/org/sakaiproject/content/tool/ResourcesAction.java $
- * $Id: ResourcesAction.java 124736 2013-05-21 14:04:18Z steve.swinsburg@gmail.com $
+ * $Id: ResourcesAction.java 124979 2013-05-24 14:08:16Z ottenhoff@longsight.com $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008, 2009 The Sakai Foundation
@@ -141,7 +141,7 @@ import org.w3c.dom.Element;
 * <p>ResourceAction is a ContentHosting application</p>
 *
 * @author University of Michigan, CHEF Software Development Team
-* @version $Revision: 124736 $
+* @version $Revision: 124979 $
 */
 public class ResourcesAction 
 	extends PagedResourceHelperAction // VelocityPortletPaneledAction
@@ -937,6 +937,11 @@ protected static final String PARAM_PAGESIZE = "collections_per_page";
 		}
 		
 		context.put("siteTitle", state.getAttribute(STATE_SITE_TITLE));
+
+		if (item.isUrl())
+		{
+			context.put("contentString", getEditItem(entityId, homeCollectionId, data).getContentstring());
+		}
 
 		return TEMPLATE_MORE;
 

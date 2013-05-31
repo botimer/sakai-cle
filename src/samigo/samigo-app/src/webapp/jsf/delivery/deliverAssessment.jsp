@@ -8,7 +8,7 @@
      "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
 <!--
-* $Id: deliverAssessment.jsp 123820 2013-05-07 23:55:17Z ktsao@stanford.edu $
+* $Id: deliverAssessment.jsp 125267 2013-05-30 18:04:08Z ktsao@stanford.edu $
 <%--
 ***********************************************************************************
 *
@@ -125,6 +125,30 @@
       	   <h:outputText value="#{deliveryMessages.five_minutes_left3}"  escape="false"/>
       	 </h:panelGrid>
       </div>
+      
+		<div id="timer-expired-warning" style="display:none;">
+			<h3><h:outputText value="#{deliveryMessages.time_expired1}" /></h3>
+      		<p><h:outputText value="#{deliveryMessages.time_expired3}" /></p>
+      		<div id="squaresWaveG">
+				<div id="squaresWaveG_1" class="squaresWaveG">
+				</div>
+				<div id="squaresWaveG_2" class="squaresWaveG">
+				</div>
+				<div id="squaresWaveG_3" class="squaresWaveG">
+				</div>
+				<div id="squaresWaveG_4" class="squaresWaveG">
+				</div>
+				<div id="squaresWaveG_5" class="squaresWaveG">
+				</div>
+				<div id="squaresWaveG_6" class="squaresWaveG">
+				</div>
+				<div id="squaresWaveG_7" class="squaresWaveG">
+				</div>
+				<div id="squaresWaveG_8" class="squaresWaveG">
+				</div>
+			</div>
+			
+		</div>
  
  <h:outputText value="<div class='portletBody' style='#{delivery.settings.divBgcolor};#{delivery.settings.divBackground}'>" escape="false"/>
 

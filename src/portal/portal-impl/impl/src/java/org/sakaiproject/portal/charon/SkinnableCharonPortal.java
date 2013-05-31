@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/portal/trunk/portal-impl/impl/src/java/org/sakaiproject/portal/charon/SkinnableCharonPortal.java $
- * $Id: SkinnableCharonPortal.java 123980 2013-05-10 20:05:08Z matthew@longsight.com $
+ * $Id: SkinnableCharonPortal.java 125091 2013-05-29 16:46:17Z ottenhoff@longsight.com $
  ***********************************************************************************
  *
  * Copyright (c) 2005, 2006, 2007, 2008 The Sakai Foundation
@@ -136,7 +136,7 @@ import au.com.flyingkite.mobiledetect.UAgentInfo;
  * </p>
  * 
  * @since Sakai 2.4
- * @version $Rev: 123980 $
+ * @version $Rev: 125091 $
  * 
  */
 @SuppressWarnings("deprecation")
@@ -1794,6 +1794,7 @@ public class SkinnableCharonPortal extends HttpServlet implements Portal
 						// get the text and image as configured
 						message2 = StringUtils.trimToNull(ServerConfigurationService
 								.getString("xlogin.text"));
+						if (message2 == null) message2 = rloader.getString("log.xlogin");
 						image2 = StringUtils.trimToNull(ServerConfigurationService
 								.getString("xlogin.icon"));
 						logInOutUrl2 = ServerConfigurationService.getString("portalPath")

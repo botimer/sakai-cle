@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/sam/trunk/samigo-app/src/java/org/sakaiproject/tool/assessment/jsf/renderer/TimerBarRenderer.java $
- * $Id: TimerBarRenderer.java 106463 2012-04-02 12:20:09Z david.horwitz@uct.ac.za $
+ * $Id: TimerBarRenderer.java 125267 2013-05-30 18:04:08Z ktsao@stanford.edu $
  ***********************************************************************************
  *
  * Copyright (c) 2004, 2005, 2006, 2007, 2008 The Sakai Foundation
@@ -42,7 +42,7 @@ import java.util.Map;
  * <p>Organization: Sakai Project</p>
  * @author Ed Smiley
  * @author (JavaScript) Brian Gosselin of http://scriptasylum.com
- * @version $Id: TimerBarRenderer.java 106463 2012-04-02 12:20:09Z david.horwitz@uct.ac.za $
+ * @version $Id: TimerBarRenderer.java 125267 2013-05-30 18:04:08Z ktsao@stanford.edu $
  */
 
 public class TimerBarRenderer extends Renderer
@@ -117,9 +117,9 @@ public class TimerBarRenderer extends Renderer
          writer.write("\n");
          writer.write("\n  var action = function()");
          writer.write("\n {");
+         writer.write ("\n showTimerExpiredWarning (function (){");
          writer.write("\n   " + attrMap.get("expireScript") + ";");
-         writer.write("\n  alert(\""  + attrMap.get("expireMessage1") + "\\n\\n" + attrMap.get("expireMessage2") + "\");");          
-         writer.write("\n }");
+         writer.write("\n });}");
          writer.write("\n");
          writer.write("\n// THE FUNCTION BELOW CONTAINS THE ACTION TAKEN WHERE THERE ARE 5 MINUTES LEFT.");
          writer.write("\n");

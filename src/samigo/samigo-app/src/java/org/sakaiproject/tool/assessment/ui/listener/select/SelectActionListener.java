@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/sam/trunk/samigo-app/src/java/org/sakaiproject/tool/assessment/ui/listener/select/SelectActionListener.java $
- * $Id: SelectActionListener.java 121258 2013-03-15 15:03:36Z ottenhoff@longsight.com $
+ * $Id: SelectActionListener.java 125088 2013-05-29 16:39:17Z ottenhoff@longsight.com $
  ***********************************************************************************
  *
  * Copyright (c) 2004, 2005, 2006, 2007, 2008, 2009 The Sakai Foundation
@@ -66,7 +66,7 @@ import org.sakaiproject.util.ResourceLoader;
  * <p>Purpose:  this module creates the lists of published assessments for the select index
  * <p>Description: Sakai Assessment Manager</p>
  * @author Ed Smiley
- * @version $Id: SelectActionListener.java 121258 2013-03-15 15:03:36Z ottenhoff@longsight.com $
+ * @version $Id: SelectActionListener.java 125088 2013-05-29 16:39:17Z ottenhoff@longsight.com $
  */
 
 public class SelectActionListener
@@ -531,7 +531,7 @@ public class SelectActionListener
     String reviewAscending = ContextUtil.lookupParam("reviewableAscending");
     String takeAscending = ContextUtil.lookupParam("takeAscending");
 
-    if (takeOrder != null && !takeOrder.trim().equals("")) {
+    if (takeOrder != null && !takeOrder.trim().equals("") && !takeOrder.equals("null")) {
       bean.setTakeableSortOrder(takeOrder);
     }
 
@@ -539,7 +539,7 @@ public class SelectActionListener
       bean.setReviewableSortOrder(reviewOrder);
     }
 
-    if (takeAscending != null && !takeAscending.trim().equals("")) {
+    if (takeAscending != null && !takeAscending.trim().equals("") && !takeAscending.equals("null")) {
       try {
         bean.setTakeableAscending((Boolean.valueOf(takeAscending)).booleanValue());
       }

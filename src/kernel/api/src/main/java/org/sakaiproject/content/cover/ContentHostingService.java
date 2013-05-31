@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/kernel/trunk/api/src/main/java/org/sakaiproject/content/cover/ContentHostingService.java $
- * $Id: ContentHostingService.java 105077 2012-02-24 22:54:29Z ottenhoff@longsight.com $
+ * $Id: ContentHostingService.java 124939 2013-05-23 22:12:00Z azeckoski@unicon.net $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008 Sakai Foundation
@@ -681,6 +681,9 @@ public class ContentHostingService
 		service.moveIntoFolder(param0, param1);
 	}
 
+	/**
+	 * @deprecated DO NOT USE THIS, it does not work and will ALWAYS throw an UnsupportedOperationException - https://jira.sakaiproject.org/browse/KNL-1078
+	 */
 	public static void rename(java.lang.String param0, java.lang.String param1)
 			throws org.sakaiproject.exception.PermissionException, org.sakaiproject.exception.IdUnusedException,
 			org.sakaiproject.exception.TypeException, org.sakaiproject.exception.InUseException,
