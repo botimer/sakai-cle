@@ -278,8 +278,8 @@ public class ViewPresentationControl extends AbstractPresentationController impl
             model.put("allowComments", pres.isAllowComments());
          }
 	         
-         if (request.get(BindException.ERROR_KEY_PREFIX + "newComment") == null) {
-            request.put(BindException.ERROR_KEY_PREFIX + "newComment",
+         if (request.get(BindException.MODEL_KEY_PREFIX + "newComment") == null) {
+            request.put(BindException.MODEL_KEY_PREFIX + "newComment",
                   new BindException(new PresentationComment(), "newComment"));
          }
 

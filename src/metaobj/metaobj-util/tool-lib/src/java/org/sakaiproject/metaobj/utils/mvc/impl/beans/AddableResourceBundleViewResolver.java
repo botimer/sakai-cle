@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/metaobj/trunk/metaobj-util/tool-lib/src/java/org/sakaiproject/metaobj/utils/mvc/impl/beans/AddableResourceBundleViewResolver.java $
- * $Id: AddableResourceBundleViewResolver.java 105079 2012-02-24 23:08:11Z ottenhoff@longsight.com $
+ * $Id: AddableResourceBundleViewResolver.java 125281 2013-05-31 03:42:46Z nbotimer@unicon.net $
  ***********************************************************************************
  *
  * Copyright (c) 2004, 2005, 2006, 2008 The Sakai Foundation
@@ -92,7 +92,7 @@ public class AddableResourceBundleViewResolver extends ResourceBundleViewResolve
                Thread.currentThread().getContextClassLoader());
          reader.registerBeanDefinitions(bundle);
       }
-      factory.registerCustomEditor(Resource.class, new ResourceEditor(getApplicationContext()));
+      factory.registerCustomEditor(Resource.class, (new ResourceEditor(getApplicationContext())).getClass());
 
       if (isCache()) {
          factory.preInstantiateSingletons();

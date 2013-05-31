@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/common/trunk/common-composite-component/src/java/org/sakaiproject/component/common/type/TypeManagerImpl.java $
- * $Id: TypeManagerImpl.java 109870 2012-06-28 18:30:34Z azeckoski@unicon.net $
+ * $Id: TypeManagerImpl.java 125281 2013-05-31 03:42:46Z nbotimer@unicon.net $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006 The Sakai Foundation.
@@ -159,6 +159,7 @@ public class TypeManagerImpl extends HibernateDaoSupport implements TypeManager
 				Query q = session.getNamedQuery(FINDTYPEBYUUID);
 				q.setString(UUID, uuid);
 				q.setCacheable(cacheFindTypeByUuid);
+				q.setCacheRegion(Type.class.getCanonicalName());
 				return q.uniqueResult();
 			}
 		};
@@ -189,6 +190,7 @@ public class TypeManagerImpl extends HibernateDaoSupport implements TypeManager
 				q.setString(DOMAIN, domain);
 				q.setString(KEYWORD, keyword);
 				q.setCacheable(cacheFindTypeByTuple);
+				q.setCacheRegion(Type.class.getCanonicalName());
 				return q.uniqueResult();
 			}
 		};

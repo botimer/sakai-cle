@@ -69,7 +69,16 @@ response.setContentType("text/html; charset=UTF-8");
                     </f:facet>
                     <h:outputText value="#{participant.roleTitle}"/>
                 </h:column>
-		        
+                <%-- SSP Add Early Alert --%>
+                <h:column rendered="#{overview.renderAddAlert}">
+                    <f:facet name="header">
+                        <h:outputText value="#{msgs.facet_ssp}" />
+                    </f:facet>
+                    <h:commandLink action="#{overview.addAlert}" rendered="#{participant.canHaveAlert}" target="_blank">
+                        <h:graphicImage value="/../../library/image/silk/add.png" alt="#{msgs.ssp_add_alert}"/>
+                        <f:param name="participantEid" value="#{participant.user.eid}" />
+                    </h:commandLink>
+                </h:column>
             </t:dataTable>
 
       <%-- Messages to display when there are no participants in the table above --%>

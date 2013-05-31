@@ -22,9 +22,12 @@
 package org.sakaiproject.component.app.roster;
 
 import java.io.Serializable;
+import java.util.Arrays;
+import java.util.List;
 
 import org.sakaiproject.api.app.profile.Profile;
 import org.sakaiproject.api.app.roster.Participant;
+import org.sakaiproject.component.cover.ServerConfigurationService;
 import org.sakaiproject.user.api.User;
 
 /**
@@ -38,6 +41,7 @@ public class ParticipantImpl implements Participant, Serializable {
 	protected Profile profile;
 	protected String roleTitle;
 	protected String groupsString;
+	protected boolean canHaveAlert;
 
 	/**
 	 * Constructs a ParticipantImpl.
@@ -106,8 +110,28 @@ public class ParticipantImpl implements Participant, Serializable {
 	public void setGroupsString(String groupsString) {
 		this.groupsString = groupsString;
 	}
-	
-	/* (non-Javadoc)
+
+    /**
+     * Check to see if an SSP Early Alert icon should be displayed for user
+     * @return true, if early alert should be displayed
+     */
+    public boolean isCanHaveAlert() {
+        canHaveAlert = false;
+        String[] allowedAlertRoles = ServerConfigurationService.getString("ssp.allowed.alert.roles", "access,Student").split(",");
+        List<String> allowedRoles = Arrays.asList(allowedAlertRoles);
+
+        if (roleTitle != null) {
+            canHaveAlert = allowedRoles.contains(roleTitle);
+        }
+
+        return canHaveAlert;
+    }
+
+    public void setCanHaveAlert(boolean canHaveAlert) {
+        this.canHaveAlert = canHaveAlert;
+    }
+
+    /* (non-Javadoc)
 	 * @see java.lang.Object#hashCode()
 	 */
 	@Override

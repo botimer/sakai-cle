@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/help/trunk/help-component/src/java/org/sakaiproject/component/app/help/HelpManagerImpl.java $
- * $Id: HelpManagerImpl.java 122161 2013-04-03 21:17:07Z azeckoski@unicon.net $
+ * $Id: HelpManagerImpl.java 125281 2013-05-31 03:42:46Z nbotimer@unicon.net $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008, 2009 The Sakai Foundation
@@ -111,7 +111,7 @@ import org.xml.sax.SAXException;
 /**
  * HelpManager provides database and search capabilitites for the Sakai help tool.
  * @author <a href="mailto:jlannan.iupui.edu">Jarrod Lannan</a>
- * @version $Id: HelpManagerImpl.java 122161 2013-04-03 21:17:07Z azeckoski@unicon.net $
+ * @version $Id: HelpManagerImpl.java 125281 2013-05-31 03:42:46Z nbotimer@unicon.net $
  *
  */
 public class HelpManagerImpl extends HibernateDaoSupport implements HelpManager
@@ -477,7 +477,7 @@ public class HelpManagerImpl extends HibernateDaoSupport implements HelpManager
 	 * Get entire Collection of Resources.
 	 * @return collection of resources
 	 */
-	protected Collection<Resource> getResources()
+	protected Collection<? extends Resource> getResources()
 	{
 		return getHibernateTemplate().loadAll(ResourceBean.class);
 	}

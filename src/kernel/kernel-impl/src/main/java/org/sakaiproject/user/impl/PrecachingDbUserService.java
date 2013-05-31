@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/kernel/trunk/kernel-impl/src/main/java/org/sakaiproject/user/impl/PrecachingDbUserService.java $
- * $Id: PrecachingDbUserService.java 106293 2012-03-27 13:32:29Z aaronz@vt.edu $
+ * $Id: PrecachingDbUserService.java 125281 2013-05-31 03:42:46Z nbotimer@unicon.net $
  ***********************************************************************************
  *
  * Copyright (c) 2005, 2006, 2008, 2009, 2010 Sakai Foundation
@@ -155,13 +155,13 @@ public abstract class PrecachingDbUserService extends DbUserService
             log.debug("USER PRECACHE BEGINNING");
             log.debug("doCacheRefresh(): using siteUserIdsQuery==" + siteUserIdsQuery);
         }
-        @SuppressWarnings("unchecked")
-        List<Map<String, String>> results = directDbAccess.getJdbcTemplate().queryForList(siteUserIdsQuery);
+        //@SuppressWarnings("unchecked")
+        List<Map<String, Object>> results = directDbAccess.getJdbcTemplate().queryForList(siteUserIdsQuery);
         List<String> userIds = new ArrayList<String>();
-        for (Map<String, String> row : results) {
-            String userId = row.get("USER_ID");
+        for (Map<String, Object> row : results) {
+            Object userId = row.get("USER_ID");
             if (userId != null) {
-                userIds.add(userId);
+                userIds.add(userId.toString());
             }
         }
 

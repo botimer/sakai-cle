@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/polls/trunk/impl/src/test/org/sakaiproject/poll/logic/test/TestDataPreload.java $
- * $Id: TestDataPreload.java 105078 2012-02-24 23:00:38Z ottenhoff@longsight.com $
+ * $Id: TestDataPreload.java 125281 2013-05-31 03:42:46Z nbotimer@unicon.net $
  ***********************************************************************************
  *
  * Copyright (c) 2008 The Sakai Foundation
@@ -83,8 +83,12 @@ public class TestDataPreload {
 	
 	//used for poll read
 	public final static String PERM_SITE_VISIT = "site.visit";
-	
-	
+
+	private Long firstPollId = null;
+
+	public Long getFirstPollId() {
+		return firstPollId;
+	}
 	
 	/**
 	 * Preload a bunch of test data into the database
@@ -102,6 +106,8 @@ public class TestDataPreload {
 		poll1.setText("something");
 		poll1.setOwner(USER_UPDATE);
 		dao.save(poll1);
+
+		firstPollId = poll1.getPollId();
 		
 		//add some options
 		Option option1 = new Option();
