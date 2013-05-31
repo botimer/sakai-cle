@@ -52,9 +52,6 @@
                 <sakai.mailarchive.groupId>org.sakaiproject.mailarchive</sakai.mailarchive.groupId>
                 <sakai.mailarchive.version>2.9.0-b05</sakai.mailarchive.version>
                 <sakai.message.groupId>org.sakaiproject.message</sakai.message.groupId>
-                <sakairsf.components.version>0.7.5</sakairsf.components.version> 
-                <sakairsf.version>0.7.7</sakairsf.version>
-
                 <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding> 
                 <url.localsite>scpexe://source.sakaiproject.org/var/www/html/release/mailsender/${project.version}</url.localsite>
             </properties>
