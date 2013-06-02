@@ -25,6 +25,8 @@
         <module>tool</module>
     </modules>
     
+<!-- NOTE: see also the "optional" profile in tools/pom.xml. That will enable support for several contrib tools -->
+
     <profiles>
         <profile>
             <id>default</id>
@@ -33,6 +35,12 @@
             </activation>
     
             <properties>
+		<!-- the hbm.xml files are different for trunk and 2.8/2.9. When hibernate moved to
+		     3.6, text had to be replaced by materialized_clob. But older versions dont
+		     know about them, so for the moment we need two different sets of xml files
+		     this is the new set, for trunk/2.10 		   
+		  -->
+		<hbms>newhbm</hbms>
                 <sakai.assignment.groupId>org.sakaiproject.assignment</sakai.assignment.groupId>
 <!--
                 <sakai.assignment.version>2.9-SNAPSHOT</sakai.assignment.version>
@@ -40,7 +48,8 @@
                 <sakai.msgcntr.version>2.8-SNAPSHOT</sakai.msgcntr.version>
                 <sakai.samigo.version>2.8-SNAPSHOT</sakai.samigo.version>
 -->
- 		<!-- the following 3 definitions are only used if the optional features are uncommented in tool/pom.xml. If you have uncommented the optional section, You should replace these with the versions you actually use. If you use only some of the optional components, leave these versions for the ones you don't use. They will allow the build to work, but the system will detect at runtime thta the feature isn't present, and not present it to users -->
+ 		<!-- the following 3 definitions are only used if the optional features are enabled (via -P optional build profile) in tool/pom.xml. If you have enabled it, You should replace these with the versions you actually use. If you use only some of the optional components, leave these versions for the ones you don't use. They will allow the build to work, but the system will detect at runtime thta the feature isn't present, and not present it to users -->
+		<lb.hbm.location>src/java</lb.hbm.location>
                 <sakai.yaft.version>1.3.0-SNAPSHOT</sakai.yaft.version>
                 <sakai.mneme.version>1.2-hack</sakai.mneme.version>
                 <sakai.mneme.scope>compile</sakai.mneme.scope>
@@ -53,18 +62,20 @@
         </profile>
         <profile>
             <id>sakai-2.8</id>
-    
             <properties>
+	        <!-- old versions of hbm.xml files, for 2.8 / 2.9 -->
+		<hbms>oldhbm</hbms>
                 <sakai.assignment.groupId>org.sakaiproject</sakai.assignment.groupId>
                 <sakai.assignment.version>2.8.1</sakai.assignment.version>
                 <sakai.entitybroker.version>1.4.1</sakai.entitybroker.version>
                 <sakai.msgcntr.version>2.8.1</sakai.msgcntr.version>
                 <sakai.samigo.version>2.8.1</sakai.samigo.version>
-		<!-- the following 3 definitions are only used if the optional features are uncommented in tool/pom.xml -->
+		<!-- the following 3 definitions are only used if the optional features enabled (via '-P optional' build profile in tool/pom.xml -->
                 <sakai.yaft.version>1.3.0-SNAPSHOT</sakai.yaft.version>
                 <sakai.mneme.version>1.2-hack</sakai.mneme.version>
                 <sakai.mneme.scope>compile</sakai.mneme.scope>
                 <rsfutil.version>0.7.7</rsfutil.version>
+		<lb.hbm.location>old-src/java</lb.hbm.location>
                 <sakairsf.version>0.7.7</sakairsf.version>
                 <!--<sakairsf.components.version>0.7.5</sakairsf.components.version> -->
                 <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding> 

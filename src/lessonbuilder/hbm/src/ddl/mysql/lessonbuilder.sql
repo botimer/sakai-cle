@@ -5,7 +5,7 @@
         pageId bigint not null,
         timePosted datetime not null,
         author varchar(36) not null,
-        commenttext text,
+        commenttext longtext,
         UUID varchar(36) not null,
         html bit not null,
         points double precision,
@@ -16,7 +16,7 @@
         id bigint not null auto_increment,
         itemId varchar(255) not null,
         groupId varchar(255) not null,
-        groups text,
+        groups longtext,
         primary key (id)
     );
 
@@ -27,11 +27,11 @@
         type integer not null,
         sakaiId varchar(250),
         name varchar(100),
-        html mediumtext,
-        description text,
+        html longtext,
+        description longtext,
         height varchar(8),
         width varchar(8),
-        alt text,
+        alt longtext,
         nextPage bit,
         format varchar(255),
         required bit,
@@ -40,7 +40,7 @@
         subrequirement bit,
         requirementText varchar(20),
         sameWindow bit,
-        groups text,
+        groups longtext,
         anonymous bit,
         showComments bit,
         forcedCommentsAnonymous bit,
@@ -52,8 +52,8 @@
         altPoints integer,
         altGradebookTitle varchar(200),
         groupOwned bit,
-        ownerGroups text,
-        attributeString text,
+        ownerGroups longtext,
+        attributeString longtext,
         primary key (id)
     );
 
@@ -69,6 +69,18 @@
         toolId varchar(250),
         studentPageId bigint,
         primary key (id)
+    );
+
+    create table lesson_builder_p_eval_results (
+        PEER_EVAL_RESULT_ID bigint not null auto_increment,
+        PAGE_ID bigint not null,
+        TIME_POSTED datetime,
+        GRADER varchar(255) not null,
+        GRADEE varchar(255) not null,
+        ROW_TEXT varchar(255) not null,
+        COLUMN_VALUE integer not null,
+        SELECTED bit,
+        primary key (PEER_EVAL_RESULT_ID)
     );
 
     create table lesson_builder_pages (
@@ -88,27 +100,15 @@
         primary key (pageId)
     );
 
-    create table lesson_builder_peer_eval_results (
-        PEER_EVAL_RESULT_ID bigint not null auto_increment,
-        PAGE_ID bigint not null,
-        TIME_POSTED datetime,
-        GRADER varchar(255) not null,
-        GRADEE varchar(255) not null,
-        ROW_TEXT varchar(255) not null,
-        COLUMN_VALUE integer not null,
-        SELECTED bit,
-        primary key (PEER_EVAL_RESULT_ID)
-    );
-
     create table lesson_builder_q_responses (
         id bigint not null auto_increment,
         timeAnswered datetime not null,
         questionId bigint not null,
         userId varchar(255) not null,
         correct bit not null,
-        shortanswer text,
+        shortanswer longtext,
         multipleChoiceId bigint,
-        originalText text,
+        originalText longtext,
         overridden bit not null,
         points double precision,
         primary key (id)
