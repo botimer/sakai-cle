@@ -57,6 +57,13 @@ import java.text.SimpleDateFormat;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import javax.crypto.Cipher;
+import javax.crypto.KeyGenerator;
+import javax.crypto.Mac;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
+import javax.xml.bind.DatatypeConverter;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.sakaiproject.component.cover.ComponentManager;
@@ -89,6 +96,7 @@ import org.sakaiproject.lessonbuildertool.tool.view.FilePickerViewParameters;
 import org.sakaiproject.lessonbuildertool.tool.view.GeneralViewParameters;
 import org.sakaiproject.lessonbuildertool.tool.view.QuestionGradingPaneViewParameters;
 import org.sakaiproject.lessonbuildertool.tool.view.ExportCCViewParameters;
+import org.sakaiproject.lessonbuildertool.service.LessonBuilderAccessService;
 import org.sakaiproject.memory.api.Cache;
 import org.sakaiproject.memory.api.MemoryService;
 import org.sakaiproject.time.api.TimeService;
@@ -136,7 +144,7 @@ import uk.org.ponder.rsf.view.ViewComponentProducer;
 import uk.org.ponder.rsf.viewstate.SimpleViewParameters;
 import uk.org.ponder.rsf.viewstate.ViewParameters;
 import uk.org.ponder.rsf.viewstate.ViewParamsReporter;
-
+import org.apache.commons.lang.StringEscapeUtils;
 
 /**
  * This produces the primary view of the page. It also handles the editing of
@@ -159,6 +167,7 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 	private static MemoryService memoryService = (MemoryService)ComponentManager.get(MemoryService.class);
 	private ToolManager toolManager;
 	public TextInputEvolver richTextEvolver;
+	private LessonBuilderAccessService lessonBuilderAccessService;
 	
 	private Map<String,String> imageToMimeMap;
 	public void setImageToMimeMap(Map<String,String> map) {
@@ -184,11 +193,14 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 	public static final String VIEW_ID = "ShowPage";
 	private static final String DEFAULT_TYPES = "mp4,mov,m2v,3gp,wmv,mp3,swf,wav";
 	private static String[] multimediaTypes = null;
-        private static final String DEFAULT_MP4_TYPES = "video/mp4,video/x-m4v";
+    // mp4 means it plays with the flash player if HTML5 doesn't work.
+    // flv is also played with the flash player, but it doesn't get a backup <OBJECT> inside the player
+    // Strobe claims to handle MOV files as well, but I feel safer passing them to quicktime, though that requires Quicktime installation
+        private static final String DEFAULT_MP4_TYPES = "video/mp4,video/m4v";
         private static String[] mp4Types = null;
-        private static final String DEFAULT_JW_TYPES = "video/x-flv,video/mp4,video/x-m4v,video/webm";
+        private static final String DEFAULT_HTML5_TYPES = "video/mp4,video/m4v,video/webm,video/ogg";
     // jw can also handle audio: audio/mp4,audio/mpeg,audio/ogg
-        private static String[] jwTypes = null;
+        private static String[] html5Types = null;
 
     // WARNING: this must occur after memoryService, for obvious reasons. 
     // I'm doing it this way because it doesn't appear that Spring can do this kind of initialization
@@ -319,7 +331,6 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 		    .decorate(new UIFreeAttributeDecorator("xml:lang", localegetter.get().getLanguage()));        
 
 		boolean iframeJavascriptDone = false;
-		boolean jwLoaded = false;
 		
 		// security model:
 		// canEditPage and canReadPage are normal Sakai privileges. They apply
@@ -443,13 +454,13 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 			Arrays.sort(mp4Types);
 		}
 
-		if (jwTypes == null) {
-			String jTypes = ServerConfigurationService.getString("lessonbuilder.jw.types", DEFAULT_JW_TYPES);
-			jwTypes = jTypes.split(",");
-			for (int i = 0; i < jwTypes.length; i++) {
-				jwTypes[i] = jwTypes[i].trim().toLowerCase();
+		if (html5Types == null) {
+			String jTypes = ServerConfigurationService.getString("lessonbuilder.html5.types", DEFAULT_HTML5_TYPES);
+			html5Types = jTypes.split(",");
+			for (int i = 0; i < html5Types.length; i++) {
+				html5Types[i] = html5Types[i].trim().toLowerCase();
 			}
-			Arrays.sort(jwTypes);
+			Arrays.sort(html5Types);
 		}
 
 		// remember that page tool was reset, so we need to give user the option
@@ -727,10 +738,18 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 		String skinRepo = null;
 		String iconBase = null;
 
+		UIComponent titlediv = UIOutput.make(tofill, "titlediv");
+		// we need to do special CSS for old portal
+		if (helpurl == null)
+		    titlediv.decorate(new UIStyleDecorator("oldPortal"));		
+
 		if (helpurl != null || reseturl != null) {
 		    skinName = simplePageBean.getCurrentSite().getSkin();
 		    if (skinName == null)
 			skinName = ServerConfigurationService.getString("skin.default", "default");
+		    // weird hack. automatically add neo if neo portal enabled
+		    if (!skinName.startsWith("neo"))
+			skinName = "neo-" + skinName;
 		    skinRepo = ServerConfigurationService.getString("skin.repo", "/library/skin");
 		    iconBase = skinRepo + "/" + skinName + "/images/";
 		}
@@ -979,8 +998,15 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 				case SimplePageItem.PEEREVAL: itemClassName = "peereval"; break;
 				}
 
-				if (listItem)
+
+
+				if (listItem){
 				    itemClassName = itemClassName + " listType";
+				}
+				if (canEditPage) {
+						itemClassName = itemClassName + "  canEdit";
+				}
+
 				tableRow.decorate(new UIFreeAttributeDecorator("class", itemClassName));
 
 				// you really need the HTML file open at the same time to make
@@ -1111,7 +1137,7 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 					    // right. Otherwise the
 					    // description block will display underneath
 					    if ("button".equals(i.getFormat())) {
-						linkdiv.decorate(new UIFreeAttributeDecorator("style", "float:left"));
+						linkdiv.decorate(new UIFreeAttributeDecorator("style", "float:none"));
 					    }
 					    // for accessibility
 					    if (navButton) {
@@ -1459,44 +1485,6 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 						// use EMBED. OBJECT does work with Flash.
 						// application/xhtml+xml is XHTML.
 
-					} else if (mimeType != null && 
-						   (Arrays.binarySearch(jwTypes, mimeType) >= 0) &&
-						   ServerConfigurationService.getBoolean("lessonbuilder.usejwplayer", false)) {
-					    
-					    if (!jwLoaded) {
-						UIOutput.make(tableRow, "jwload");
-						jwLoaded = true;
-					    }
-
-					    // new jw player code. uses javascript, so separate from normal embed
-					    // duplicates code from next section, but anything else is too confusing
-					    if (itemGroupString != null) {
-						UIOutput.make(tableRow, "item-group-titles5", itemGroupTitles);
-						UIOutput.make(tableRow, "item-groups5", itemGroupString);
-					    }
-					    UIOutput.make(tableRow, "movieSpan");
-					    String movieUrl = i.getItemURL(simplePageBean.getCurrentSiteId(),currentPage.getOwner());
-					    UIComponent movieDiv = UIOutput.make(tableRow, "jwmovie"); // dummy div to replace with player
-					    String sizeString = "";
-					    if (lengthOk(height) && height.getOld().indexOf("%") < 0)
-						sizeString = ",height: " + height.getOld();
-					    if (lengthOk(width) && width.getOld().indexOf("%") < 0)
-						sizeString += ",width: " + width.getOld();
-
-					    UIVerbatim.make(tableRow, "jwscript", "jwplayer(\"" + movieDiv.getFullID() + "\").setup({file:\"" + movieUrl + "\"" + sizeString + "});");
-					    if (canEditPage) {
-						UIOutput.make(tableRow, "movieId", String.valueOf(i.getId()));
-						UIOutput.make(tableRow, "movieHeight", getOrig(height));
-						UIOutput.make(tableRow, "movieWidth", getOrig(width));
-						UIOutput.make(tableRow, "mimetype5", mimeType);
-						UIOutput.make(tableRow, "current-item-id6", Long.toString(i.getId()));
-						
-						UIOutput.make(tableRow, "movie-td");
-						UILink.make(tableRow, "edit-movie", messageLocator.getMessage("simplepage.editItem"), "").decorate(new UIFreeAttributeDecorator("title", messageLocator.getMessage("simplepage.edit-title.url").replace("{}", abbrevUrl(i.getURL()))));
-					    }
-					    
-					    UIOutput.make(tableRow, "description3", i.getDescription());
-						    
 					} else if ((mimeType != null && !mimeType.equals("text/html") && !mimeType.equals("application/xhtml+xml")) || (mimeType == null && Arrays.binarySearch(multimediaTypes, extension) >= 0)) {
 
 						if (mimeType == null)
@@ -1520,16 +1508,35 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 						// this requires session.parameter.allow=true in sakai.properties
 						// don't pass the arg unless that is set, since the whole point of defaulting
 						// off is to not expose the session id
-						if (allowSessionId)
-						    movieUrl = movieUrl + "?sakai.session=" + SessionManager.getCurrentSession().getId();
+						String sessionParameter = getSessionParameter(movieUrl);
+						if (sessionParameter != null)
+						    movieUrl = movieUrl + "?lb.session=" + sessionParameter;
+
+						//	if (allowSessionId)
+						//  movieUrl = movieUrl + "?sakai.session=" + SessionManager.getCurrentSession().getId();
 						String oMimeType = mimeType; // in case we change it for
 						// FLV or others
 						boolean useFlvPlayer = false;
-						boolean useJwPlayer = false;
-						// in theory m4v can be DMRed. But Apple's DRM is
-						// useless on a web page, so it's got to be an
-						// unprotected file.
+
+						// isMp4 means we try the flash player (if not HTML5)
+						// we also try the flash player for FLV but for mp4 we do an
+						// additional backup if flash fails, but that doesn't make sense for FLV
 						boolean isMp4 = Arrays.binarySearch(mp4Types, mimeType) >= 0;
+						boolean isHtml5 = Arrays.binarySearch(html5Types, mimeType) >= 0;
+						
+						// wrap whatever stuff we decide to put out in HTML5 if appropriate
+						// javascript is used to do the wrapping, because RSF can't really handle this
+						if (isHtml5) {
+						    UIComponent h5video = UIOutput.make(tableRow, "h5video");
+						    UIComponent h5source = UIOutput.make(tableRow, "h5source");
+						    if (lengthOk(height) && height.getOld().indexOf("%") < 0)
+							h5video.decorate(new UIFreeAttributeDecorator("height", height.getOld()));
+						    if (lengthOk(width) && width.getOld().indexOf("%") < 0)
+							h5video.decorate(new UIFreeAttributeDecorator("width", width.getOld()));
+						    h5source.decorate(new UIFreeAttributeDecorator("src", movieUrl)).
+							decorate(new UIFreeAttributeDecorator("type", mimeType));
+						}
+
 						// FLV is special. There's no player for flash video in
 						// the browser
 						// it shows with a special flash program, which I
@@ -1538,12 +1545,7 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 						// same code
 						if (mimeType != null && (mimeType.equals("video/x-flv") || isMp4)) {
 							mimeType = "application/x-shockwave-flash";
-							useJwPlayer = ServerConfigurationService.getBoolean("lessonbuilder.usejwplayer", false);
-							if (useJwPlayer) {
-								movieUrl = "/lessonbuilder-tool/templates/jwflvplayer.swf";
-							} else {
-								movieUrl = "/lessonbuilder-tool/templates/StrobeMediaPlayback.swf";
-							}
+							movieUrl = "/lessonbuilder-tool/templates/StrobeMediaPlayback.swf";
 							useFlvPlayer = true;
 						}
 						// for IE, if we're not supplying a player it's safest
@@ -1558,7 +1560,7 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 						boolean useEmbed = ieVersion > 0 && !mimeType.equals("application/x-shockwave-flash");
 
 						if (useEmbed) {
-							item2 = UIOutput.make(tableRow, "movieEmbed").decorate(new UIFreeAttributeDecorator("src", movieUrl)).decorate(new UIFreeAttributeDecorator("alt", messageLocator.getMessage("simplepage.mm_player").replace("{}", abbrevUrl(i.getURL()))));
+						    item2 = UIOutput.make(tableRow, "movieEmbed").decorate(new UIFreeAttributeDecorator("src", movieUrl)).decorate(new UIFreeAttributeDecorator("alt", messageLocator.getMessage("simplepage.mm_player").replace("{}", abbrevUrl(i.getURL()))));
 						} else {
 							item2 = UIOutput.make(tableRow, "movieObject").decorate(new UIFreeAttributeDecorator("data", movieUrl)).decorate(new UIFreeAttributeDecorator("title", messageLocator.getMessage("simplepage.mm_player").replace("{}", abbrevUrl(i.getURL()))));
 						}
@@ -1566,7 +1568,7 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 							item2.decorate(new UIFreeAttributeDecorator("type", mimeType));
 						}
 						if (canEditPage) {
-							item2.decorate(new UIFreeAttributeDecorator("style", "border: 1px solid black"));
+							//item2.decorate(new UIFreeAttributeDecorator("style", "border: 1px solid black"));
 						}
 
 						// some object types seem to need a specification
@@ -1576,7 +1578,7 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 
 						if (!useEmbed) {
 							if (useFlvPlayer) {
-								UIOutput.make(tableRow, "flashvars").decorate(new UIFreeAttributeDecorator("value", (useJwPlayer ? "file=" : "src=") + URLEncoder.encode(myUrl() + i.getItemURL(simplePageBean.getCurrentSiteId(),currentPage.getOwner()))));
+								UIOutput.make(tableRow, "flashvars").decorate(new UIFreeAttributeDecorator("value", "src=" + URLEncoder.encode(myUrl() + i.getItemURL(simplePageBean.getCurrentSiteId(),currentPage.getOwner()))));
 							}
 
 							UIOutput.make(tableRow, "movieURLInject").decorate(new UIFreeAttributeDecorator("value", movieUrl));
@@ -2379,6 +2381,37 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 		createQuestionDialog(tofill, currentPage);
 	}
 
+    // get encrypted version of session id. This is our equivalent of session.id, except that we
+    // encrypt it so it can't be used for anything else in case someone captures it.
+    // we can't use time to avoid replay, as some time can go by between display of the page and
+    // when the user clicks. The only thing this can be used for is reading multimedia files. I
+    // think we're willing to risk that. I used to use session.id, but by default that's now off, 
+    // and turning it on to use it here would expose us to more serious risks.  Cache the encryption.
+    // we could include the whole URL in the encryption if it was worth the additional over head.
+    // I think it's not.
+
+    // url is /access/lessonbuilder/item/NNN/url. Because the server side
+    // sees a reference starting with /item, we send that.
+        public String getSessionParameter(String url) {
+	    UsageSession session = UsageSessionService.getSession();
+	    if (!url.startsWith("/access/lessonbuilder"))
+		return null;
+	    url = url.substring("/access/lessonbuilder".length());
+
+	    try {
+		Cipher sessionCipher = Cipher.getInstance("Blowfish");
+		sessionCipher.init(Cipher.ENCRYPT_MODE, lessonBuilderAccessService.getSessionKey());
+		String sessionParam = session.getId() + ":" + url;
+		byte[] sessionBytes = sessionParam.getBytes("UTF8");
+		sessionBytes = sessionCipher.doFinal(sessionBytes);
+		sessionParam = DatatypeConverter.printHexBinary(sessionBytes);
+		return sessionParam;
+	    } catch (Exception e) {
+		System.out.println("unable to generate encrypted session id " + e);
+		return null;
+	    }
+	}
+
 	public void setSimplePageBean(SimplePageBean simplePageBean) {
 		this.simplePageBean = simplePageBean;
 	}
@@ -2691,6 +2724,10 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 
 	public void setToolManager(ToolManager m) {
 		toolManager = m;
+	}
+
+	public void setLessonBuilderAccessService (LessonBuilderAccessService a) {
+		lessonBuilderAccessService = a;
 	}
 
 	public ViewParameters getViewParameters() {
@@ -3026,7 +3063,7 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 		fileparams.setResourceType(true);
 		fileparams.viewID = ResourcePickerProducer.VIEW_ID;
 		
-		UILink link = UIInternalLink.make(form, "mm-choose", messageLocator.getMessage("simplepage.choose_existing"), fileparams);
+		UILink link = UIInternalLink.make(form, "mm-choose", messageLocator.getMessage("simplepage.choose_existing_or"), fileparams);
 
 		UICommand.make(form, "mm-add-item", messageLocator.getMessage("simplepage.save_message"), "#{simplePageBean.addMultimedia}");
 		UIInput.make(form, "mm-item-id", "#{simplePageBean.itemId}");
@@ -3420,20 +3457,12 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 		UIBoundBoolean.make(form, "student-required", "#{simplePageBean.required}");
 		UIBoundBoolean.make(form, "student-prerequisite", "#{simplePageBean.prerequisite}");
 		
-		/* **************************************************************************
-		 * Peer Evaluation Rubrics addon for Student Content tool.
-		 * @email Rutgers Sakai <devs@sakai.rutgers.edu>
-		 * 
-		 * Creation of rubrics is currently disabled until testing is complete.
-		 * **************************************************************************
-		 
-		
 		UIOutput.make(form, "peer-evaluation-creation");
-		*/
+		
 		UIBoundBoolean.make(form, "peer-eval-check", "#{simplePageBean.peerEval}");
 		UIInput.make(form, "peer-eval-input-title", "#{simplePageBean.rubricTitle}");
 		UIInput.make(form, "peer-eval-input-row", "#{simplePageBean.rubricRow}");
-		
+
         UIOutput.make(form, "peer_eval_open_date_label", messageLocator.getMessage("simplepage.peer-eval.open_date"));
        
         UIInput openDateField = UIInput.make(form, "peer_eval_open_date:", "#{simplePageBean.peerEvalOpenDate}");
@@ -3446,8 +3475,6 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
         dateevolver.evolveDateInput(dueDateField);
         
         UIBoundBoolean.make(form, "peer-eval-allow-selfgrade", "#{simplePageBean.peerEvalAllowSelfGrade}");
-        
-        
         
 		UIBoundBoolean.make(form, "student-graded", "#{simplePageBean.graded}");
 		UIInput.make(form, "student-max", "#{simplePageBean.maxPoints}");

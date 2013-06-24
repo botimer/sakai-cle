@@ -1,4 +1,4 @@
-<!-- $Id: chef_assignments_instructor_grading_submission.vm 122725 2013-04-12 21:05:51Z ottenhoff@longsight.com $ -->
+<!-- $Id: chef_assignments_instructor_grading_submission.vm 125385 2013-06-02 22:58:23Z ottenhoff@longsight.com $ -->
 <!-- start: check_assignments_instructor_grading_submission.vm  -->
 ##<!-- $Header: /cvs/sakai2/legacy/tools/src/webapp/vm/assignment/chef_assignments_instructor_grading_submission.vm,v 1.10 2005/06/03 15:32:15 zqian.umich.edu Exp $ -->
 <script type="text/javascript">
@@ -77,7 +77,7 @@ function handleEnterKeyPress(ev)
 				 		
 				<h3>
                                         #assignmentTitleIcon($assignment)
-					$validator.escapeHtml($!assignment_title)
+					$validator.escapeHtml($!assignment.title)
 					<span class="highlight"> - 
 					#if ($withGrade)
 						#if (!$!submission.getGraded())

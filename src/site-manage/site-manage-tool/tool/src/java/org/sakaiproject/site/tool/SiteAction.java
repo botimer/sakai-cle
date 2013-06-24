@@ -1,7 +1,7 @@
 /**********************************************************************************
 
  * $URL: https://source.sakaiproject.org/svn/site-manage/trunk/site-manage-tool/tool/src/java/org/sakaiproject/site/tool/SiteAction.java $
- * $Id: SiteAction.java 125095 2013-05-29 17:17:28Z ottenhoff@longsight.com $
+ * $Id: SiteAction.java 126099 2013-06-21 17:38:36Z phaggood@umich.edu $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008, 2009 The Sakai Foundation
@@ -383,7 +383,12 @@ public class SiteAction extends PagedResourceActionII {
 	private static final String STATE_SITE_ADD_PROJECT = "canAddProject";
 		
 	private static final String STATE_PROJECT_SITE_TYPE = "project";
-			
+	
+	// SAK-23468
+	private static final String STATE_NEW_SITE_STATUS_ISPUBLISHED = "newSiteStatusIsPublished";
+	private static final String STATE_NEW_SITE_STATUS_TITLE = "newSiteStatusTitle";
+	private static final String STATE_NEW_SITE_STATUS_ID = "newSiteStatusID";
+	
 
 	// %%% get rid of the IdAndText tool lists and just use ToolConfiguration or
 	// ToolRegistration lists
@@ -1529,6 +1534,9 @@ public class SiteAction extends PagedResourceActionII {
 			
 			context.put("allowAddSite",allowAddSite);
 
+			//SAK-23468 put create variables into context
+            		addSiteCreationValuesIntoContext(context,state);
+
 			
 			return (String) getContext(data).get("template") + TEMPLATE[0];
 		case 1:
@@ -2192,6 +2200,7 @@ public class SiteAction extends PagedResourceActionII {
             } catch (GroupNotDefinedException e) {
                     M_log.warn(this + "  IdUnusedException " + realmId);
             }
+            
             
 			return (String) getContext(data).get("template") + TEMPLATE[12];
 
@@ -3597,6 +3606,37 @@ public class SiteAction extends PagedResourceActionII {
 	}
 
 
+	// SAK-23468 If this is after an add site, the 
+	private void addSiteCreationValuesIntoContext(Context context, SessionState state) {
+		String siteID = (String) state.getAttribute(STATE_NEW_SITE_STATUS_ID);
+		if (siteID != null) {  // make sure this message is only seen immediately after a new site is created.
+			context.put(STATE_NEW_SITE_STATUS_ISPUBLISHED, state.getAttribute(STATE_NEW_SITE_STATUS_ISPUBLISHED));
+			String siteTitle = (String) state.getAttribute(STATE_NEW_SITE_STATUS_TITLE);
+			context.put(STATE_NEW_SITE_STATUS_TITLE, siteTitle);
+			context.put(STATE_NEW_SITE_STATUS_ID, siteID);
+			// remove the values from state so the values are gone on the next call to chef_site-list
+			//clearNewSiteStateParameters(state);
+		}
+	}	
+	
+	
+	// SAK-23468 
+	private void setNewSiteStateParameters(Site site, SessionState state){
+		if (site != null) {
+			state.setAttribute(STATE_NEW_SITE_STATUS_ISPUBLISHED, Boolean.valueOf(site.isPublished()));
+			state.setAttribute(STATE_NEW_SITE_STATUS_ID, site.getId());
+			state.setAttribute(STATE_NEW_SITE_STATUS_TITLE, site.getTitle());
+		}
+	}	
+
+	// SAK-23468 
+        private void clearNewSiteStateParameters(SessionState state) {
+		state.removeAttribute(STATE_NEW_SITE_STATUS_ISPUBLISHED);
+		state.removeAttribute(STATE_NEW_SITE_STATUS_ID);
+		state.removeAttribute(STATE_NEW_SITE_STATUS_TITLE);
+
+	}
+	
 	/**
 	 * show site skin and icon selections or not
 	 * @param state
@@ -5821,6 +5861,10 @@ private Map<String,List> getToolGroupList(SessionState state, String type, Site 
 			addNewSite(params, state);
 
 			Site site = getStateSite(state);
+			
+			// SAK-23468  Add new site params to state
+			setNewSiteStateParameters(site, state);
+			
 			
 			// Since the option to input aliases is presented to users prior to
 			// the new site actually being created, it doesn't really make sense 
@@ -10678,7 +10722,7 @@ private Map<String,List> getToolGroupList(SessionState state, String type, Site 
 
 				// commit newly added site in order to enable related realm
 				commitSite(site);
-
+				
 			} catch (IdUsedException e) {
 				addAlert(state, rb.getFormattedMessage("java.sitewithid.exists", new Object[]{id}));
 				M_log.warn(this + ".addNewSite: " + rb.getFormattedMessage("java.sitewithid.exists", new Object[]{id}), e);

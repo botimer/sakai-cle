@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/syllabus/trunk/syllabus-impl/src/java/org/sakaiproject/component/app/syllabus/SyllabusManagerImpl.java $
- * $Id: SyllabusManagerImpl.java 122347 2013-04-08 14:25:17Z holladay@longsight.com $
+ * $Id: SyllabusManagerImpl.java 125925 2013-06-18 19:10:51Z holladay@longsight.com $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2008 The Sakai Foundation
@@ -167,7 +167,8 @@ public class SyllabusManagerImpl extends HibernateDaoSupport implements Syllabus
    * @param emailNotification 
    */
   public SyllabusData createSyllabusDataObject(String title, Integer position,
-        String asset, String view, String status, String emailNotification)      
+        String asset, String view, String status, String emailNotification,
+        Date startDate, Date endDate, boolean linkCalendar)      
   {
     if (position == null)
     {
@@ -183,8 +184,10 @@ public class SyllabusManagerImpl extends HibernateDaoSupport implements Syllabus
       data.setView(view);
       data.setStatus(status);
       data.setEmailNotification(emailNotification);
-            
-      saveSyllabus(data);
+      data.setStartDate(startDate);
+      data.setEndDate(endDate);
+      data.setLinkCalendar(linkCalendar);
+      saveSyllabus(data, false);
       return data;
     }
   }
@@ -516,21 +519,29 @@ public class SyllabusManagerImpl extends HibernateDaoSupport implements Syllabus
    */
   public void saveSyllabus(SyllabusData data)
   {
-    //calendar check
-	updateCalendarSettings(data);
-    getHibernateTemplate().saveOrUpdate(data);
-    updateSyllabusAttachmentsViewState(data);
-  //update calendar attachments
-    if(data.getAttachments() != null && data.getAttachments().size() > 0){
-    	if(data.getCalendarEventIdStartDate() != null
-    			&& !"".equals(data.getCalendarEventIdStartDate())){
-    		addCalendarAttachments(data.getSyllabusItem().getContextId(), data.getCalendarEventIdStartDate(), new ArrayList(data.getAttachments()));
-    	}
-    	if(data.getCalendarEventIdEndDate() != null
-    			&& !"".equals(data.getCalendarEventIdEndDate())){
-    		addCalendarAttachments(data.getSyllabusItem().getContextId(), data.getCalendarEventIdEndDate(), new ArrayList(data.getAttachments()));
-    	}
-    }
+	  saveSyllabus(data, true);
+  }
+  
+  public void saveSyllabus(SyllabusData data, boolean updateCalendar){
+	  if(updateCalendar){
+		  //calendar check
+		  updateCalendarSettings(data);
+	  }
+	  getHibernateTemplate().saveOrUpdate(data);
+	  if(updateCalendar){
+		  updateSyllabusAttachmentsViewState(data);
+		  //update calendar attachments
+		  if(data.getAttachments() != null && data.getAttachments().size() > 0){
+			  if(data.getCalendarEventIdStartDate() != null
+					  && !"".equals(data.getCalendarEventIdStartDate())){
+				  addCalendarAttachments(data.getSyllabusItem().getContextId(), data.getCalendarEventIdStartDate(), new ArrayList(data.getAttachments()));
+			  }
+			  if(data.getCalendarEventIdEndDate() != null
+					  && !"".equals(data.getCalendarEventIdEndDate())){
+				  addCalendarAttachments(data.getSyllabusItem().getContextId(), data.getCalendarEventIdEndDate(), new ArrayList(data.getAttachments()));
+			  }
+		  }
+	  }
   }  
 
   public SyllabusData getSyllabusData(final String dataId)
@@ -925,7 +936,7 @@ public class SyllabusManagerImpl extends HibernateDaoSupport implements Syllabus
 				CalendarEventEdit event = calendar.getEditEvent(calendarEventId, CalendarService.EVENT_ADD_CALENDAR);
 				if(event != null){
 					for(Reference ref : event.getAttachments()){
-						if(ref.getReference().equals(attachment.getAttachmentId())){
+						if(ref.getId().equals(attachment.getAttachmentId())){
 							event.removeAttachment(ref);
 							break;
 						}

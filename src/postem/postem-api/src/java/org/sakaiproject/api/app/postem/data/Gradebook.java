@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/postem/trunk/postem-api/src/java/org/sakaiproject/api/app/postem/data/Gradebook.java $
- * $Id: Gradebook.java 105079 2012-02-24 23:08:11Z ottenhoff@longsight.com $
+ * $Id: Gradebook.java 125618 2013-06-11 16:41:26Z matthew@longsight.com $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008 The Sakai Foundation
@@ -75,6 +75,10 @@ public interface Gradebook {
 	public Template getTemplate();
 
 	public void setTemplate(Template template);
+
+    public void setFileReference(String fileReference);
+
+    public String getFileReference();
 
 	public List getHeadings();
 

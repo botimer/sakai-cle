@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/search/trunk/elasticsearch/impl/src/java/org/sakaiproject/search/elasticsearch/ElasticSearchIndexBuilder.java $
- * $Id: ElasticSearchIndexBuilder.java 124093 2013-05-15 06:08:36Z jbush@rsmart.com $
+ * $Id: ElasticSearchIndexBuilder.java 125882 2013-06-17 20:17:01Z jbush@rsmart.com $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008 The Sakai Foundation
@@ -278,14 +278,15 @@ public class ElasticSearchIndexBuilder implements SearchIndexBuilder {
         }
         EntityContentProducer ecp = newEntityContentProducer(event);
         String siteId = ecp.getSiteId(resourceName);
-        String id = ecp.getId(resourceName);
 
 
         if (ecp == null || ecp.getSiteId(resourceName) == null) {
             log.debug("Not indexing " + resourceName + " as it has no context");
             return;
         }
-        if (onlyIndexSearchToolSites) {
+ 
+       String id = ecp.getId(resourceName);
+       if (onlyIndexSearchToolSites) {
             try {
                 Site s = siteService.getSite(siteId);
                 ToolConfiguration t = s.getToolForCommonId(SEARCH_TOOL_ID);

@@ -66,6 +66,9 @@ import org.sakaiproject.lessonbuildertool.SimplePagePeerEval;
 import org.sakaiproject.lessonbuildertool.SimplePagePeerEvalImpl;
 import org.sakaiproject.lessonbuildertool.SimplePagePeerEvalResult;
 import org.sakaiproject.lessonbuildertool.SimplePagePeerEvalResultImpl;
+import org.sakaiproject.lessonbuildertool.SimplePageProperty;
+import org.sakaiproject.lessonbuildertool.SimplePagePropertyImpl;
+
 import org.sakaiproject.tool.api.ToolManager;
 import org.sakaiproject.user.cover.UserDirectoryService;
 import org.springframework.dao.DataAccessException;
@@ -173,6 +176,10 @@ public class SimplePageToolDaoImpl extends HibernateDaoSupport implements Simple
 		return list;
 	}
 
+	public void flush() {
+	    getHibernateTemplate().flush();
+	}
+
 	public List<SimplePageItem> findItemsInSite(String siteId) {
 	    Object [] fields = new Object[1];
 	    fields[0] = siteId;
@@ -264,6 +271,28 @@ public class SimplePageToolDaoImpl extends HibernateDaoSupport implements Simple
 		}
 	}
 	
+	public SimplePageProperty findProperty(String attribute) {
+	    
+		DetachedCriteria d = DetachedCriteria.forClass(SimplePageProperty.class).add(Restrictions.eq("attribute", attribute));
+		
+		List<SimplePageProperty> list = null;
+		try {
+		    list = getHibernateTemplate().findByCriteria(d);
+		} catch (org.hibernate.ObjectNotFoundException e) {
+		    return null;
+		}
+
+		if (list != null && list.size() > 0) {
+			return list.get(0);
+		} else {
+			return null;
+		}
+	}
+
+        public SimplePageProperty makeProperty(String attribute, String value) {
+	    return new SimplePagePropertyImpl(attribute, value);
+	}
+
 	public List<SimplePageComment> findComments(long commentWidgetId) {
 		DetachedCriteria d = DetachedCriteria.forClass(SimplePageComment.class).add(Restrictions.eq("itemId", commentWidgetId));
 		List<SimplePageComment> list = getHibernateTemplate().findByCriteria(d);
@@ -1193,4 +1222,39 @@ public class SimplePageToolDaoImpl extends HibernateDaoSupport implements Simple
 		
 		return newList;
 	}
+
+	class Cons {
+	    String car;
+	    String cdr;
+	}
+
+	public List<String>findGradebookIds(final String gradebookUid) {
+
+	    Object [] fields = new Object[1];
+	    fields[0] = gradebookUid;
+	    List<Cons> ids = SqlService.dbRead("select a.gradebookId, a.altGradebook from lesson_builder_items a, lesson_builder_pages b where a.pageId = b.pageId and b.siteId = ? and (a.gradebookId is not null or a.altGradebook is not null)", fields, new SqlReader() {
+    		public Object readSqlResultRecord(ResultSet result) {
+    			try {
+			    Cons pair = new Cons();
+			    pair.car = result.getString(1);
+			    pair.cdr = result.getString(2);
+			    return pair;
+    			} catch (SQLException e) {
+			    log.warn("findGradebookIds " + gradebookUid + " : " + e);
+			    return null;
+    			}
+    		}
+		});
+	    
+	    List<String>ret = new ArrayList<String>();
+	    for (Cons p: ids) {
+		if (p.car != null && p.car.length() > 0)
+		    ret.add(p.car);
+		if (p.cdr != null && p.cdr.length() > 0)
+		    ret.add(p.cdr);
+	    }
+
+	    return ret;
+	}
+	    
 }

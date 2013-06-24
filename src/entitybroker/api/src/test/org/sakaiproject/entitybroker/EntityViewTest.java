@@ -1,5 +1,5 @@
 /**
- * $Id: EntityViewTest.java 105077 2012-02-24 22:54:29Z ottenhoff@longsight.com $
+ * $Id: EntityViewTest.java 125663 2013-06-12 13:43:37Z azeckoski@unicon.net $
  * $URL: https://source.sakaiproject.org/svn/entitybroker/trunk/api/src/test/org/sakaiproject/entitybroker/EntityViewTest.java $
  * EntityViewTest.java - entity-broker - Apr 10, 2008 7:20:29 PM - azeckoski
  **************************************************************************
@@ -314,6 +314,14 @@ public class EntityViewTest extends TestCase {
       assertEquals("myid", ev.getPathSegment(1) );
       assertEquals("stuff", ev.getPathSegment(2) );
       assertEquals("this has spaces", ev.getPathSegment(3) );
+      assertEquals(null, ev.getPathSegment(4) );
+
+      ev = new EntityView("/myprefix/myid/stuff/this_is_a_site.with.periods.in.the.name");
+      assertNotNull(ev);
+      assertEquals("myprefix", ev.getPathSegment(0) );
+      assertEquals("myid", ev.getPathSegment(1) );
+      assertEquals("stuff", ev.getPathSegment(2) );
+      assertEquals("this_is_a_site.with.periods.in.the.name", ev.getPathSegment(3) );
       assertEquals(null, ev.getPathSegment(4) );
 
    }

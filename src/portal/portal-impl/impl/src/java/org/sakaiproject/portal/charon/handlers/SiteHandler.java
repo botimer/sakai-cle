@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/portal/trunk/portal-impl/impl/src/java/org/sakaiproject/portal/charon/handlers/SiteHandler.java $
- * $Id: SiteHandler.java 123980 2013-05-10 20:05:08Z matthew@longsight.com $
+ * $Id: SiteHandler.java 126131 2013-06-21 22:54:32Z matthew@longsight.com $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008 The Sakai Foundation
@@ -70,7 +70,7 @@ import org.sakaiproject.util.ResourceLoader;
 /**
  * @author ieb
  * @since Sakai 2.4
- * @version $Rev: 123980 $
+ * @version $Rev: 126131 $
  */
 public class SiteHandler extends WorksiteHandler
 {
@@ -333,6 +333,12 @@ public class SiteHandler extends WorksiteHandler
 		}
 
 		rcontext.put("siteId", siteId);
+                boolean showShortDescription = Boolean.valueOf(ServerConfigurationService.getBoolean("portal.title.shortdescription.show", false));
+
+		if (showShortDescription) {
+		  rcontext.put("shortDescription", Web.escapeHtml(site.getShortDescription()));
+		}
+		rcontext.put("siteTitle", Web.escapeHtml(site.getTitle()));
 
 		// should we consider a frameset ?
 		boolean doFrameSet = includeFrameset(rcontext, res, req, session, page);

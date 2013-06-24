@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/syllabus/trunk/syllabus-api/src/java/org/sakaiproject/api/app/syllabus/SyllabusManager.java $
- * $Id: SyllabusManager.java 122347 2013-04-08 14:25:17Z holladay@longsight.com $
+ * $Id: SyllabusManager.java 125872 2013-06-17 18:36:21Z holladay@longsight.com $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2008 The Sakai Foundation
@@ -43,7 +43,7 @@ public interface SyllabusManager
   public void removeSyllabusFromSyllabusItem(final SyllabusItem syllabusItem, final SyllabusData syllabusData);
   
   public SyllabusData createSyllabusDataObject(String title, Integer position,
-      String assetId, String view, String status, String emailNotification);
+      String assetId, String view, String status, String emailNotification, Date startDate, Date endDate, boolean linkCalendar);
   
   public void removeSyllabusDataObject(SyllabusData o);
   
@@ -52,6 +52,7 @@ public interface SyllabusManager
   public void swapSyllabusDataPositions(final SyllabusItem syllabusItem, final SyllabusData d1, final SyllabusData d2);
   
   public void saveSyllabus(SyllabusData data);
+  public void saveSyllabus(SyllabusData data, boolean updateCalendar);
   
   public Integer findLargestSyllabusPosition(final SyllabusItem syllabusItem);
   

@@ -388,17 +388,22 @@ class OAuthRequest {
    */
   public function to_header() {
     $out ='Authorization: OAuth realm=""';
+    $comma = ',';
+    // Hack for RoR implementations that do not handle realm properly
+    // $out ='Authorization: OAuth ';
+    // $comma = '';
     $total = array();
     foreach ($this->parameters as $k => $v) {
       if (substr($k, 0, 5) != "oauth") continue;
       if (is_array($v)) {
         throw new OAuthException('Arrays not supported in headers');
       }
-      $out .= ',' .
+      $out .= $comma .
               OAuthUtil::urlencode_rfc3986($k) .
               '="' .
               OAuthUtil::urlencode_rfc3986($v) .
               '"';
+      $comma = ',';
     }
     return $out;
   }

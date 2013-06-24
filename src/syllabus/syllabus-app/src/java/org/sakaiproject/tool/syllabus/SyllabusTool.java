@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/syllabus/trunk/syllabus-app/src/java/org/sakaiproject/tool/syllabus/SyllabusTool.java $
- * $Id: SyllabusTool.java 124127 2013-05-15 18:52:12Z ottenhoff@longsight.com $
+ * $Id: SyllabusTool.java 125925 2013-06-18 19:10:51Z holladay@longsight.com $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008 The Sakai Foundation
@@ -87,6 +87,11 @@ public class SyllabusTool
 	private Map<String, Map<String, Boolean>> ACCESS_CACHE = new HashMap<String, Map<String, Boolean>>();
   private static final int MAX_REDIRECT_LENGTH = 512; // according to HBM file
   private static final int MAX_TITLE_LENGTH = 256;    // according to HBM file
+  private boolean mainEdit = false;
+  private static final String SESSION_ATTACHMENT_DATA_ID = "syllabysAttachDataId";
+  //used for the UI to know which data ID to have opened by default (i.e. if you added/removed an attachment on the main page)
+  private String openDataId;
+  
   
   public class DecoratedSyllabusEntry
   {
@@ -546,6 +551,49 @@ public class SyllabusTool
       this.displayNoEntryMsg = false;
     }
 
+    //Check if the instructor added an attachment to an item:
+    //Clear out list first, then call get attachment(), which will check the 
+    //session to see if the file picker selected any
+    attachments = new ArrayList();
+    attachments = getAttachments();
+    if(attachments.size() > 0){
+    	//user selected attachments, let's find which item it is for and add 
+    	ToolSession session = SessionManager.getCurrentToolSession();
+    	if(session.getAttribute(SESSION_ATTACHMENT_DATA_ID) != null){
+    		String dataIdStr = (String) session.getAttribute(SESSION_ATTACHMENT_DATA_ID);
+    		try{
+    			Long dataId = Long.parseLong(dataIdStr);
+    			//find data entry:
+    			for(DecoratedSyllabusEntry entry : (List<DecoratedSyllabusEntry>) entries){
+    				if(entry.getEntry().getSyllabusId().equals(dataId)){
+    					boolean added = false;
+    					for(int i=0; i<attachments.size(); i++)
+    					{
+    						syllabusManager.addSyllabusAttachToSyllabusData(entry.getEntry(), (SyllabusAttachment)attachments.get(i));
+    						added = true;
+    					}
+    					//update the calendar data for this item since the attachments have chnaged:
+    					if(added){
+    						 //update calendar attachments
+    				          if(entry.getEntry().getCalendarEventIdStartDate() != null
+    				        		  && !"".equals(entry.getEntry().getCalendarEventIdStartDate())){
+    				        	  syllabusManager.addCalendarAttachments(siteId, entry.getEntry().getCalendarEventIdStartDate(), attachments);
+    				          }
+    				          if(entry.getEntry().getCalendarEventIdEndDate() != null
+    				        		  && !"".equals(entry.getEntry().getCalendarEventIdEndDate())){
+    				        	  syllabusManager.addCalendarAttachments(siteId, entry.getEntry().getCalendarEventIdEndDate(), attachments);
+    				          }
+    					}
+    					break;
+    				}
+    			}
+    		}catch(Exception e){
+    			logger.error(e.getMessage(), e);
+    		}
+    	}
+    	session.removeAttribute(SESSION_ATTACHMENT_DATA_ID);
+    }
+    
     //Registramos el evento de que se ha accedido a Syllabus
     //Register the event when the syllabus is accessed
     Event event = EventTrackingService.newEvent("syllabus.read","/syllabus/"+currentSiteId+"/1", false, 0);
@@ -652,6 +700,12 @@ public class SyllabusTool
 
   public String getSiteId()
   {
+	  if(siteId == null){
+		  Placement placement = ToolManager.getCurrentPlacement();
+		  if(placement != null){
+			  siteId = placement.getContext();
+		  }
+	  }
     return siteId;
   }
 
@@ -960,7 +1014,11 @@ public class SyllabusTool
   {
 	  bulkEntry = null;
 	  alertMessage = null;
-	  return "main_edit";
+	  if(mainEdit){
+		  return "main_edit";
+	  }else{
+		  return "main";
+	  }
   }
   	public String processEditBulkPost() throws PermissionException{
   		return processEditBulk(true);
@@ -1076,8 +1134,11 @@ public class SyllabusTool
 							initPosition++;
 						}
 					}
-					
-					return "main_edit";
+					if(mainEdit){
+						return "main_edit";
+					}else{
+						return "main";
+					}
 				}
 			  }
 		}catch (Exception e)
@@ -1261,7 +1322,7 @@ public class SyllabusTool
         int initPosition = syllabusManager.findLargestSyllabusPosition(
             syllabusItem).intValue() + 1;
         SyllabusData en = syllabusManager.createSyllabusDataObject(null,
-            new Integer(initPosition), null, null, SyllabusData.ITEM_DRAFT, "none");
+            new Integer(initPosition), null, null, SyllabusData.ITEM_DRAFT, "none", null, null, Boolean.FALSE);
         en.setView("no");
 
         entry = new DecoratedSyllabusEntry(en);
@@ -1284,10 +1345,20 @@ public class SyllabusTool
     }
   }
   
+  public String processListNewBulkMainEdit() throws PermissionException
+  {
+	  mainEdit = true;
+	  return processListNewBulk();
+  }
+  
+  public String processListNewBulkMain() throws PermissionException
+  {
+	  mainEdit = false;
+	  return processListNewBulk();
+  }
+  
   public String processListNewBulk() throws PermissionException
   {
-    //logger.info(this + ".processListNew() in SyllabusTool");
-
     try
     {
       if (!this.checkAccess())
@@ -1806,7 +1877,7 @@ public class SyllabusTool
 	entries.clear();
     entry = null;
 
-    return "main_edit";
+    return "main";
   }
 
   public String processEditSaveRedirect() throws PermissionException
@@ -1859,7 +1930,7 @@ public class SyllabusTool
       	}
       }
 
-     return "main_edit";
+     return "main";
     }
     catch (Exception e)
     {
@@ -2117,7 +2188,7 @@ public class SyllabusTool
         
         attachments.add(thisAttach);
         
-        if(entry.justCreated != true)
+        if(entry != null && entry.justCreated != true)
         {
           allAttachments.add(thisAttach);
         }
@@ -2389,6 +2460,9 @@ public class SyllabusTool
       currentToolSession.setAttribute(FilePickerHelper.FILE_PICKER_ATTACHMENTS, filePickerList);
       ExternalContext context = FacesContext.getCurrentInstance().getExternalContext();
       context.redirect("sakai.filepicker.helper/tool");
+      if(context.getRequestParameterMap().get("itemId") != null){
+    	  currentToolSession.setAttribute(SESSION_ATTACHMENT_DATA_ID, context.getRequestParameterMap().get("itemId"));
+      }
       return null;
     }
     catch(Exception e)
@@ -3040,5 +3114,18 @@ public BulkSyllabusEntry getBulkEntry() {
 
 public void setBulkEntry(BulkSyllabusEntry bulkEntry) {
 	this.bulkEntry = bulkEntry;
+}
+
+public String getOpenDataId() {
+	ToolSession session = SessionManager.getCurrentToolSession();
+	if(session.getAttribute(SESSION_ATTACHMENT_DATA_ID) != null){
+		return (String) session.getAttribute(SESSION_ATTACHMENT_DATA_ID);
+	}else{
+		return "";
+	}
+}
+
+public void setOpenDataId(String openDataId) {
+	this.openDataId = openDataId;
 }
 }

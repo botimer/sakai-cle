@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE hibernate-configuration PUBLIC
 		"-//Hibernate/Hibernate Configuration DTD 3.0//EN"
-		"http://www.hibernate.org/dtd/hibernate-configuration-3.0.dtd">
+		"http://hibernate.sourceforge.net/hibernate-configuration-3.0.dtd">
 <hibernate-configuration>
     <session-factory>
         <!-- these mapping resource paths must point to your hibernate template files (.hbm.xml),
@@ -15,5 +15,6 @@
         <mapping resource="org/sakaiproject/lessonbuildertool/simplepagequestionresponse.hbm.xml"/>
         <mapping resource="org/sakaiproject/lessonbuildertool/simplepagequestionresponsetotals.hbm.xml"/>
         <mapping resource="org/sakaiproject/lessonbuildertool/simplepagepeerevalresult.hbm.xml"/>
+        <mapping resource="org/sakaiproject/lessonbuildertool/simplepageproperty.hbm.xml"/>
     </session-factory>
 </hibernate-configuration>

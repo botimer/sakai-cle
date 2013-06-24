@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/syllabus/trunk/syllabus-api/src/java/org/sakaiproject/api/app/syllabus/SyllabusService.java $
- * $Id: SyllabusService.java 105080 2012-02-24 23:10:31Z ottenhoff@longsight.com $
+ * $Id: SyllabusService.java 125859 2013-06-17 14:41:17Z holladay@longsight.com $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2008 The Sakai Foundation
@@ -58,11 +58,15 @@ public interface SyllabusService extends EntityProducer
 	
 	public void deletePostedSyllabus(SyllabusData data);
 	
+	public void deletePostedSyllabus(SyllabusData data, String siteId);
+	
 	public void readSyllabus(SyllabusData data);
 	
 	public void draftNewSyllabus(SyllabusData data);
 	
 	public void draftChangeSyllabus(SyllabusData data);
+	
+	public void draftChangeSyllabus(SyllabusData data, String siteId);
 	
 	public List getMessages(String id);
 	

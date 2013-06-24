@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/providers/trunk/jldap/src/java/edu/amc/sakai/user/JLDAPDirectoryProvider.java $
- * $Id: JLDAPDirectoryProvider.java 121256 2013-03-15 14:16:36Z ottenhoff@longsight.com $
+ * $Id: JLDAPDirectoryProvider.java 125941 2013-06-18 21:35:09Z ottenhoff@longsight.com $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008, 2009 The Sakai Foundation
@@ -631,17 +631,20 @@ public class JLDAPDirectoryProvider implements UserDirectoryProvider, LdapConnec
 				userEdit = (UserEdit) userEdits.next();
 				String eid = userEdit.getEid();
 				
-				// Do nothing with this eid if it is in the blacklist
 				if ( !(isSearchableEid(eid)) ) {
 					userEdits.remove();
-					continue;
-				}
-				
-				// Check the cache before sending the request to LDAP
-				LdapUserData cachedUserData = getCachedUserEntry(eid);
-				if ( cachedUserData == null ) {
-					usersToSearchInLDAP.put(eid, userEdit);
-					cnt++;
+					//proceed ahead with this (perhaps the final) iteration
+					//usersToSearchInLDAP needs to be processed unless empty
+				} else {
+					// Check the cache before sending the request to LDAP
+					LdapUserData cachedUserData = getCachedUserEntry(eid);
+					if ( cachedUserData == null ) {
+						usersToSearchInLDAP.put(eid, userEdit);
+						cnt++;
+					} else {
+						// populate userEdit with cached ldap data:
+						mapUserDataOntoUserEdit(cachedUserData, userEdit);
+					}
 				}
 				
 				// We need to make sure this query isn't larger than maxQuerySize

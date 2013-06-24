@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/podcasts/trunk/podcasts-api/src/java/org/sakaiproject/api/app/podcasts/PodcastService.java $
- * $Id: PodcastService.java 120348 2013-02-21 12:48:17Z matthew.buckett@it.ox.ac.uk $
+ * $Id: PodcastService.java 125825 2013-06-16 12:40:53Z steve.swinsburg@gmail.com $
  ***********************************************************************************
  *
  * Copyright (c) 2006, 2007, 2008 The Sakai Foundation
@@ -64,7 +64,7 @@ public interface PodcastService // extends EntityProducer
 	public static final String COLLECTION_PODCASTS_DESCRIPTION = "Common Folder for All Site Podcasts";
 
 	/** This string gives the Service name (class w/ package prefix) for podcast service **/
-	public static final String PODCASTS_SERVICE_NAME = "org.sakaiproject.api.app.syllabus.PodcastService";
+	public static final String PODCASTS_SERVICE_NAME = "org.sakaiproject.api.app.podcasts.PodcastService";
 
 	/** This string is the name of the property used when displaying and sorting the podcasts **/
 	public static final String DISPLAY_DATE = "displayDate";

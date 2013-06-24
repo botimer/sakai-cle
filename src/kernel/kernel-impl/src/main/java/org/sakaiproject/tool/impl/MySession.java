@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/kernel/trunk/kernel-impl/src/main/java/org/sakaiproject/tool/impl/MySession.java $
- * $Id: MySession.java 105077 2012-02-24 22:54:29Z ottenhoff@longsight.com $
+ * $Id: MySession.java 125958 2013-06-19 02:29:59Z azeckoski@unicon.net $
  **********************************************************************************
  *
  * Copyright (c) 2008 The Sakai Foundation.
@@ -456,6 +456,7 @@ public class MySession implements Session, HttpSession, Serializable
 	public void setMaxInactiveInterval(int interval)
 	{
 		m_inactiveInterval = interval;
+		resetExpirationTimeSuggestion(); // added for KNL-1088
 	}
 
 	/**

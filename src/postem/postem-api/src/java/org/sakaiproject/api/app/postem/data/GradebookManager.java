@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/postem/trunk/postem-api/src/java/org/sakaiproject/api/app/postem/data/GradebookManager.java $
- * $Id: GradebookManager.java 105079 2012-02-24 23:08:11Z ottenhoff@longsight.com $
+ * $Id: GradebookManager.java 125618 2013-06-11 16:41:26Z matthew@longsight.com $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008 The Sakai Foundation
@@ -26,7 +26,7 @@ import java.util.SortedSet;
 
 public interface GradebookManager {
 	public Gradebook createGradebook(String title, String creator,
-			String context, List headings, SortedSet students, Template template);
+			String context, List headings, SortedSet students, Template template, String fileReference);
 
 	public Gradebook createEmptyGradebook(String creator, String context);
 
@@ -51,7 +51,7 @@ public interface GradebookManager {
 	public void updateGrades(Gradebook gradebook, List headings,
 			SortedSet students);
 
-	public void updateTemplate(Gradebook gradebook, String template);
+	public void updateTemplate(Gradebook gradebook, String template, String fileReference);
 
 	public void deleteGradebook(final Gradebook gradebook);
 

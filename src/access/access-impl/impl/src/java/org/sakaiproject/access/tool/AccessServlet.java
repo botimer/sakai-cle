@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/access/trunk/access-impl/impl/src/java/org/sakaiproject/access/tool/AccessServlet.java $
- * $Id: AccessServlet.java 124735 2013-05-21 14:02:42Z steve.swinsburg@gmail.com $
+ * $Id: AccessServlet.java 125715 2013-06-13 15:51:41Z ottenhoff@longsight.com $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008, 2009 The Sakai Foundation
@@ -453,6 +453,12 @@ public class AccessServlet extends VmServlet
 		} 
 		
 		
+		// if there is a Range: header for partial content and we haven't done basic auth, refuse the request	(SAK-23678)
+		if (req.getHeader("Range") != null) {
+			sendError(res, HttpServletResponse.SC_FORBIDDEN);
+			return;
+		}
+
 		// get the Sakai session
 		Session session = SessionManager.getCurrentSession();
 

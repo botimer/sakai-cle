@@ -858,3 +858,18 @@ alter table SAM_PUBLISHEDANSWER_T modify PARTIAL_CREDIT double precision;
 alter table SAM_PUBLISHEDITEM_T modify SCORE double precision;
 alter table SAM_PUBLISHEDITEM_T modify DISCOUNT double precision;
 -- End SAM-2087
+
+
+-- SAM-2088 
+update GB_GRADABLE_OBJECT_T set external_id=concat('/samigo/',external_id) where external_id not like '/%';
+
+-- Upgrade for Quartz 1.6 to 1.8 - SAK-20384
+
+-- Drop column
+ALTER TABLE QRTZ_SCHEDULER_STATE DROP COLUMN RECOVERER;
+
+-- Increase size
+ALTER TABLE QRTZ_SIMPLE_TRIGGERS MODIFY TIMES_TRIGGERED BIGINT(10) NOT NULL;
+
+-- Increase size
+ALTER TABLE QRTZ_CRON_TRIGGERS MODIFY CRON_EXPRESSION VARCHAR(120) NOT NULL;

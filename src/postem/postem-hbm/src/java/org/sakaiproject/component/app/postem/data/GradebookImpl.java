@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/postem/trunk/postem-hbm/src/java/org/sakaiproject/component/app/postem/data/GradebookImpl.java $
- * $Id: GradebookImpl.java 105079 2012-02-24 23:08:11Z ottenhoff@longsight.com $
+ * $Id: GradebookImpl.java 125618 2013-06-11 16:41:26Z matthew@longsight.com $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008 The Sakai Foundation
@@ -49,6 +49,8 @@ public class GradebookImpl implements Gradebook, Comparable, Serializable {
 	protected String title;
 
 	protected String creator;
+	
+    protected String fileReference;
 	
 	protected String creatorEid;
 
@@ -137,6 +139,14 @@ public class GradebookImpl implements Gradebook, Comparable, Serializable {
 		this.title = title;
 	}
 
+	public String getFileReference() {
+		return fileReference;
+	}
+
+	public void setFileReference(String fileReference) {
+		this.fileReference = fileReference;
+	}
+
 	public String getCreator() {
 		return creator;
 	}
@@ -146,6 +156,7 @@ public class GradebookImpl implements Gradebook, Comparable, Serializable {
 		setCreatorEid(creator);
 
 	}
+	
 	
 	public String getCreatorEid() {
 		return creatorEid;

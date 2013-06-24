@@ -48,13 +48,18 @@ sub update_svn_collection ($$)
 
  # Match the pattern */src/*/*.html
 
- my @filelist = glob("$svnrepo/*/src/*/*.html");
+ print "$svnrepo $docrepo\n";
+ my @filelist = glob("$svnrepo/*/*-help/src/*/*.html");
  foreach my $helpfile (@filelist) {
     if ($helpfile =~ /\/([a-z]{4})\.html/) {
         my $fileid = $1;
         if (-s "$docrepo/$fileid.html") {
+        	print "Helpfile for '$fileid' copied from '$docrepo'\n";
                 copy("$docrepo/$fileid.html", $helpfile);
         }
+    }
+    else {
+	print "No match for $helpfile\n";
     }
  }
 

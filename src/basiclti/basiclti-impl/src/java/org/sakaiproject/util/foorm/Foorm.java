@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/basiclti/trunk/basiclti-impl/src/java/org/sakaiproject/util/foorm/Foorm.java $
- * $Id: Foorm.java 121290 2013-03-15 23:52:46Z csev@umich.edu $
+ * $Id: Foorm.java 126032 2013-06-20 13:34:24Z csev@umich.edu $
  ***********************************************************************************
  *
  * Copyright (c) 2011 The Sakai Foundation
@@ -1418,9 +1418,9 @@ public class Foorm {
 			}
 
 			String ff = formSql(formField, vendor);
-			if ( "oracle".equals(vendor) ) {
-				if ( ! isNullable ) ff = ff.replace("NOT NULL","");
-			}
+
+			// BLTI-220, BLTI-238 - Required will be enforced in software - not the DB
+			boolean shouldAlter = false;
 			if ("key".equals(type)) {
 				if ( ! NUMBER_TYPE.equals(sqlType) ) logger.severe(field+" must be Integer and Auto Increment");
 			} else if ("autodate".equals(type)) {
@@ -1430,18 +1430,21 @@ public class Foorm {
 					logger.severe(field+" must be String field");
 					continue;
 				}
-				if ( sqlLength < maxlength ) {
-					if ( "oracle".equals(vendor) ) {
-						rv.add("ALTER TABLE "+table+" MODIFY ( " + ff + " )");
-					} else if ( "mysql".equals(vendor) ) {
-						rv.add("ALTER TABLE "+table+" MODIFY " + ff);
-					} else {
-						rv.add("ALTER TABLE "+table+" ALTER COLUMN " + ff);
-					}
-				}
+				if ( sqlLength < maxlength ) shouldAlter = true;
+				if ( ! isNullable ) shouldAlter = true; // BLTI-220, BLTI-238
 			} else if ("radio".equals(type) || "checkbox".equals(type) || "integer".equals(type) ) {
 				if ( NUMBER_TYPE.equals(sqlType)) continue;
 				logger.severe(field+" must be Integer field");
+			}
+
+			if ( shouldAlter ) {
+				if ( "oracle".equals(vendor) ) {
+					rv.add("ALTER TABLE "+table+" MODIFY ( " + ff + " )");
+				} else if ( "mysql".equals(vendor) ) {
+					rv.add("ALTER TABLE "+table+" MODIFY " + ff);
+				} else {
+					rv.add("ALTER TABLE "+table+" ALTER COLUMN " + ff);
+				}
 			}
 		}
 

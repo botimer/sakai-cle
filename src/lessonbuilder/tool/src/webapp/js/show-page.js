@@ -326,6 +326,7 @@ $(function() {
 		
 		$(".edit-youtube").click(function(){
 			closeDropdown();
+            $('li').removeClass('editInProgress');
 			$("#editgroups-youtube").after($("#grouplist"));
 			$("#grouplist").hide();
 			$("#editgroups-youtube").hide();
@@ -350,6 +351,8 @@ $(function() {
 			$("#youtubeWidth").val(row.find(".mm-width").text());
 			$("#description4").val(row.find(".description").text());
 			var position =  row.position();
+            $('.edit-col').addClass('edit-colHidden');
+            $(this).closest('li').addClass('editInProgress');
 			$("#youtube-dialog").dialog("option", "position", [position.left, position.top]);
 			oldloc = $(this);
 			$('#youtube-dialog').dialog('open');
@@ -365,6 +368,7 @@ $(function() {
 
 		$('.edit-movie').click(function(){
 			closeDropdown();
+            $('li').removeClass('editInProgress');
 	                //var object = this.parentNode.parentNode.childNodes[3].childNodes[1];                                                                
 			$("#expert-movie").hide();
 			$("#expert-movie-toggle-div").show();
@@ -396,6 +400,8 @@ $(function() {
 			$("#description3").val(row.find(".description").text());
 			$("#mimetype4").val(row.find(".mm-type").text());
 			var position =  row.position();
+            $('.edit-col').addClass('edit-colHidden');
+            $(this).closest('li').addClass('editInProgress');
 			$("#movie-dialog").dialog("option", "position", [position.left, position.top]);
 			oldloc = $(this);
 			$("#movie-dialog").dialog('open');
@@ -406,6 +412,7 @@ $(function() {
 		
 		$(".edit-comments").click(function(){
 			closeDropdown();
+            $('li').removeClass('editInProgress');
 			$("#editgroups-comments").after($("#grouplist"));
 			$("#grouplist").hide();
 			$("#editgroups-comments").hide();
@@ -462,6 +469,8 @@ $(function() {
 			}
 			
 			var position = row.position();
+            $('.edit-col').addClass('edit-colHidden');
+            $(this).closest('li').addClass('editInProgress');
 			$("#comments-dialog").dialog("option", "position", [position.left, position.top]);
 			oldloc = $(this);
 			$('#comments-dialog').dialog('open');
@@ -477,6 +486,7 @@ $(function() {
 
 		$(".edit-student").click(function(){
 			closeDropdown();
+            $('li').removeClass('editInProgress');
 			$("#editgroups-student").after($("#grouplist"));
 			$("#grouplist").hide();
 			$("#editgroups-student").hide();
@@ -656,6 +666,8 @@ $(function() {
 			}
 			
 			var position = row.position();
+            $('.edit-col').addClass('edit-colHidden');
+            $(this).closest('li').addClass('editInProgress');
 			$("#student-dialog").dialog("option", "position", [position.left, position.top]);
 			oldloc = $(this);
 			$('#student-dialog').dialog('open');
@@ -738,8 +750,10 @@ $(function() {
 		
 		$('.question-link').click(function(){
 			closeDropdown();
+            $('li').removeClass('editInProgress');
 			var position =  $(this).position();
 			
+			$('#question-error-container').hide();
 			$("#questionEditId").val("-1");
 			$("#question-text-input").val("");
 			$("#question-answer-input").val("");
@@ -759,8 +773,6 @@ $(function() {
 			
 			$("#question-correct-text").val("");
 			$("#question-incorrect-text").val("");
-			
-			$("#delete-question-div").hide();
 			
 			$("#question-dialog").dialog("option", "position", [position.left, position.top]);
 			oldloc = $(this);
@@ -890,6 +902,10 @@ $(function() {
 			$("#delete-question-div").show();
 			
 			var position = row.position();
+            $("#delete-question-div").hide();
+            $('.edit-col').addClass('edit-colHidden');
+            $(this).closest('li').addClass('editInProgress');
+
 			$("#question-dialog").dialog("option", "position", [position.left, position.top]);
 			oldloc = $(this);
 			$('#question-dialog').dialog('open');
@@ -930,6 +946,9 @@ $(function() {
 		
 		$(".edit-link").click(function(){
 			closeDropdown();
+            $('li').removeClass('editInProgress');
+            $('.edit-col').addClass('edit-colHidden');
+            $(this).closest('li').addClass('editInProgress');
 			$("#require-label2").hide();
 			$("#item-required2").hide();
 			$("#assignment-dropdown-selection").hide();
@@ -1194,7 +1213,7 @@ $(function() {
 			setUpRequirements();
 		        $("#item-id").val(row.find(".current-item-id2").text());
 			$("#edit-item-error-container").hide();
-			var position =  $(this).position();
+			var position =  $(this).closest('li').position();
 			$("#edit-item-dialog").dialog("option", "position", [position.left, position.top]);
 			oldloc = $(this);
 			$("#edit-item-dialog").dialog('open');
@@ -1242,6 +1261,7 @@ $(function() {
 			$("#mm-choose").attr("href",href);
 			$("#add-multimedia-dialog").prev().children(".ui-dialog-title").text($(this).text());
 			var position =  $(this).position();
+            
 			$("#add-multimedia-dialog").dialog("option", "position", [position.left, position.top]);
 			$(".mm-additional").show();
 			$(".mm-additional-website").hide();
@@ -1299,6 +1319,7 @@ $(function() {
 
 		$(".multimedia-edit").click(function(){
 			closeDropdown();
+            $('li').removeClass('editInProgress');
 			$("#expert-multimedia").hide();
 			$("#expert-multimedia-toggle-div").show();
 			$("#editgroups-mm").after($("#grouplist"));
@@ -1339,6 +1360,9 @@ $(function() {
 				   "pageItemId=" + row.find(".mm-itemid").text()));
 			$("#multimedia-item-id").val(row.find(".mm-itemid").text());
 			var position =  row.position();
+            $('.edit-col').addClass('edit-colHidden');
+            $(this).closest('li').addClass('editInProgress');
+
 			$("#edit-multimedia-dialog").dialog("option", "position", [position.left, position.top]);
 			oldloc = $(this);
 			$("#edit-multimedia-dialog").dialog('open');
@@ -1388,7 +1412,7 @@ $(function() {
 		});
 		
 		$('body').bind('dialogopen', function(event) {
-			hideMultimedia();
+            //hideMultimedia();
 		});
 		
 		$('body').bind('dialogclose', function(event) {
@@ -1406,7 +1430,9 @@ $(function() {
 				$('#comments-dialog').dialog('isOpen') ||
 				$('#student-dialog').dialog('isOpen')) ||
 				$('#question-dialog').dialog('isOpen')) {
-					unhideMultimedia();
+                    //unhideMultimedia();
+                    $('.edit-col').removeClass('edit-colHidden');
+                    $('li').removeClass('editInProgress')
 				}
 		});
 		 
@@ -1461,7 +1487,8 @@ $(function() {
 
 	} // Closes admin if statement
 
-	$(".showPollGraph").click(function() {
+	$(".showPollGraph").click(function(e) {
+        e.preventDefault();
 		var pollGraph = $(this).parents(".questionDiv").find(".questionPollGraph");
 		
 		if($(this).find("span").text() === $(this).parent().find(".show-poll").text()) {
@@ -1485,7 +1512,7 @@ $(function() {
 			$(this).find("span").text($(this).parent().find(".show-poll").text());
 		}
 		
-		setMainFrameHeight(window.name);
+        resizeFrame('grow')
 	});
 	
 	function submitgrading(item) {
@@ -1572,6 +1599,30 @@ $(function() {
 			out: removeHighlight
 	};
 
+	// where html5 might work we have an html5 player followed by the ususal object or embed
+	// check the dom to see if it will actually work. If so use html5 with other stuff inside it
+	// otherwise remove html5
+	//
+	// you'd hope that the html5 player would call what's inside if it can't work, but
+	// in firefox it give the user an error without trying. Hence the code below that actually
+	// checks. Let's hope it doesn't lie. Unfortunately many of the players say "maybe."
+	// We just can't win.
+
+	$(".html5video").each(function(index) {
+             var html5 = $(this);
+	     var source = html5.children().first();
+	     var html5ok = false;
+	     try {
+		 html5ok = !!html5[0].canPlayType(source.attr('type'));
+	     } catch (err) {
+	     }
+	     if (html5ok) {
+		 html5.next().remove();
+		 html5.show();
+	     } else {
+		 html5.remove();
+	     }
+            });
 
 	$("li.dropdown").hoverIntent(megaConfig);
 	$("#dropDownDiv").hide();
@@ -1603,6 +1654,7 @@ function closeMultimediaEditDialog() {
 function closeAddMultimediaDialog() {
 	$("#add-multimedia-dialog").dialog("close");
 	oldloc.focus();
+    $(oldloc).closest('li').removeClass('editInProgress');
 }
 
 function closeEditTitleDialog() {
@@ -2107,12 +2159,25 @@ function checkQuestionGradedForm() {
 
 // Prepares the question dialog to be submitted
 function prepareQuestionDialog() {
+    alert($("#question-gradebook-title"));
+	if ($("#question-graded").attr("checked") && !isFinite(parseFloat($("#question-max").val()))) {
+	    $('#question-error').text(msg("simplepage.integer-expected"));
+	    $('#question-error-container').show();
+	    return false;
+	} else if($("#question-graded").attr("checked") && $("#question-gradebook-title") == '') {
+	    $('#question-error').text(msg("simplepage.gbname-expected"));
+	    $('#question-error-container').show();
+	    return false;
+	} else
+	    $('#question-error-container').hide();
+
 	updateMultipleChoiceAnswers();
 	updateShortanswers();
 	
 	// RSF bugs out if we don't undisable these before submitting
 	$("#multipleChoiceSelect").removeAttr("disabled");
 	$("#shortanswerSelect").removeAttr("disabled");
+	return true;
 }
 
 // Reset the multiple choice answers to prevent problems when submitting a shortanswer
@@ -2130,3 +2195,22 @@ function resetShortanswers() {
 	$("#extraShortanswers").empty();
 }
 
+
+resizeFrame = function (updown) {
+      var frame = parent.document.getElementById( window.name );
+      if( frame ) {
+        if(updown=='shrink')
+        {
+        var clientH = document.body.clientHeight + 30;
+      }
+      else
+      {
+      var clientH = document.body.clientHeight + 30;
+      }
+        $( frame ).height( clientH );
+      } else {
+        throw( "resizeFrame did not get the frame (using name=" + window.name + ")" );
+      }
+    };
+
+    

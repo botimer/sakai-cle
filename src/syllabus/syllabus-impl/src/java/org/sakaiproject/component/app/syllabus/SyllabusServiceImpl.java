@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/syllabus/trunk/syllabus-impl/src/java/org/sakaiproject/component/app/syllabus/SyllabusServiceImpl.java $
- * $Id: SyllabusServiceImpl.java 120846 2013-03-06 15:46:33Z holladay@longsight.com $
+ * $Id: SyllabusServiceImpl.java 125872 2013-06-17 18:36:21Z holladay@longsight.com $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008, 2009 The Sakai Foundation
@@ -686,7 +686,7 @@ public class SyllabusServiceImpl implements SyllabusService, EntityTransferrer, 
                                         syData.getTitle(), (new Integer(
                                             initPosition)), syData.getAsset(),
                                         syData.getView(), syData.getStatus(),
-                                        syData.getEmailNotification());
+                                        syData.getEmailNotification(), syData.getStartDate(), syData.getEndDate(), syData.isLinkCalendar());
                             		Set attachSet = new TreeSet();
                             		for(int m=0; m<attachStringList.size(); m++)
                             		{
@@ -707,7 +707,7 @@ public class SyllabusServiceImpl implements SyllabusService, EntityTransferrer, 
                             		syData.setAttachments(attachSet);
                                 
                                 syllabusManager.addSyllabusToSyllabusItem(
-                                    syllabusItem, syData);
+                                    syllabusItem, syData, false);
 
                               }
                             }
@@ -795,9 +795,9 @@ public class SyllabusServiceImpl implements SyllabusService, EntityTransferrer, 
                   SyllabusData newToSyData = syllabusManager
                   		  .createSyllabusDataObject(toSyData.getTitle(),
                           positionNo, toSyData.getAsset(), toSyData.getView(),
-                          toSyData.getStatus(), toSyData.getEmailNotification());
+                          toSyData.getStatus(), toSyData.getEmailNotification(), toSyData.getStartDate(), toSyData.getEndDate(), toSyData.isLinkCalendar());
                   
-                  syllabusManager.addSyllabusToSyllabusItem(toSyItem, newToSyData);
+                  syllabusManager.addSyllabusToSyllabusItem(toSyItem, newToSyData, false);
                 }
             }
             else
@@ -1082,7 +1082,14 @@ public class SyllabusServiceImpl implements SyllabusService, EntityTransferrer, 
 
 	public void deletePostedSyllabus(SyllabusData data)
 	{
-    BaseResourceEdit bre = new BaseResourceEdit(data.getSyllabusId().toString(), data);
+		Placement placement = ToolManager.getCurrentPlacement();
+		String siteId = placement.getContext();
+		deletePostedSyllabus(data, siteId);
+	}
+	
+	public void deletePostedSyllabus(SyllabusData data, String siteId)
+	{
+    BaseResourceEdit bre = new BaseResourceEdit(data.getSyllabusId().toString(), data, siteId);
     
     addLiveSyllabusProperties(bre);
     
@@ -1214,7 +1221,7 @@ public class SyllabusServiceImpl implements SyllabusService, EntityTransferrer, 
 										positionNo, toSyData.getAsset(),
 										toSyData.getView(), toSyData
 												.getStatus(), toSyData
-												.getEmailNotification());
+												.getEmailNotification(), toSyData.getStartDate(), toSyData.getEndDate(), toSyData.isLinkCalendar());
 						Set attachSet = syllabusManager.getSyllabusAttachmentsForSyllabusData(toSyData);
 						Iterator attachIter = attachSet.iterator();
 						Set newAttachSet = new TreeSet();
@@ -1235,7 +1242,7 @@ public class SyllabusServiceImpl implements SyllabusService, EntityTransferrer, 
 						}
 						newToSyData.setAttachments(newAttachSet);
 						syllabusManager.addSyllabusToSyllabusItem(toSyItem,
-								newToSyData);
+								newToSyData, false);
 				  }
 				} 
 				else 
@@ -1278,8 +1285,12 @@ public class SyllabusServiceImpl implements SyllabusService, EntityTransferrer, 
 
 	public void draftChangeSyllabus(SyllabusData data)
 	{
-    BaseResourceEdit bre = new BaseResourceEdit(data.getSyllabusId().toString(), data);
-    
+		Placement placement = ToolManager.getCurrentPlacement();
+		String siteId = placement.getContext();
+		draftChangeSyllabus(data, siteId);
+	}
+    public void draftChangeSyllabus(SyllabusData data, String siteId){
+    BaseResourceEdit bre = new BaseResourceEdit(data.getSyllabusId().toString(), data, siteId);
     addLiveSyllabusProperties(bre);
     
     bre.setEvent(EVENT_SYLLABUS_DRAFT_CHANGE);

@@ -16,7 +16,7 @@
         id number(19,0) not null,
         itemId varchar2(255 char) not null,
         groupId varchar2(255 char) not null,
-        groups long,
+        groups clob,
         primary key (id)
     );
 
@@ -98,6 +98,13 @@
         groupid varchar2(36 char),
         cssSheet varchar2(250 char),
         primary key (pageId)
+    );
+
+    create table lesson_builder_properties (
+        id number(19,0) not null,
+        attribute varchar2(255 char) not null unique,
+        value clob,
+        primary key (id)
     );
 
     create table lesson_builder_q_responses (

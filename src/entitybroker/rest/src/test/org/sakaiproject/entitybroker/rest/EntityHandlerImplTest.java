@@ -1,5 +1,5 @@
 /**
- * $Id: EntityHandlerImplTest.java 105077 2012-02-24 22:54:29Z ottenhoff@longsight.com $
+ * $Id: EntityHandlerImplTest.java 125663 2013-06-12 13:43:37Z azeckoski@unicon.net $
  * $URL: https://source.sakaiproject.org/svn/entitybroker/trunk/rest/src/test/org/sakaiproject/entitybroker/rest/EntityHandlerImplTest.java $
  * EntityHandlerImplTest.java - entity-broker - Apr 6, 2008 12:08:39 PM - azeckoski
  **************************************************************************
@@ -149,7 +149,7 @@ public class EntityHandlerImplTest extends TestCase {
         }
 
         // types that cannot handle the return requested
-        req = new EntityHttpServletRequest("GET", DIRECT_PREFIX + TestData.REF4 + ".xxxx");
+        req = new EntityHttpServletRequest("GET", DIRECT_PREFIX + TestData.REF4 + ".csv");
         res = new EntityHttpServletResponse();
         try {
             entityHandler.handleEntityAccess(req, res, null);

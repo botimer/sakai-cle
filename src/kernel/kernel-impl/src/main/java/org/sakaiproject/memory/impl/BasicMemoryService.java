@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/kernel/trunk/kernel-impl/src/main/java/org/sakaiproject/memory/impl/BasicMemoryService.java $
- * $Id: BasicMemoryService.java 105130 2012-02-27 00:02:50Z nbotimer@unicon.net $
+ * $Id: BasicMemoryService.java 125957 2013-06-19 02:23:55Z azeckoski@unicon.net $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008 Sakai Foundation
@@ -266,11 +266,17 @@ public abstract class BasicMemoryService implements MemoryService, Observer
 			final long misses = cache.getStatistics().getCacheMisses();
 			final long total = hits + misses;
 			final long hitRatio = ((total > 0) ? ((100l * hits) / total) : 0);
+			// Even when we're not collecting statistics ehcache knows how
+			// many objects are in the cache
 			buf.append(cache.getName() + ": " + 
-					" count:" + cache.getStatistics().getObjectCount() +
-					" hits:" + hits +
+					" count:" + cache.getStatistics().getObjectCount());
+			if (cache.isStatisticsEnabled()) {
+				buf.append(" hits:" + hits +
 					" misses:" + misses + 
 					" hit%:" + hitRatio);
+			} else {
+				buf.append(" NO statistics (not enabled for cache)");
+			}
 			buf.append("\n");
 		}
 
