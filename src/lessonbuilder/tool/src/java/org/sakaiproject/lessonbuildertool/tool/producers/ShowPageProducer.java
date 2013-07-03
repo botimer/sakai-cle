@@ -191,14 +191,14 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 	public MessageLocator messageLocator;
 	private LocaleGetter localegetter;
 	public static final String VIEW_ID = "ShowPage";
-	private static final String DEFAULT_TYPES = "mp4,mov,m2v,3gp,wmv,mp3,swf,wav";
+	private static final String DEFAULT_TYPES = "mp4,mov,m2v,3gp,3g2,avi,m4v,mpg,rm,vob,wmv,mp3,swf,wav,aif,m4a,mid,mpa,ra,wma";
 	private static String[] multimediaTypes = null;
     // mp4 means it plays with the flash player if HTML5 doesn't work.
     // flv is also played with the flash player, but it doesn't get a backup <OBJECT> inside the player
     // Strobe claims to handle MOV files as well, but I feel safer passing them to quicktime, though that requires Quicktime installation
-        private static final String DEFAULT_MP4_TYPES = "video/mp4,video/m4v";
+        private static final String DEFAULT_MP4_TYPES = "video/mp4,video/m4v,audio/mpeg";
         private static String[] mp4Types = null;
-        private static final String DEFAULT_HTML5_TYPES = "video/mp4,video/m4v,video/webm,video/ogg";
+        private static final String DEFAULT_HTML5_TYPES = "video/mp4,video/m4v,video/webm,video/ogg,audio/mpeg,audio/ogg,audio/wav,audio/webm,audio/ogg,audio/mp4,audio/aac";
     // jw can also handle audio: audio/mp4,audio/mpeg,audio/ogg
         private static String[] html5Types = null;
 
@@ -1409,7 +1409,7 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 						UIOutput.make(tableRow, "description2", i.getDescription());
 
 					} else if ((youtubeKey = simplePageBean.getYoutubeKey(i)) != null) {
-						String youtubeUrl = "http://www.youtube.com/embed/" + youtubeKey;
+						String youtubeUrl = "https://www.youtube.com/embed/" + youtubeKey + "?wmode=opaque";
 
 						UIOutput.make(tableRow, "youtubeSpan");
 
@@ -1527,8 +1527,9 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 						// wrap whatever stuff we decide to put out in HTML5 if appropriate
 						// javascript is used to do the wrapping, because RSF can't really handle this
 						if (isHtml5) {
-						    UIComponent h5video = UIOutput.make(tableRow, "h5video");
-						    UIComponent h5source = UIOutput.make(tableRow, "h5source");
+						    boolean isAudio = mimeType.startsWith("audio/");
+						    UIComponent h5video = UIOutput.make(tableRow, (isAudio? "h5audio" : "h5video"));
+						    UIComponent h5source = UIOutput.make(tableRow, (isAudio? "h5asource" : "h5source"));
 						    if (lengthOk(height) && height.getOld().indexOf("%") < 0)
 							h5video.decorate(new UIFreeAttributeDecorator("height", height.getOld()));
 						    if (lengthOk(width) && width.getOld().indexOf("%") < 0)
@@ -1543,7 +1544,7 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 						// supply. For the moment MP4 is
 						// shown with the same player so it uses much of the
 						// same code
-						if (mimeType != null && (mimeType.equals("video/x-flv") || isMp4)) {
+						if (mimeType != null && (mimeType.equals("video/x-flv") || mimeType.equals("video/flv") || isMp4)) {
 							mimeType = "application/x-shockwave-flash";
 							movieUrl = "/lessonbuilder-tool/templates/StrobeMediaPlayback.swf";
 							useFlvPlayer = true;
@@ -1571,15 +1572,25 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 							//item2.decorate(new UIFreeAttributeDecorator("style", "border: 1px solid black"));
 						}
 
-						// some object types seem to need a specification
+						// some object types seem to need a specification, so supply our default if necessary
 						if (lengthOk(height) && lengthOk(width)) {
 							item2.decorate(new UIFreeAttributeDecorator("height", height.getOld())).decorate(new UIFreeAttributeDecorator("width", width.getOld()));
+						} else {
+						    if (oMimeType.startsWith("audio/"))
+							item2.decorate(new UIFreeAttributeDecorator("height", "100")).decorate(new UIFreeAttributeDecorator("width", "400"));
+						    else
+							item2.decorate(new UIFreeAttributeDecorator("height", "300")).decorate(new UIFreeAttributeDecorator("width", "400"));
 						}
-
 						if (!useEmbed) {
 							if (useFlvPlayer) {
 								UIOutput.make(tableRow, "flashvars").decorate(new UIFreeAttributeDecorator("value", "src=" + URLEncoder.encode(myUrl() + i.getItemURL(simplePageBean.getCurrentSiteId(),currentPage.getOwner()))));
-							}
+								// need wmode=opaque for player to stack properly with dialogs, etc.
+								// there is a performance impact, but I'm guessing in our application we don't 
+								// need ultimate performance for embedded video. I'm setting it only for
+								// the player, so flash games and other applications will still get wmode=window
+								UIOutput.make(tableRow, "wmode");
+							} else if (mimeType.equals("application/x-shockwave-flash"))
+								UIOutput.make(tableRow, "wmode");
 
 							UIOutput.make(tableRow, "movieURLInject").decorate(new UIFreeAttributeDecorator("value", movieUrl));
 							if (!isMp4) {
@@ -1600,9 +1611,14 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 								item2.decorate(new UIFreeAttributeDecorator("type", oMimeType));
 							}
 
-							// some object types seem to need a specification
+							// some object types seem to need a specification, so give a default if needed
 							if (lengthOk(height) && lengthOk(width)) {
 								item2.decorate(new UIFreeAttributeDecorator("height", height.getOld())).decorate(new UIFreeAttributeDecorator("width", width.getOld()));
+							} else {
+							    if (oMimeType.startsWith("audio/"))
+								item2.decorate(new UIFreeAttributeDecorator("height", "100")).decorate(new UIFreeAttributeDecorator("width", "100%"));
+							    else
+								item2.decorate(new UIFreeAttributeDecorator("height", "300")).decorate(new UIFreeAttributeDecorator("width", "100%"));
 							}
 
 							if (!useEmbed) {

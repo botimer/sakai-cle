@@ -8,11 +8,10 @@
 	<sakai:view title="My Profile" rendered="#{ProfileTool.showTool}">
 	<h:form id="editProfileForm">
 	<!--edit.jsp -->
-		<div class="navIntraTool">
-		 	<h:outputText id="editprofile" value="#{msgs.profile_edit}" styleClass="currentView" />
-			<h:outputText id="seperaror" value=" | "/>
-			<h:commandLink id="cancel" immediate="true" action="#{SearchTool.processCancel}"  value="#{msgs.profile_show}" />
-		</div>
+		<ul class="navIntraTool">
+		 	<li><span><h:commandLink id="editProfile" title ="#{msgs.profile_edit}" action="#{ProfileTool.processActionEdit}" immediate="true" value="#{msgs.profile_edit}" /></span></li>
+      <li><span><h:commandLink id="cancel" immediate="true" action="#{SearchTool.processCancel}"  value="#{msgs.profile_show}" /></span></li>
+		</ul>
 		<sakai:tool_bar_message value="#{msgs.profile_edit_title}" />
  			 <div class="instruction">
   			    <h:outputText id="er1"  value="#{msgs.info_A}"/>

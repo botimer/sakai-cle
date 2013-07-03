@@ -15,6 +15,14 @@ function is_lti_request() {
    return false;
 }
 
+function htmlspec_utf8($string) {
+	return htmlspecialchars($string,ENT_QUOTES,$encoding = 'UTF-8');
+}
+
+function htmlent_utf8($string) {
+	return htmlentities($string,ENT_QUOTES,$encoding = 'UTF-8');
+}
+
 // Basic LTI Class that does the setup and provides utility
 // functions
 class BLTI {
@@ -119,6 +127,7 @@ class BLTI {
         // Store the launch information in the session for later
         $newinfo = array();
         foreach($_POST as $key => $value ) {
+		    if (get_magic_quotes_gpc()) $value = stripslashes($value);
             if ( $key == "basiclti_submit" ) continue;
             if ( strpos($key, "oauth_") === false ) {
                 $newinfo[$key] = $value;
@@ -332,9 +341,9 @@ class BLTI {
     }
 
     if ( headers_sent() ) {
-      echo('<a href="'.htmlentities($location).'">Continue</a>'."\n");
+      echo('<a href="'.htmlent_utf8($location).'">Continue</a>'."\n");
     } else {
-        $location = htmlentities($this->addSession($location));
+        $location = htmlent_utf8($this->addSession($location));
       header("Location: $location");
     }
     }
@@ -415,7 +424,7 @@ class TrivialOAuthDataStore extends OAuthDataStore {
 function signParameters($oldparms, $endpoint, $method, $oauth_consumer_key, $oauth_consumer_secret,
     $submit_text = false, $org_id = false, $org_desc = false)
 {
-    global $last_base_string;
+    global $LastOAuthBodyBaseString;
     $parms = $oldparms;
     if ( ! isset($parms["lti_version"]) ) $parms["lti_version"] = "LTI-1p0";
     if ( ! isset($parms["lti_message_type"]) ) $parms["lti_message_type"] = "basic-lti-launch-request";
@@ -433,7 +442,7 @@ function signParameters($oldparms, $endpoint, $method, $oauth_consumer_key, $oau
     $acc_req->sign_request($hmac_method, $test_consumer, $test_token);
 
     // Pass this back up "out of band" for debugging
-    $last_base_string = $acc_req->get_signature_base_string();
+    $LastOAuthBodyBaseString = $acc_req->get_signature_base_string();
 
     $newparms = $acc_req->get_parameters();
 
@@ -449,7 +458,7 @@ function signParameters($oldparms, $endpoint, $method, $oauth_consumer_key, $oau
 }
 
   function postLaunchHTML($newparms, $endpoint, $debug=false, $iframeattr=false) {
-    global $last_base_string;
+    global $LastOAuthBodyBaseString;
     $r = "<div id=\"ltiLaunchFormSubmitArea\">\n";
     if ( $iframeattr ) {
         $r = "<form action=\"".$endpoint."\" name=\"ltiLaunchForm\" id=\"ltiLaunchForm\" method=\"post\" target=\"basicltiLaunchFrame\" encType=\"application/x-www-form-urlencoded\">\n" ;
@@ -458,8 +467,8 @@ function signParameters($oldparms, $endpoint, $method, $oauth_consumer_key, $oau
     }
     $submit_text = $newparms['ext_submit'];
     foreach($newparms as $key => $value ) {
-        $key = htmlspecialchars($key);
-        $value = htmlspecialchars($value);
+        $key = htmlspec_utf8($key);
+        $value = htmlspec_utf8($value);
         if ( $key == "ext_submit" ) {
             $r .= "<input type=\"submit\" name=\"";
         } else {
@@ -491,12 +500,12 @@ function signParameters($oldparms, $endpoint, $method, $oauth_consumer_key, $oau
         $r .= $endpoint . "<br/>\n&nbsp;<br/>\n";
         $r .=  "<b>".get_string("basiclti_parameters","basiclti")."</b><br/>\n";
         foreach($newparms as $key => $value ) {
-            $key = htmlspecialchars($key);
-            $value = htmlspecialchars($value);
+            $key = htmlspec_utf8($key);
+            $value = htmlspec_utf8($value);
             $r .= "$key = $value<br/>\n";
         }
         $r .= "&nbsp;<br/>\n";
-        $r .= "<p><b>".get_string("basiclti_base_string","basiclti")."</b><br/>\n".$last_base_string."</p>\n";
+        $r .= "<p><b>".get_string("basiclti_base_string","basiclti")."</b><br/>\n".$LastOAuthBodyBaseString."</p>\n";
         $r .= "</div>\n";
     }
     $r .= "</form>\n";
@@ -533,7 +542,7 @@ function do_post_request($url, $data, $optional_headers = null)
   if ($optional_headers !== null) {
      $header = $optional_headers . "\r\n";
   }
-  $header = $header . "Content-type: application/x-www-form-urlencoded\r\n";
+  $header = $header . "Content-Type: application/x-www-form-urlencoded\r\n";
 
   return do_post($url,$data,$header);
 }
@@ -711,7 +720,6 @@ function sendOAuthBodyPOST($method, $endpoint, $oauth_consumer_key, $oauth_consu
     // Pass this back up "out of band" for debugging
     global $LastOAuthBodyBaseString;
     $LastOAuthBodyBaseString = $acc_req->get_signature_base_string();
-    echo($LastOAuthBodyBaseString."\n");
 
     $header = $acc_req->to_header();
     $header = $header . "\r\nContent-Type: " . $content_type . "\r\n";
@@ -744,8 +752,8 @@ function do_post($url, $body, $header) {
     $LastPOSTMethod = "Error";
     echo("Unable to post<br/>\n");
     echo("Url=$url <br/>\n");
-    echo("Headers:<br/>\n$headers<br/>\n");
-    echo("Body:<br/>\n$data<br/>\n");
+    echo("Headers:<br/>\n$header<br/>\n");
+    echo("Body:<br/>\n$body<br/>\n");
     throw new Exception("Unable to post");
 }
 
@@ -826,13 +834,20 @@ function post_stream($url, $body, $header) {
 function post_curl($url, $body, $header) {
   if ( ! function_exists('curl_init') ) return false;
   global $last_http_response;
+  global $LastHeadersSent;
+  global $LastHeadersReceived;
 
   $ch = curl_init();
   curl_setopt($ch, CURLOPT_URL, $url);
 
-  // Make sure that the header is an array
+  // Make sure that the header is an array and pitch white space
+  $LastHeadersSent = trim($header);
   $header = explode("\n", trim($header));
-  curl_setopt ($ch, CURLOPT_HTTPHEADER, $header);
+  $htrim = Array();
+  foreach ( $header as $h ) {
+    $htrim[] = trim($h);
+  }
+  curl_setopt ($ch, CURLOPT_HTTPHEADER, $htrim);
 
   curl_setopt($ch, CURLOPT_POST, 1);
   curl_setopt($ch, CURLOPT_POSTFIELDS, $body);

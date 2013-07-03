@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/portal/trunk/portal-impl/impl/src/java/org/sakaiproject/portal/charon/handlers/SiteHandler.java $
- * $Id: SiteHandler.java 126131 2013-06-21 22:54:32Z matthew@longsight.com $
+ * $Id: SiteHandler.java 126225 2013-06-25 21:22:15Z ottenhoff@longsight.com $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008 The Sakai Foundation
@@ -70,7 +70,7 @@ import org.sakaiproject.util.ResourceLoader;
 /**
  * @author ieb
  * @since Sakai 2.4
- * @version $Rev: 126131 $
+ * @version $Rev: 126225 $
  */
 public class SiteHandler extends WorksiteHandler
 {
@@ -772,6 +772,17 @@ public class SiteHandler extends WorksiteHandler
 				// rcontext.put("tabsSitLog",
 				// Web.escapeHtml(rb.getString("sit_log")));
 			}
+
+			boolean allowAddSite = false;
+			if(SiteService.allowAddCourseSite()) {
+				allowAddSite = true;
+			} else if (SiteService.allowAddPortfolioSite()) {
+				allowAddSite = true;
+			} else if (SiteService.allowAddProjectSite()) {
+				allowAddSite = true;
+			}
+
+			rcontext.put("allowAddSite",allowAddSite);
 		}
 	}
 	/**

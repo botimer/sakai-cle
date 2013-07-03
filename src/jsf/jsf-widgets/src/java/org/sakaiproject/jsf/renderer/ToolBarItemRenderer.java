@@ -1,6 +1,6 @@
 /**********************************************************************************
 * $URL: https://source.sakaiproject.org/svn/jsf/trunk/jsf-widgets/src/java/org/sakaiproject/jsf/renderer/ToolBarItemRenderer.java $
-* $Id: ToolBarItemRenderer.java 105077 2012-02-24 22:54:29Z ottenhoff@longsight.com $
+* $Id: ToolBarItemRenderer.java 126577 2013-07-02 12:11:17Z azeckoski@unicon.net $
 ***********************************************************************************
 *
  * Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008 The Sakai Foundation
@@ -56,6 +56,7 @@ public class ToolBarItemRenderer extends JSFDepends.CommandLinkRenderer
       ResponseWriter writer = context.getResponseWriter();
       writer.write(""); //normally, add aria and class attributes and close the span
     }
+
   }
 
   public void encodeChildren(FacesContext context, UIComponent component) throws IOException

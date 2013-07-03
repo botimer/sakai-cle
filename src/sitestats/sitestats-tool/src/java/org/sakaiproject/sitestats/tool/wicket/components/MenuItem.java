@@ -1,6 +1,6 @@
 /**
  * $URL: https://source.sakaiproject.org/svn/sitestats/trunk/sitestats-tool/src/java/org/sakaiproject/sitestats/tool/wicket/components/MenuItem.java $
- * $Id: MenuItem.java 105078 2012-02-24 23:00:38Z ottenhoff@longsight.com $
+ * $Id: MenuItem.java 126330 2013-06-27 13:57:42Z azeckoski@unicon.net $
  *
  * Copyright (c) 2006-2009 The Sakai Foundation
  *
@@ -67,17 +67,19 @@ public class MenuItem extends Panel {
 	@Override
 	protected void onBeforeRender() {
 		Class currentPageClass = getPage().getClass();
-		if(itemPageClass.equals(currentPageClass)) {
-			if(first) {
-				menuItemLinkHolder.setVisible(false);
-			}else{
-				menuItemLink.setVisible(false);
-			}
-			menuItemLabel.setVisible(true);
-		}else{
-			menuItemLinkHolder.setVisible(true);
-			menuItemLabel.setVisible(false);
-		}
+		//if(itemPageClass.equals(currentPageClass)) {
+		//	if(first) {
+		//		menuItemLinkHolder.setVisible(false);
+		//	}else{
+		//		menuItemLink.setVisible(false);
+		//	}
+		//	menuItemLabel.setVisible(true);
+		//}else{
+		//	menuItemLinkHolder.setVisible(true);
+		//	menuItemLabel.setVisible(false);
+		//}
+		menuItemLinkHolder.setVisible(true);
+		menuItemLabel.setVisible(false);
 		super.onBeforeRender();
 	}
 }

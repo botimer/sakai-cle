@@ -750,9 +750,9 @@ $(function() {
 		
 		$('.question-link').click(function(){
 			closeDropdown();
-            $('li').removeClass('editInProgress');
+			$('li').removeClass('editInProgress');
 			var position =  $(this).position();
-			
+
 			$('#question-error-container').hide();
 			$("#questionEditId").val("-1");
 			$("#question-text-input").val("");
@@ -902,9 +902,10 @@ $(function() {
 			$("#delete-question-div").show();
 			
 			var position = row.position();
-            $("#delete-question-div").hide();
-            $('.edit-col').addClass('edit-colHidden');
-            $(this).closest('li').addClass('editInProgress');
+			$("#delete-question-div").hide();
+			$('.edit-col').addClass('edit-colHidden');
+			$(this).closest('li').addClass('editInProgress');
+			$('#question-error-container').hide();
 
 			$("#question-dialog").dialog("option", "position", [position.left, position.top]);
 			oldloc = $(this);
@@ -1967,7 +1968,7 @@ function addHighlight() {
 	if(!lessonBuilderAnimationLocked) {
 		if(!$("#dropDownDiv").is(":visible")) {
 			lessonBuilderAnimationLocked = true;
-			hideMultimedia();
+			//hideMultimedia();
 			reposition();
 			$("#dropDownDiv").show("slide", {direction: "up"}, 300, unlockAnimation);
 			$(".add-forum-link").focus();
@@ -1982,7 +1983,7 @@ function removeHighlight() {
 		if($("#dropDownDiv").is(":visible") && !dropdownViaClick) {
 			hasBeenInMenu = false;
 			lessonBuilderAnimationLocked = true;
-			unhideMultimedia();
+			//unhideMultimedia();
 			$("#dropDownDiv").hide("slide", {direction: "up"}, 300, unlockAnimation);
 			$(".dropdown a").focus();
 		}
@@ -1996,13 +1997,13 @@ function toggleDropdown() {
 		if($("#dropDownDiv").is(":visible")) {
 			lessonBuilderAnimationLocked = true;
 			hasBeenInMenu = false;
-			unhideMultimedia();
+			//unhideMultimedia();
 			$("#dropDownDiv").hide("slide", {direction: "up"}, 300, unlockAnimation);
 			dropdownViaClick = false;
 			$(".dropdown a").focus();
 		}else {
 			lessonBuilderAnimationLocked = true;
-			hideMultimedia();
+			//hideMultimedia();
 			reposition();
 			$("#dropDownDiv").show("slide", {direction: "up"}, 300, unlockAnimation);
 			$(".add-forum-link").focus();
@@ -2017,7 +2018,7 @@ function closeDropdown() {
 	if(!lessonBuilderAnimationLocked) {
 		if($("#dropDownDiv").is(":visible")) {
 			hasBeenInMenu = false;
-			unhideMultimedia();
+			//unhideMultimedia();
 			$("#dropDownDiv").hide();
 			dropdownViaClick = false;
 			$(".dropdown a").focus();
@@ -2159,12 +2160,11 @@ function checkQuestionGradedForm() {
 
 // Prepares the question dialog to be submitted
 function prepareQuestionDialog() {
-    alert($("#question-gradebook-title"));
 	if ($("#question-graded").attr("checked") && !isFinite(parseFloat($("#question-max").val()))) {
 	    $('#question-error').text(msg("simplepage.integer-expected"));
 	    $('#question-error-container').show();
 	    return false;
-	} else if($("#question-graded").attr("checked") && $("#question-gradebook-title") == '') {
+	} else if($("#question-graded").attr("checked") && $("#question-gradebook-title").val() == '') {
 	    $('#question-error').text(msg("simplepage.gbname-expected"));
 	    $('#question-error-container').show();
 	    return false;

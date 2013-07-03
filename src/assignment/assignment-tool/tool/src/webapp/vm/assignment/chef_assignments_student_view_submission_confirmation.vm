@@ -1,4 +1,4 @@
-<!-- $Id: chef_assignments_student_view_submission_confirmation.vm 118096 2013-01-04 17:42:01Z holladay@longsight.com $ -->
+<!-- $Id: chef_assignments_student_view_submission_confirmation.vm 126289 2013-06-26 12:39:28Z holladay@longsight.com $ -->
 <!-- start:  chef_assignments_student_view_submission_confirmation.vm  -->
 ## showing the submission confirmation page
 <link href="/sakai-assignment-tool/css/assignment.css" type="text/css" rel="stylesheet" media="all" />
@@ -185,7 +185,7 @@
 		#end	
 		#if ($!linkInvoked)
 		<p class="act">
-			<input type="submit" accesskey="x" onClick="window.close();" name="eventSubmit_doConfirm_assignment_submission" value="Close and Exit"  class="active" />
+			<input type="submit" accesskey="x" onClick="window.close();" name="eventSubmit_doConfirm_assignment_submission" value="$tlang.getString("gen.closeexit")"  class="active" />
 		</p>		
 		#else	
 		<p class="act">

@@ -1,6 +1,6 @@
  /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/announcement/trunk/announcement-tool/tool/src/java/org/sakaiproject/announcement/tool/AnnouncementAction.java $
- * $Id: AnnouncementAction.java 123489 2013-05-01 20:13:34Z azeckoski@unicon.net $
+ * $Id: AnnouncementAction.java 126581 2013-07-02 12:41:14Z azeckoski@unicon.net $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008, 2009 The Sakai Foundation
@@ -4988,7 +4988,7 @@ public class AnnouncementAction extends PagedResourceActionII
 
 		if ((sortedBy == null) || sortedBy.equals(""))
 		{
-			sortedBy= getCurrentOrder();
+			sortedBy = isOnWorkspaceTab() ? SORT_DATE : getCurrentOrder();
 			asc = false;
 		}
 		SortedIterator rvSorted = new SortedIterator(rv.iterator(), new AnnouncementComparator(sortedBy, asc));

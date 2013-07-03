@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/jsf/trunk/jsf-widgets/src/java/org/sakaiproject/jsf/tag/ToolBarItemTag.java $
- * $Id: ToolBarItemTag.java 105077 2012-02-24 22:54:29Z ottenhoff@longsight.com $
+ * $Id: ToolBarItemTag.java 126577 2013-07-02 12:11:17Z azeckoski@unicon.net $
  **********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2008 The Sakai Foundation
@@ -21,20 +21,43 @@
 
 package org.sakaiproject.jsf.tag;
 
+import javax.faces.component.UIComponent;
+
 import org.sakaiproject.jsf.util.JSFDepends;
+import org.sakaiproject.jsf.util.TagUtil;
 
 
 public class ToolBarItemTag extends JSFDepends.CommandButtonTag
 {
-  public String getComponentType()
-  {
-    return "org.sakaiproject.ToolBarItem";
-  }
 
-  public String getRendererType()
-  {
-    return "org.sakaiproject.ToolBarItem";
-  }
+    /**
+     * Indicates if the tool bar item is "current" - i.e. represents the current view being rendered
+     * In other words, if this is current then it is the tool bar item indicating the current page the user is viewing
+     */
+    String current = null; // NOTE: MUST be a string to work right
+    public String getCurrent() {
+        return current;
+    }
+    public void setCurrent(String current) {
+        this.current = current;
+    }
+
+    protected void setProperties(UIComponent component) {
+        super.setProperties(component);
+        if (current != null) {
+            TagUtil.setBoolean(component, "current", current);
+        }
+    }
+
+    public String getComponentType()
+    {
+        return "org.sakaiproject.ToolBarItem";
+    }
+
+    public String getRendererType()
+    {
+        return "org.sakaiproject.ToolBarItem";
+    }
 }
 
 
