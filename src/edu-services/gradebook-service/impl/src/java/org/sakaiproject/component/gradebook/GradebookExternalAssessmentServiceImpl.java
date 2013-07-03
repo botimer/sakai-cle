@@ -47,6 +47,8 @@ import org.sakaiproject.service.gradebook.shared.AssignmentHasIllegalPointsExcep
 import org.sakaiproject.service.gradebook.shared.ConflictingAssignmentNameException;
 import org.sakaiproject.service.gradebook.shared.ConflictingExternalIdException;
 import org.sakaiproject.service.gradebook.shared.ExternalAssignmentProvider;
+import org.sakaiproject.service.gradebook.shared.ExternalAssignmentProviderCompat;
+import org.sakaiproject.service.gradebook.shared.GradebookService;
 import org.sakaiproject.service.gradebook.shared.GradebookExternalAssessmentService;
 import org.sakaiproject.service.gradebook.shared.GradebookNotFoundException;
 import org.sakaiproject.service.gradebook.shared.InvalidCategoryException;
@@ -64,10 +66,15 @@ public class GradebookExternalAssessmentServiceImpl extends BaseHibernateManager
     // Special logger for data contention analysis.
     private static final Log logData = LogFactory.getLog(GradebookExternalAssessmentServiceImpl.class.getName() + ".GB_DATA");
 
+    private GradebookService gradebookService;
     private EventTrackingService eventTrackingService;
 	
     public void setEventTrackingService(EventTrackingService eventTrackingService) {
         this.eventTrackingService = eventTrackingService;
+    }
+
+    public void setGradebookService(GradebookService gradebookService) {
+        this.gradebookService = gradebookService;
     }
 
 	private ConcurrentHashMap<String, ExternalAssignmentProvider> externalProviders =
@@ -446,6 +453,9 @@ public class GradebookExternalAssessmentServiceImpl extends BaseHibernateManager
 	{
         // SAK-19668
 		final Assignment assignment = getExternalAssignment(gradebookUid, externalId);
+		// If we check all available providers for an existing, externally maintained assignment
+		// and none manage it, return false since grouping is the outlier case and all items
+		// showed for all users until the 2.9 release.
 		boolean result = false;
 		if (assignment == null) {
             result = false;
@@ -468,33 +478,64 @@ public class GradebookExternalAssessmentServiceImpl extends BaseHibernateManager
 	{
 	    // SAK-19668
 		final Assignment assignment = getExternalAssignment(gradebookUid, externalId);
+		// If we check all available providers for an existing, externally maintained assignment
+		// and none manage it, assume that it should be visible. This matches the pre-2.9 behavior
+		// when a provider is not implemented to handle the assignment. Also, any provider that
+		// returns true will allow access (logical OR of responses).
 		boolean result = false;
+		boolean providerResponded = false;
 		if (assignment == null) {
 		    result = false;
 			log.info("No assignment found for external assignment check: gradebookUid="+gradebookUid+", externalId="+externalId);
 		} else {
-    		for (ExternalAssignmentProvider provider : getExternalAssignmentProviders().values()) {
-    			if (provider.isAssignmentDefined(externalId)) {
-    			    result = provider.isAssignmentVisible(externalId, userId);
-    			}
-    		}
+			for (ExternalAssignmentProvider provider : getExternalAssignmentProviders().values()) {
+				if (provider.isAssignmentDefined(externalId)) {
+					providerResponded = true;
+					result = result || provider.isAssignmentVisible(externalId, userId);
+				}
+			}
 		}
-		return result;
+		return result || !providerResponded;
 	}
 
 	public Map<String, String> getExternalAssignmentsForCurrentUser(String gradebookUid)
 		throws GradebookNotFoundException
 	{
 		final Gradebook gradebook = getGradebook(gradebookUid);
-		Map<String, String> allAssignments = new HashMap<String, String>();
+
+		Map<String, String> visibleAssignments = new HashMap<String, String>();
+		Set<String> allAssignments = new HashSet<String>();
 		for (ExternalAssignmentProvider provider : getExternalAssignmentProviders().values()) {
 			String appKey = provider.getAppKey();
 			List<String> assignments = provider.getExternalAssignmentsForCurrentUser(gradebookUid);
 			for (String externalId : assignments) {
-				allAssignments.put(externalId, appKey);
+				visibleAssignments.put(externalId, appKey);
+			}
+
+			// TODO: This is a temporary cast; if this method proves to be the right fit
+			//       and perform well enough, it will be moved to the regular interface.
+			if (provider instanceof ExternalAssignmentProviderCompat) {
+				allAssignments.addAll(
+						((ExternalAssignmentProviderCompat) provider).getAllExternalAssignments(gradebookUid));
 			}
 		}
-		return allAssignments;
+
+		// We include those items that the gradebook has marked as externally maintained, but no provider has
+		// identified as items under its authority. This maintains the behavior prior to the grouping support
+		// introduced for the 2.9 release (SAK-11485 and SAK-19688), where a tool that does not have a provider
+		// implemented does not have its items filtered for student views and grading.
+		List<org.sakaiproject.service.gradebook.shared.Assignment> gbAssignments = gradebookService.getViewableAssignmentsForCurrentUser(gradebookUid);
+		for (org.sakaiproject.service.gradebook.shared.Assignment assignment : gbAssignments) {
+			String id = assignment.getExternalId();
+			if (assignment.isExternallyMaintained() && !allAssignments.contains(id) && !visibleAssignments.containsKey(id)) {
+				if (log.isDebugEnabled()) {
+					log.debug(String.format("External assignment in gradebook [%s] is not handled by a provider; ID: %s", gradebookUid, id));
+				}
+				visibleAssignments.put(id, null);
+			}
+		}
+
+		return visibleAssignments;
 	}
 
 	public Map<String, List<String>> getVisibleExternalAssignments(String gradebookUid, Collection<String> studentIds)
