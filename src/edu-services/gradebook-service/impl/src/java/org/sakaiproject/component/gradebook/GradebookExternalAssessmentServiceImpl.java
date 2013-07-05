@@ -21,6 +21,7 @@
 **********************************************************************************/
 package org.sakaiproject.component.gradebook;
 
+import java.lang.reflect.Method;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.text.ParseException;
@@ -87,6 +88,9 @@ public class GradebookExternalAssessmentServiceImpl extends BaseHibernateManager
         return externalProviders;
     }
 
+    private ConcurrentHashMap<ExternalAssignmentProvider, Method> providerMethods =
+        new ConcurrentHashMap<ExternalAssignmentProvider, Method>();
+
     /* (non-Javadoc)
      * @see org.sakaiproject.service.gradebook.shared.GradebookExternalAssessmentService#registerExternalAssignmentProvider(org.sakaiproject.service.gradebook.shared.ExternalAssignmentProvider)
      */
@@ -95,6 +99,21 @@ public class GradebookExternalAssessmentServiceImpl extends BaseHibernateManager
             throw new IllegalArgumentException("provider cannot be null");
         } else {
             getExternalAssignmentProviders().put(provider.getAppKey(), provider);
+
+            // Try to duck-type the provider so it doesn't have to declare the Compat interface.
+            // TODO: Remove this handling once the Compat interface has been merged or the issue is otherwise resolved.
+            if (!(provider instanceof ExternalAssignmentProviderCompat)) {
+                try {
+                    Method m = provider.getClass().getDeclaredMethod("getAllExternalAssignments", String.class);
+                    if (m.getReturnType().equals(List.class)) {
+                        providerMethods.put(provider, m);
+                    }
+                } catch (Exception e) {
+                    log.warn("ExternalAssignmentProvider [" + provider.getAppKey() + " / " + provider.getClass().toString()
+                            + "] does not implement getAllExternalAssignments. It will not be able to exclude items from student views/grades. "
+                            + "See the ExternalAssignmentProviderCompat interface and SAK-23733 for details.");
+                }
+            }
         }
     }
 
@@ -517,6 +536,14 @@ public class GradebookExternalAssessmentServiceImpl extends BaseHibernateManager
 			if (provider instanceof ExternalAssignmentProviderCompat) {
 				allAssignments.addAll(
 						((ExternalAssignmentProviderCompat) provider).getAllExternalAssignments(gradebookUid));
+			} else if (providerMethods.containsKey(provider)) {
+				Method m = providerMethods.get(provider);
+				try {
+					List<String> reflectedAssignments = (List<String>) m.invoke(provider, gradebookUid);
+					allAssignments.addAll(reflectedAssignments);
+				} catch (Exception e) {
+					log.debug("Exception calling getAllExternalAssignments", e);
+				}
 			}
 		}
 
