@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/sam/trunk/samigo-qti/src/java/org/sakaiproject/tool/assessment/qti/helper/ExtractionHelper.java $
- * $Id: ExtractionHelper.java 124466 2013-05-17 23:11:31Z ktsao@stanford.edu $
+ * $Id: ExtractionHelper.java 126626 2013-07-03 18:23:28Z ktsao@stanford.edu $
  ***********************************************************************************
  *
  * Copyright (c) 2005, 2006, 2007, 2008, 2009 The Sakai Foundation
@@ -99,7 +99,7 @@ import org.xml.sax.SAXException;
  * <p> </p>
  * <p>Copyright: Copyright (c) 2005 Sakai</p>
  * @author Ed Smiley esmiley@stanford.edu
- * @version $Id: ExtractionHelper.java 124466 2013-05-17 23:11:31Z ktsao@stanford.edu $
+ * @version $Id: ExtractionHelper.java 126626 2013-07-03 18:23:28Z ktsao@stanford.edu $
  */
 
 public class ExtractionHelper
@@ -814,13 +814,17 @@ public class ExtractionHelper
     else if (releasedTo != null && releasedTo.indexOf("Selected Groups") > -1){
     	releasedTo = AgentFacade.getCurrentSiteName();
     }
+    else if (releasedTo != null && releasedTo.indexOf(AuthoringConstantStrings.ANONYMOUS) > -1){
+	releasedTo = AuthoringConstantStrings.ANONYMOUS;
+    }
     else {
     	if (AgentFacade.getCurrentSiteName() != null) {
     		releasedTo = AgentFacade.getCurrentSiteName();
     	}
-    	else {
-    		control.setReleaseTo(releasedTo);
-    	}
+    }
+
+    if (releasedTo != null) {
+	control.setReleaseTo(releasedTo);
     }
     
     // Timed Assessment

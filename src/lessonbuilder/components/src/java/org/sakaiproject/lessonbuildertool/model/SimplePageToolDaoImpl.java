@@ -900,9 +900,9 @@ public class SimplePageToolDaoImpl extends HibernateDaoSupport implements Simple
 	}
 
 
-    public SimplePageGroup makeGroup(String itemId, String groupId, String groups) {
-		return new SimplePageGroupImpl(itemId, groupId, groups);
-    }
+	public SimplePageGroup makeGroup(String itemId, String groupId, String groups, String siteId) {
+		return new SimplePageGroupImpl(itemId, groupId, groups, siteId);
+	}
 
 	public SimplePageQuestionResponse makeQuestionResponse(String userId, long questionId) {
 		return new SimplePageQuestionResponseImpl(userId, questionId);
@@ -1223,38 +1223,26 @@ public class SimplePageToolDaoImpl extends HibernateDaoSupport implements Simple
 		return newList;
 	}
 
-	class Cons {
-	    String car;
-	    String cdr;
+	public List<SimplePageItem>findGradebookItems(final String gradebookUid) {
+
+	    String hql = "select item from org.sakaiproject.lessonbuildertool.SimplePageItem item, org.sakaiproject.lessonbuildertool.SimplePage page where item.pageId = page.pageId and page.siteId = :site and (item.gradebookId is not null or item.altGradebook is not null)";
+	    return getHibernateTemplate().findByNamedParam(hql, "site", gradebookUid);
 	}
-
-	public List<String>findGradebookIds(final String gradebookUid) {
-
-	    Object [] fields = new Object[1];
-	    fields[0] = gradebookUid;
-	    List<Cons> ids = SqlService.dbRead("select a.gradebookId, a.altGradebook from lesson_builder_items a, lesson_builder_pages b where a.pageId = b.pageId and b.siteId = ? and (a.gradebookId is not null or a.altGradebook is not null)", fields, new SqlReader() {
-    		public Object readSqlResultRecord(ResultSet result) {
-    			try {
-			    Cons pair = new Cons();
-			    pair.car = result.getString(1);
-			    pair.cdr = result.getString(2);
-			    return pair;
-    			} catch (SQLException e) {
-			    log.warn("findGradebookIds " + gradebookUid + " : " + e);
-			    return null;
-    			}
-    		}
-		});
 	    
-	    List<String>ret = new ArrayList<String>();
-	    for (Cons p: ids) {
-		if (p.car != null && p.car.length() > 0)
-		    ret.add(p.car);
-		if (p.cdr != null && p.cdr.length() > 0)
-		    ret.add(p.cdr);
-	    }
+	// items in lesson_builder_groups for specified site, map of itemId to groups
+	public Map<String,String> getExternalAssigns(String siteId) {
+
+	    DetachedCriteria d = DetachedCriteria.forClass(SimplePageGroup.class)
+		.add(Restrictions.eq("siteId", siteId));
+
+	    List<SimplePageGroup> list = getHibernateTemplate().findByCriteria(d);
+
+	    Map<String,String>ret = new HashMap<String,String>();	
+	    for (SimplePageGroup group: list)
+		ret.put(group.getItemId(), group.getGroups());
 
 	    return ret;
-	}
 	    
+	}
+
 }

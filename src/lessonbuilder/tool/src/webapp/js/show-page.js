@@ -247,6 +247,11 @@ $(function() {
                         } else {
                             $("#export-cc-link").attr('href', $("#export-cc-link").attr('href').replace(/version=[0-9.]*/, "version=1.2"));
                         }
+                        if ($('#export-cc-bank').attr('checked') == 'checked') {
+                            $("#export-cc-link").attr('href', $("#export-cc-link").attr('href').replace(/bank=[01]/, "bank=1"));
+                        } else {
+                            $("#export-cc-link").attr('href', $("#export-cc-link").attr('href').replace(/bank=[01]/, "bank=0"));
+                        }
 			$("#export-cc-link").get(0).click();
 			closeExportCcDialog();
 			return false;
@@ -1413,7 +1418,7 @@ $(function() {
 		});
 		
 		$('body').bind('dialogopen', function(event) {
-            //hideMultimedia();
+			hideMultimedia();
 		});
 		
 		$('body').bind('dialogclose', function(event) {
@@ -1431,7 +1436,7 @@ $(function() {
 				$('#comments-dialog').dialog('isOpen') ||
 				$('#student-dialog').dialog('isOpen')) ||
 				$('#question-dialog').dialog('isOpen')) {
-                    //unhideMultimedia();
+		    unhideMultimedia();
                     $('.edit-col').removeClass('edit-colHidden');
                     $('li').removeClass('editInProgress')
 				}
@@ -1968,7 +1973,7 @@ function addHighlight() {
 	if(!lessonBuilderAnimationLocked) {
 		if(!$("#dropDownDiv").is(":visible")) {
 			lessonBuilderAnimationLocked = true;
-			//hideMultimedia();
+			hideMultimedia();
 			reposition();
 			$("#dropDownDiv").show("slide", {direction: "up"}, 300, unlockAnimation);
 			$(".add-forum-link").focus();
@@ -1983,7 +1988,7 @@ function removeHighlight() {
 		if($("#dropDownDiv").is(":visible") && !dropdownViaClick) {
 			hasBeenInMenu = false;
 			lessonBuilderAnimationLocked = true;
-			//unhideMultimedia();
+			unhideMultimedia();
 			$("#dropDownDiv").hide("slide", {direction: "up"}, 300, unlockAnimation);
 			$(".dropdown a").focus();
 		}
@@ -1997,13 +2002,13 @@ function toggleDropdown() {
 		if($("#dropDownDiv").is(":visible")) {
 			lessonBuilderAnimationLocked = true;
 			hasBeenInMenu = false;
-			//unhideMultimedia();
+			unhideMultimedia();
 			$("#dropDownDiv").hide("slide", {direction: "up"}, 300, unlockAnimation);
 			dropdownViaClick = false;
 			$(".dropdown a").focus();
 		}else {
 			lessonBuilderAnimationLocked = true;
-			//hideMultimedia();
+			hideMultimedia();
 			reposition();
 			$("#dropDownDiv").show("slide", {direction: "up"}, 300, unlockAnimation);
 			$(".add-forum-link").focus();
@@ -2018,7 +2023,7 @@ function closeDropdown() {
 	if(!lessonBuilderAnimationLocked) {
 		if($("#dropDownDiv").is(":visible")) {
 			hasBeenInMenu = false;
-			//unhideMultimedia();
+			unhideMultimedia();
 			$("#dropDownDiv").hide();
 			dropdownViaClick = false;
 			$(".dropdown a").focus();
@@ -2049,12 +2054,12 @@ function unlockAnimation() {
 }
 
 function hideMultimedia() {
-	$('.hideOnDialog').hide();
+    $('.hideOnDialog').css('visibility','hidden');
 }
 
 // When dialogs close, this shows the stuff that was hidden
 function unhideMultimedia() {
-	$('.hideOnDialog').show();
+	$('.hideOnDialog').css('visibility','visible');
 	$("#outer").height("auto");
 	setMainFrameHeight(window.name);
 }
@@ -2166,6 +2171,20 @@ function prepareQuestionDialog() {
 	    return false;
 	} else if($("#question-graded").attr("checked") && $("#question-gradebook-title").val() == '') {
 	    $('#question-error').text(msg("simplepage.gbname-expected"));
+	    $('#question-error-container').show();
+	    return false;
+	} else if ($("#question-text-input").val() == '') {
+	    $('#question-error').text(msg("simplepage.missing-question-text"));
+	    $('#question-error-container').show();
+	    return false;
+	} else if ($("#multipleChoiceSelect").attr("checked") == 'checked' && 
+		   $(".question-multiplechoice-answer").filter(function(index){return $(this).val() != '';}).length < 2) {
+	    $('#question-error').text(msg("simplepage.question-need-2"));
+	    $('#question-error-container').show();
+	    return false;
+	} else if ($("#shortanswerSelect").attr("checked") == 'checked' && 
+		   $(".question-shortanswer-answer").filter(function(index){return $(this).val()!="";}).length < 1) {
+	    $('#question-error').text(msg("simplepage.question-need-1"));
 	    $('#question-error-container').show();
 	    return false;
 	} else

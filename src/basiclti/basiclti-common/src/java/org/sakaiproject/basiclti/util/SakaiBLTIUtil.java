@@ -1,6 +1,6 @@
 /**
  * $URL: https://source.sakaiproject.org/svn/basiclti/trunk/basiclti-common/src/java/org/sakaiproject/basiclti/util/SakaiBLTIUtil.java $
- * $Id: SakaiBLTIUtil.java 120424 2013-02-24 02:02:51Z csev@umich.edu $
+ * $Id: SakaiBLTIUtil.java 126799 2013-07-09 18:48:17Z csev@umich.edu $
  *
  * Copyright (c) 2006-2009 The Sakai Foundation
  *
@@ -449,7 +449,7 @@ public class SakaiBLTIUtil {
 		String sakaiVersion = ServerConfigurationService.getString("version.sakai","2");
 		setProperty(props,"ext_lms", "sakai-"+sakaiVersion);  
 		setProperty(props,BasicLTIConstants.TOOL_CONSUMER_INFO_PRODUCT_FAMILY_CODE, 
-			sakaiVersion);  
+			"sakai");  
 		setProperty(props,BasicLTIConstants.TOOL_CONSUMER_INFO_VERSION, sakaiVersion);  
 
 		// We pass this along in the Sakai world - it might
