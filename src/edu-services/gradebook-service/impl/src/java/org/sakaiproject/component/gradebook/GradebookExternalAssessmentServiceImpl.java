@@ -88,6 +88,10 @@ public class GradebookExternalAssessmentServiceImpl extends BaseHibernateManager
         return externalProviders;
     }
 
+    // Mapping of providers to their getAllExternalAssignments(String gradebookUid) methods,
+    // used to allow the method to be called on providers not declaring the Compat interface.
+    // This is to allow the same code to be used on 2.9 and beyond, where the secondary interface
+    // may be removed, without build profiles.
     private ConcurrentHashMap<ExternalAssignmentProvider, Method> providerMethods =
         new ConcurrentHashMap<ExternalAssignmentProvider, Method>();
 
@@ -123,7 +127,9 @@ public class GradebookExternalAssessmentServiceImpl extends BaseHibernateManager
     public void unregisterExternalAssignmentProvider(String providerAppKey) {
         if (providerAppKey == null || "".equals(providerAppKey)) {
             throw new IllegalArgumentException("providerAppKey must be set");
-        } else {
+        } else if (getExternalAssignmentProviders().containsKey(providerAppKey)) {
+            ExternalAssignmentProvider provider = getExternalAssignmentProviders().get(providerAppKey);
+            providerMethods.remove(provider);
             getExternalAssignmentProviders().remove(providerAppKey);
         }
     }
