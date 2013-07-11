@@ -1,9 +1,9 @@
 /**********************************************************************************
-*
-* $Id:$
-*
-***********************************************************************************
-*
+ *
+ * $Id:$
+ *
+ ***********************************************************************************
+ *
  * Copyright (c) 2013 The Sakai Foundation
  *
  * Licensed under the Educational Community License, Version 2.0 (the "License");
@@ -17,8 +17,8 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*
-**********************************************************************************/
+ *
+ **********************************************************************************/
 package org.sakaiproject.service.gradebook.shared;
 
 import java.util.List;
@@ -31,7 +31,7 @@ import java.util.List;
  * Before this was implemented, external items for tools without a provider
  * could never be visible in the student view of the gradebook.
  *
- * This interface will be merged into ExternalAssignmentProvider for the next
+ * This interface should be merged into ExternalAssignmentProvider for the next
  * major release.
  *
  * See also: https://jira.sakaiproject.org/browse/SAK-23733
