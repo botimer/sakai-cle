@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/calendar/trunk/calendar-summary-tool/tool/src/java/org/sakaiproject/tool/summarycalendar/ui/CalendarBean.java $
- * $Id: CalendarBean.java 117851 2012-12-19 03:41:13Z steve.swinsburg@gmail.com $
+ * $Id: CalendarBean.java 126861 2013-07-10 16:06:02Z gjthomas@iupui.edu $
  ***********************************************************************************
  *
  * Copyright (c) 2006, 2007, 2008, 2009 The Sakai Foundation
@@ -723,11 +723,9 @@ public class CalendarBean {
 	}
 
 	public String getCaption() {
-		Calendar c = Calendar.getInstance(getCurrentUserTimezone(), msgs.getLocale());
-		c.setTime(getViewingDate());
-		String month = msgs.getString(months[c.get(Calendar.MONTH)]);
-		String year = c.get(Calendar.YEAR) + "";
-		return month + ", " + year;
+		SimpleDateFormat formatter = new SimpleDateFormat(msgs.getString("viewm.date_format"), msgs.getLocale());
+		formatter.setTimeZone(getCurrentUserTimezone());
+		return formatter.format(getViewingDate());
 	}
 
 	public boolean isViewingSelectedDay() {

@@ -1,6 +1,6 @@
  /**********************************************************************************
 *
-* $Id: BaseHibernateManager.java 118507 2013-01-19 17:27:49Z nbotimer@unicon.net $
+* $Id: BaseHibernateManager.java 126908 2013-07-11 02:37:39Z nbotimer@unicon.net $
 *
 ***********************************************************************************
 *
@@ -1479,7 +1479,7 @@ public abstract class BaseHibernateManager extends HibernateDaoSupport {
     				for (String studentUid : studentUids) {
     					// SAK-11485 - We don't want to add scores for those grouped activities
     					//             that this student should not see or be scored on.
-    					if (!visible.containsKey(studentUid) || !visible.get(studentUid).contains(assignment)) {
+    					if (assignment.isExternallyMaintained() && (!visible.containsKey(studentUid) || !visible.get(studentUid).contains(assignment))) {
     						continue;
     					}
     					AssignmentGradeRecord gradeRecord = studentToGradeRecordMap.get(studentUid);
