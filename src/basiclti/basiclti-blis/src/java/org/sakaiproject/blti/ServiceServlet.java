@@ -1,6 +1,6 @@
 /**
  * $URL: https://source.sakaiproject.org/svn/basiclti/trunk/basiclti-blis/src/java/org/sakaiproject/blti/ServiceServlet.java $
- * $Id: ServiceServlet.java 120423 2013-02-24 01:36:55Z csev@umich.edu $
+ * $Id: ServiceServlet.java 127240 2013-07-18 16:15:27Z csev@umich.edu $
  *
  * Copyright (c) 2009 The Sakai Foundation
  *
@@ -1084,13 +1084,23 @@ public class ServiceServlet extends HttpServlet {
             List<Map<String,String>> resultList = new ArrayList<Map<String,String>>();
 
 			recursivelyAddResourcesXML(context_id, thePage, nl, seq, resultList);
+			// One success means overall status is a success
+			boolean success = false;
+			for ( Map<String,String> result : resultList ) {
+				if ( "success".equals(result.get("/status")) ) success = true;
+			}
 
             Map<String,Object> theMap = new TreeMap<String,Object>();
             theMap.put("/addCourseResourcesResponse/resources/resource",resultList);
             String theXml = XMLMap.getXMLFragment(theMap, true);
 
 			response.setContentType("application/xml");
-			String output = pox.getResponseSuccess("Items Added",theXml);
+			String output = null;
+			if ( success ) {
+				output = pox.getResponseSuccess("Items Added",theXml);
+			} else {
+				output = pox.getResponseFailure("Items were not added", null);
+			}
 
 			PrintWriter out = response.getWriter();
 			out.println(output);

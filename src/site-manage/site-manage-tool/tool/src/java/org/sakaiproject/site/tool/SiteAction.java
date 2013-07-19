@@ -1,7 +1,7 @@
 /**********************************************************************************
 
  * $URL: https://source.sakaiproject.org/svn/site-manage/trunk/site-manage-tool/tool/src/java/org/sakaiproject/site/tool/SiteAction.java $
- * $Id: SiteAction.java 126099 2013-06-21 17:38:36Z phaggood@umich.edu $
+ * $Id: SiteAction.java 126993 2013-07-12 19:35:12Z pushyami@umich.edu $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008, 2009 The Sakai Foundation
@@ -13348,6 +13348,10 @@ private Map<String,List> getToolGroupList(SessionState state, String type, Site 
 					addRequestedSection(state);
 				}
 				if (state.getAttribute(STATE_MESSAGE) == null) {
+					// no manual add
+					state.removeAttribute(STATE_MANUAL_ADD_COURSE_NUMBER);
+					state.removeAttribute(STATE_MANUAL_ADD_COURSE_FIELDS);
+
 					if (getStateSite(state) == null) {
 						if (state.getAttribute(STATE_TEMPLATE_SITE) != null)
 						{

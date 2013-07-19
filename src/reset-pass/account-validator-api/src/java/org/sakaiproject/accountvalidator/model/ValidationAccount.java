@@ -1,5 +1,5 @@
 /**
- * $Id: ValidationAccount.java 111737 2012-08-22 14:16:32Z david.horwitz@uct.ac.za $
+ * $Id: ValidationAccount.java 126916 2013-07-11 16:29:45Z azeckoski@unicon.net $
  * $URL: https://source.sakaiproject.org/svn/reset-pass/trunk/account-validator-api/src/java/org/sakaiproject/accountvalidator/model/ValidationAccount.java $
  * 
  **************************************************************************
@@ -70,8 +70,8 @@ public class ValidationAccount {
 	private Integer status;
 	private String eid;
 
-	private String firstName;
-	private String surname;
+	private String firstName = "";
+	private String surname = "";
 	private Integer accountStatus;
 	
 	private String password;
