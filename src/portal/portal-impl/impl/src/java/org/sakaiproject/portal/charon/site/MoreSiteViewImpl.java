@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/portal/trunk/portal-impl/impl/src/java/org/sakaiproject/portal/charon/site/MoreSiteViewImpl.java $
- * $Id: MoreSiteViewImpl.java 123255 2013-04-25 02:14:34Z matthew@longsight.com $
+ * $Id: MoreSiteViewImpl.java 127575 2013-07-23 12:12:31Z azeckoski@unicon.net $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008 The Sakai Foundation
@@ -162,7 +162,7 @@ public class MoreSiteViewImpl extends DefaultSiteViewImpl
 				List<Map> temp = siteHelper.convertSitesToMaps(request, currentList, prefix,
 						currentSiteId, myWorkspaceSiteId,
 						/* includeSummary */false, /* expandSite */false,
-						/* resetTools */"true".equals(serverConfigurationService
+						/* resetTools */"true".equalsIgnoreCase(serverConfigurationService
 								.getString(Portal.CONFIG_AUTO_RESET)),
 						/* doPages */true, /* toolContextPath */null, loggedIn);
 

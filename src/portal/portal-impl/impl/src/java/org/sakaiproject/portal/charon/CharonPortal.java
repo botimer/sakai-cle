@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/portal/trunk/portal-impl/impl/src/java/org/sakaiproject/portal/charon/CharonPortal.java $
- * $Id: CharonPortal.java 122221 2013-04-04 21:24:12Z ottenhoff@longsight.com $
+ * $Id: CharonPortal.java 127575 2013-07-23 12:12:31Z azeckoski@unicon.net $
  ***********************************************************************************
  *
  * Copyright (c) 2005, 2006, 2007, 2008 The Sakai Foundation
@@ -77,7 +77,7 @@ import org.sakaiproject.util.Web;
  * Charon is the Sakai Site based portal.
  * </p>
  * @since Sakai 2.0
- * @version $Rev: 122221 $
+ * @version $Rev: 127575 $
  * 
  */
 public class CharonPortal extends HttpServlet 
@@ -2129,7 +2129,7 @@ public class CharonPortal extends HttpServlet
 		PrintWriter out = res.getWriter();
 		// If we have turned on auto-state reset on navigation, we generate the
 		// "site-reset" "worksite-reset" and "gallery-reset" urls
-		if ("true".equals(ServerConfigurationService.getString(CONFIG_AUTO_RESET)))
+        if ("true".equalsIgnoreCase(ServerConfigurationService.getString(CONFIG_AUTO_RESET)))
 		{
 			portalPrefix = portalPrefix + "-reset";
 		}
@@ -2371,7 +2371,7 @@ public class CharonPortal extends HttpServlet
 
 		// If we have turned on auto-state reset on navigation, we generate the
 		// "site-reset" "worksite-reset" and "gallery-reset" urls
-		if ("true".equals(ServerConfigurationService.getString(CONFIG_AUTO_RESET)))
+        if ("true".equalsIgnoreCase(ServerConfigurationService.getString(CONFIG_AUTO_RESET)))
 		{
 			prefix = prefix + "-reset";
 		}

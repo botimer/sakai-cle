@@ -1,6 +1,6 @@
 /**
  * $URL: https://source.sakaiproject.org/svn/basiclti/trunk/basiclti-blis/src/java/org/sakaiproject/blti/LessonsFacade.java $
- * $Id: LessonsFacade.java 127240 2013-07-18 16:15:27Z csev@umich.edu $
+ * $Id: LessonsFacade.java 127566 2013-07-23 11:39:38Z csev@umich.edu $
  *
  * Copyright (c) 2009 The Sakai Foundation
  *
@@ -118,6 +118,23 @@ public class LessonsFacade {
 		M_log.debug("Item Saved "+elist);
 		// System.out.println("subItem = "+subPageItem);
 		return subPageItem;
+	}
+
+	// Borrowed from SimplePageBean.java#getCurrentPageId
+	public static SimplePageItem addFirstPage(String siteId, String toolId, String title)
+	{
+		M_log.debug("Adding top page site="+siteId+" toolId="+toolId+" title="+title);
+		SimplePage page = simplePageToolDao.makePage(toolId, siteId, title, null, null);
+        List<String>elist = new ArrayList<String>();
+		if (!simplePageToolDao.saveItem(page,elist, "ERROR WAS HERE", false)) return null;
+		M_log.debug("SimplePage added="+page.getPageId());
+
+		// Add the dummy item associtated with the page
+		Long l = page.getPageId();
+		SimplePageItem i = simplePageToolDao.makeItem(0, 0, SimplePageItem.PAGE, l.toString(), title);
+		simplePageToolDao.saveItem(i,elist, "ERROR WAS HERE", false);
+		M_log.debug("SimplePageItem added="+i.getId());
+		return i;
 	}
 
     public static String doImportTool(String siteId, String launchUrl, String bltiTitle, String strXml, String custom)

@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/announcement/trunk/announcement-impl/impl/src/java/org/sakaiproject/announcement/impl/BaseAnnouncementService.java $
- * $Id: BaseAnnouncementService.java 111698 2012-08-21 16:49:24Z matthew@longsight.com $
+ * $Id: BaseAnnouncementService.java 127568 2013-07-23 12:01:49Z azeckoski@unicon.net $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008 The Sakai Foundation
@@ -46,6 +46,7 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.sakaiproject.alias.api.Alias;
@@ -114,7 +115,6 @@ public abstract class BaseAnnouncementService extends BaseMessageService impleme
 
 	/** private constants definitions */
 	private final static String SAKAI_ANNOUNCEMENT_TOOL_ID = "sakai.announcements";
-	private final static String ANNOUNCEMENT_CHANNEL_PROPERTY = "channel";
 	private static final String PORTLET_CONFIG_PARM_MERGED_CHANNELS = "mergedAnnouncementChannels";
 
 	
@@ -550,12 +550,22 @@ public abstract class BaseAnnouncementService extends BaseMessageService impleme
 	/**
 	 * Form a tracking event string based on a security function string.
 	 * 
-	 * @param secure
-	 *        The security function string.
+	 * @param secure The security function string.
+	 *     NOTE: if this input is null or blank then event id will default to "annc.INVALID_KEY",
+	 *           this is only because throwing an exception here would be very disruptive and returning
+	 *           a null or blank for the event id would cause other failures (SAK-23804)
 	 * @return The event tracking string.
 	 */
-	protected String eventId(String secure)
-	{
+	protected String eventId(String secure) {
+		// https://jira.sakaiproject.org/browse/SAK-23804
+		if (StringUtils.isBlank(secure)) {
+		    try {
+		        throw new IllegalArgumentException("anouncement eventId() input cannot be null or blank");
+		    } catch (Exception e) {
+		        secure = "INVALID_KEY";
+		        M_log.error("Bad call to BaseAnnouncementService.eventId(String) - input string is blank, generating '"+secure+"' event name and logging trace", e);
+		    }
+		}
 		return SECURE_ANNC_ROOT + secure;
 
 	} // eventId
@@ -1386,7 +1396,7 @@ public abstract class BaseAnnouncementService extends BaseMessageService impleme
 			{
 				Set<Entry<String, String>> entrySet = (Set<Entry<String, String>>) transversalMap.entrySet();
 				
-				String channelId = ServerConfigurationService.getString("channel", null);
+				String channelId = ServerConfigurationService.getString(ANNOUNCEMENT_CHANNEL_PROPERTY, null);
 
 				String toSiteId = toContext;
 
@@ -1863,7 +1873,7 @@ public abstract class BaseAnnouncementService extends BaseMessageService impleme
 		{
 			if(cleanup == true)
 			{
-				String channelId = ServerConfigurationService.getString("channel", null);
+				String channelId = ServerConfigurationService.getString(ANNOUNCEMENT_CHANNEL_PROPERTY, null);
 				
 				String toSiteId = toContext;
 				

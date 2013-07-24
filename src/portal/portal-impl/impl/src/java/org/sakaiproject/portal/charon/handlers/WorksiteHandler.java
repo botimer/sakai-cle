@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/portal/trunk/portal-impl/impl/src/java/org/sakaiproject/portal/charon/handlers/WorksiteHandler.java $
- * $Id: WorksiteHandler.java 118049 2013-01-02 23:46:38Z a.fish@lancaster.ac.uk $
+ * $Id: WorksiteHandler.java 127575 2013-07-23 12:12:31Z azeckoski@unicon.net $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008 The Sakai Foundation
@@ -47,7 +47,7 @@ import org.sakaiproject.util.ResourceLoader;
  * 
  * @author ieb
  * @since Sakai 2.4
- * @version $Rev: 118049 $
+ * @version $Rev: 127575 $
  * 
  */
 public class WorksiteHandler extends PageHandler
@@ -195,7 +195,7 @@ public class WorksiteHandler extends PageHandler
 				Map pageMap = portal.getSiteHelper().pageListToMap(req, loggedIn, site, page, toolContextPath, 
 					portalPrefix, 
 					/* doPages */true,
-					/* resetTools */"true".equals(ServerConfigurationService
+					/* resetTools */"true".equalsIgnoreCase(ServerConfigurationService
 							.getString(Portal.CONFIG_AUTO_RESET)),
 					/* includeSummary */false);
  				rcontext.put("sitePages", pageMap);

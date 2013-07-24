@@ -1,7 +1,7 @@
 /**********************************************************************************
 
  * $URL: https://source.sakaiproject.org/svn/site-manage/trunk/site-manage-tool/tool/src/java/org/sakaiproject/site/tool/SiteAction.java $
- * $Id: SiteAction.java 126993 2013-07-12 19:35:12Z pushyami@umich.edu $
+ * $Id: SiteAction.java 127603 2013-07-23 17:02:03Z bkirschn@umich.edu $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008, 2009 The Sakai Foundation
@@ -3570,27 +3570,30 @@ public class SiteAction extends PagedResourceActionII {
 		Set multipleToolIdSet = (Set) state.getAttribute(STATE_MULTIPLE_TOOL_ID_SET);
 		Map multipleToolIdTitleMap = state.getAttribute(STATE_MULTIPLE_TOOL_ID_TITLE_MAP) != null? (Map) state.getAttribute(STATE_MULTIPLE_TOOL_ID_TITLE_MAP):new HashMap();
 		Map<String,List> toolGroupMultiples = new HashMap<String, List>();
-		for(Iterator iter = list.iterator(); iter.hasNext();)
+		if ( list != null )
 		{
-			String toolId = ((MyTool)iter.next()).getId();
-			String originId = findOriginalToolId(state, toolId);
-			// is this tool in the list of multipeToolIds?
-			if (multipleToolIdSet.contains(originId)) {
-				// is this the original tool or a multiple having uniqueId+originalToolId?
-				if (!originId.equals(toolId)) {
-					if (!toolGroupMultiples.containsKey(originId)) {
-						toolGroupMultiples.put(originId,  new ArrayList());
+			for(Iterator iter = list.iterator(); iter.hasNext();)
+			{
+				String toolId = ((MyTool)iter.next()).getId();
+				String originId = findOriginalToolId(state, toolId);
+				// is this tool in the list of multipeToolIds?
+				if (multipleToolIdSet.contains(originId)) {
+					// is this the original tool or a multiple having uniqueId+originalToolId?
+					if (!originId.equals(toolId)) {
+						if (!toolGroupMultiples.containsKey(originId)) {
+							toolGroupMultiples.put(originId,	 new ArrayList());
+						}
+						List tools = toolGroupMultiples.get(originId);
+						MyTool tool = new MyTool();
+						tool.id = toolId;
+						tool.title = (String) multipleToolIdTitleMap.get(toolId);
+						// tool comes from toolRegistrationSelectList so selected should be true
+						tool.selected = true;
+						// is a toolMultiple ever *required*?
+						tools.add(tool);
+						// update the tools list for this tool id
+						toolGroupMultiples.put(originId, tools);
 					}
-					List tools = toolGroupMultiples.get(originId);
-					MyTool tool = new MyTool();
-					tool.id = toolId;
-					tool.title = (String) multipleToolIdTitleMap.get(toolId);
-					// tool comes from toolRegistrationSelectList so selected should be true
-					tool.selected = true;
-					// is a toolMultiple ever *required*?
-					tools.add(tool);
-					// update the tools list for this tool id
-					toolGroupMultiples.put(originId, tools);
 				}
 			}
 		}
@@ -5367,19 +5370,20 @@ private Map<String,List> getToolGroupList(SessionState state, String type, Site 
 		}
 	}
 	}
-	// TODO sort and add methods to remove highlighted groupNames from sort (i.e. where 'Core' defaults to top of list)
-	M_log.debug("setToolGroupList:complete");
 	
 	// add ungroups tools to end of toolGroup list if selected
-	Boolean showUngroupedTools = ServerConfigurationService.getBoolean("config.sitemanage.showUngrouped",false);
-	if (showUngroupedTools.booleanValue()==true) {
-		String ungroupedName = ServerConfigurationService.getString("config.sitemanage.ungroupedToolGroupName","Ungrouped Tools");
-		toolGroup.put(ungroupedName, getUngroupedTools(ungroupedName,  toolGroup, state, type, moreInfoDir, countryCode, site));
-	}
+	String ungroupedName = ServerConfigurationService.getString("config.sitemanage.ungroupedToolGroupName","Ungrouped Tools");
+	List ungroupedTools = getUngroupedTools(ungroupedName,  toolGroup, state, type, moreInfoDir, countryCode, site);
+	if (ungroupedTools.size() > 0) 
+		toolGroup.put(ungroupedName, ungroupedTools);
+	
 	// add external tools to end of toolGroup list
 	String externaltoolgroupname = ServerConfigurationService.getString("config.sitemanage.externalToolGroupName","Plugin Tools");
-	toolGroup.put(externaltoolgroupname, getLtiToolGroup(externaltoolgroupname, moreInfoDir, countryCode, site));
-	// set checkhome too SAK-23208
+	List externalTools = getLtiToolGroup(externaltoolgroupname, moreInfoDir, countryCode, site);
+	if (externalTools.size() > 0 ) 
+		toolGroup.put(externaltoolgroupname, externalTools);
+      
+	// Home page should be auto-selected
 	if (checkhome==true) {
 		state.setAttribute(STATE_TOOL_HOME_SELECTED, new Boolean(true));
 	}
@@ -5523,7 +5527,13 @@ private Map<String,List> getToolGroupList(SessionState state, String type, Site 
 	 */
 	private List getUngroupedTools(String ungroupedName, Map<String,List> toolsByGroup, SessionState state, String type, File moreInforDir, String countryCode, Site site) {
 		// Get all tools for site
-		List ungroupedTools = (List) state.getAttribute(STATE_TOOL_REGISTRATION_LIST);
+		List ungroupedToolsOld = (List) state.getAttribute(STATE_TOOL_REGISTRATION_LIST);
+		
+		// copy the list of tools to avoid ConcurrentModificationException
+		List<MyTool> ungroupedTools = new Vector<MyTool>();
+		if ( ungroupedToolsOld != null )
+			ungroupedTools.addAll(ungroupedToolsOld);
+		
 		// Grab tool multiples too
 		// get all the groups that are available for this site type
 		for (Iterator<String> toolgroupitr = toolsByGroup.keySet().iterator(); toolgroupitr.hasNext();) {

@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/kernel/trunk/kernel-impl/src/main/java/org/sakaiproject/authz/impl/DbAuthzGroupService.java $
- * $Id: DbAuthzGroupService.java 123045 2013-04-19 16:51:53Z matthew.buckett@it.ox.ac.uk $
+ * $Id: DbAuthzGroupService.java 127574 2013-07-23 12:12:07Z azeckoski@unicon.net $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2006 2007, 2007, 2008 Sakai Foundation
@@ -683,7 +683,7 @@ public abstract class DbAuthzGroupService extends BaseAuthzGroupService implemen
 			        }
 			    });
 
-			    if (serverConfigurationService().getBoolean("authz.cacheGrants", false)) {
+                if (serverConfigurationService().getBoolean("authz.cacheGrants", true)) {
 			        Map<String, Map> payLoad = new HashMap<String, Map>();
 
 			        payLoad.put(REALM_ROLES_CACHE,realm.m_roles);
@@ -2958,7 +2958,7 @@ public abstract class DbAuthzGroupService extends BaseAuthzGroupService implemen
 	
 	public void update(Observable arg0, Object arg) {
 		// No need to listen for events if we are not caching the authz grants
-		if (arg == null || !(arg instanceof Event) || !serverConfigurationService().getBoolean("authz.cacheGrants", false)) 
+        if (arg == null || !(arg instanceof Event) || !serverConfigurationService().getBoolean("authz.cacheGrants", true))
 			return;
 		Event event = (Event) arg;
 		

@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/roster/trunk/roster-app/src/java/org/sakaiproject/tool/roster/FilteredParticipantListingBean.java $
- * $Id: FilteredParticipantListingBean.java 125011 2013-05-27 16:44:48Z matthew@longsight.com $
+ * $Id: FilteredParticipantListingBean.java 127576 2013-07-23 12:12:54Z azeckoski@unicon.net $
  ***********************************************************************************
  *
  * Copyright (c) 2007, 2008 The Sakai Foundation
@@ -191,13 +191,13 @@ public class FilteredParticipantListingBean implements Serializable {
      * @return true or false
      */
     public boolean isHideSingleGroupFilter() {
-        if("true".equals(services.serverConfigurationService.getString("roster.display.hideSingleGroupFilter")))return true;
+        if("true".equalsIgnoreCase(services.serverConfigurationService.getString("roster.display.hideSingleGroupFilter")))return true;
         return false;
     }
 
 
     public boolean isDisplayPhotoFirstNameLastName(){
-       if("true".equals(services.serverConfigurationService.getString("roster.display.firstNameLastName"))) return true;
+       if("true".equalsIgnoreCase(services.serverConfigurationService.getString("roster.display.firstNameLastName"))) return true;
        return false;
     }
     

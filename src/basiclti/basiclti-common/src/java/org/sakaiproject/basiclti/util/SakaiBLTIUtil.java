@@ -1,6 +1,6 @@
 /**
  * $URL: https://source.sakaiproject.org/svn/basiclti/trunk/basiclti-common/src/java/org/sakaiproject/basiclti/util/SakaiBLTIUtil.java $
- * $Id: SakaiBLTIUtil.java 126799 2013-07-09 18:48:17Z csev@umich.edu $
+ * $Id: SakaiBLTIUtil.java 127585 2013-07-23 14:45:01Z csev@umich.edu $
  *
  * Copyright (c) 2006-2009 The Sakai Foundation
  *
@@ -241,7 +241,7 @@ public class SakaiBLTIUtil {
 		String theRole = "Learner";
 		if ( SecurityService.isSuperUser() )
 		{
-			theRole = "Instructor,Administrator";
+			theRole = "Instructor,Administrator,urn:lti:instrole:ims/lis/Administrator,urn:lti:sysrole:ims/lis/Administrator";
 		}
 		else if ( SiteService.allowUpdateSite(context) ) 
 		{

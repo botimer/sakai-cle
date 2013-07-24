@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/assignment/trunk/assignment-impl/impl/src/java/org/sakaiproject/assignment/impl/BaseAssignmentService.java $
- * $Id: BaseAssignmentService.java 127124 2013-07-17 16:34:51Z zqian@umich.edu $
+ * $Id: BaseAssignmentService.java 127569 2013-07-23 12:02:14Z azeckoski@unicon.net $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008, 2009 The Sakai Foundation
@@ -450,7 +450,12 @@ public abstract class BaseAssignmentService implements AssignmentService, Entity
 		}
 		
 		// group level users
-		Collection groupIds = assignment.getGroups();
+		Collection groupIds = null;
+		//SAK-23235 this method can be passed a null assignment -DH
+		if (assignment != null) 
+		{
+			groupIds = assignment.getGroups();
+		}
 		if(groupIds != null && groupIds.size() > 0)
 		{
 			Iterator i = groupIds.iterator();
@@ -1913,7 +1918,7 @@ public abstract class BaseAssignmentService implements AssignmentService, Entity
 	{
 	    AnnouncementService aService = org.sakaiproject.announcement.cover.AnnouncementService.getInstance();
 	    AnnouncementChannel channel = null;
-	    String channelId = m_serverConfigurationService.getString("channel", null);
+        String channelId = m_serverConfigurationService.getString(m_announcementService.ANNOUNCEMENT_CHANNEL_PROPERTY, null);
 	    if (channelId == null)
 	    {
 	        channelId = m_announcementService.channelReference(contextId, SiteService.MAIN_CONTAINER);

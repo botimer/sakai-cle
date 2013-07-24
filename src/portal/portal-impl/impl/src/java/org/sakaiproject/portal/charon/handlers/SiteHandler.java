@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/portal/trunk/portal-impl/impl/src/java/org/sakaiproject/portal/charon/handlers/SiteHandler.java $
- * $Id: SiteHandler.java 126225 2013-06-25 21:22:15Z ottenhoff@longsight.com $
+ * $Id: SiteHandler.java 127575 2013-07-23 12:12:31Z azeckoski@unicon.net $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008 The Sakai Foundation
@@ -70,7 +70,7 @@ import org.sakaiproject.util.ResourceLoader;
 /**
  * @author ieb
  * @since Sakai 2.4
- * @version $Rev: 126225 $
+ * @version $Rev: 127575 $
  */
 public class SiteHandler extends WorksiteHandler
 {
@@ -606,7 +606,7 @@ public class SiteHandler extends WorksiteHandler
 
 			// If we have turned on auto-state reset on navigation, we generate
 			// the "site-reset" "worksite-reset" and "gallery-reset" urls
-			if ("true".equals(ServerConfigurationService
+            if ("true".equalsIgnoreCase(ServerConfigurationService
 					.getString(Portal.CONFIG_AUTO_RESET)))
 			{
 				prefix = prefix + "-reset";
