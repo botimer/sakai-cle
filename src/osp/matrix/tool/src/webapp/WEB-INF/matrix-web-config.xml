@@ -255,6 +255,7 @@
          <bean class="org.theospi.portfolio.matrix.control.WizardPageController">
             <property name="matrixManager"><ref bean="matrixManager"/></property>
             <property name="authManager"><ref bean="authManager"/></property>
+            <property name="authzManager"><ref bean="authzManager"/></property>
             <property name="idManager"><ref bean="idManager"/></property>
             <property name="reviewManager">
                <ref bean="org.theospi.portfolio.review.mgt.ReviewManager"/>
@@ -378,6 +379,7 @@
          <bean class="org.theospi.portfolio.matrix.control.SequentialWizardPageController">
             <property name="matrixManager"><ref bean="matrixManager"/></property>
             <property name="authManager"><ref bean="authManager"/></property>
+            <property name="authzManager"><ref bean="authzManager"/></property>
             <property name="idManager"><ref bean="idManager"/></property>
             <property name="reviewManager">
                <ref bean="org.theospi.portfolio.review.mgt.ReviewManager"/>

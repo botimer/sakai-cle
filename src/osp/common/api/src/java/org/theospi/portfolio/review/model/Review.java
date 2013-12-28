@@ -1,6 +1,6 @@
 /**********************************************************************************
 * $URL: https://source.sakaiproject.org/svn/osp/trunk/common/api/src/java/org/theospi/portfolio/review/model/Review.java $
-* $Id: Review.java 105079 2012-02-24 23:08:11Z ottenhoff@longsight.com $
+* $Id: Review.java 130580 2013-10-17 17:43:15Z dsobiera@indiana.edu $
 ***********************************************************************************
 *
  * Copyright (c) 2005, 2006, 2007, 2008 The Sakai Foundation
@@ -29,6 +29,7 @@ public class Review extends IdentifiableObject {
    public static final int REFLECTION_TYPE = 0;
    public static final int EVALUATION_TYPE = 1;
    public static final int FEEDBACK_TYPE = 2;
+   public static final int ITEM_LEVEL_EVAL_TYPE = 3;
 
    private String siteId; 
    private String parent; // e.g. pageId

@@ -1,6 +1,6 @@
 /**
  * $URL: https://source.sakaiproject.org/svn/sitestats/trunk/sitestats-tool/src/java/org/sakaiproject/sitestats/tool/wicket/pages/OverviewPage.java $
- * $Id: OverviewPage.java 105078 2012-02-24 23:00:38Z ottenhoff@longsight.com $
+ * $Id: OverviewPage.java 131093 2013-11-04 14:59:26Z ottenhoff@longsight.com $
  *
  * Copyright (c) 2006-2009 The Sakai Foundation
  *
@@ -64,10 +64,6 @@ public class OverviewPage extends BasePage {
 	public void renderHead(IHeaderResponse response) {
 		super.renderHead(response);
 		response.renderJavascriptReference(JQUERYSCRIPT);
-		response.renderJavascriptReference(StatsManager.SITESTATS_WEBAPP + "/script/jquery.ifixpng2.js");
-		StringBuilder onDomReady = new StringBuilder();
-		onDomReady.append("jQuery.ifixpng('"+StatsManager.SITESTATS_WEBAPP+"/images/transparent.gif');");
-		response.renderOnDomReadyJavascript(onDomReady.toString());
 	}
 	
 	private void renderBody() {

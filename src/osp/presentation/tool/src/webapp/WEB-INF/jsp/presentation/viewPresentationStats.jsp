@@ -3,6 +3,8 @@
 
 
 <jsp:useBean id="msgs" class="org.sakaiproject.util.ResourceLoader" scope="request"><jsp:setProperty name="msgs" property="baseName" value="org.theospi.portfolio.presentation.bundle.Messages"/></jsp:useBean>
+<fmt:setLocale value="${locale}" />
+<fmt:setBundle basename="org.theospi.portfolio.presentation.bundle.Messages" />
 
 <c:forEach var="log" items="${presentationLogs}" varStatus="presentationStatus">
     <c:set var="count" value="${presentationStatus.count}" scope="request" />
@@ -11,10 +13,24 @@
 
 <h3><c:out value="${msgs.title_presentationStats}"/></h3>
 
-    <c:out value="${msgs.viewPresentationStats_countReport}"/>
-    <c:out value="${presentationName}" />
-
-
+<c:if test="${count == 0}">
+    <fmt:message key="viewPresentationStats_countReport_none">
+     <fmt:param><c:out value="${presentationName}" /></fmt:param>
+    </fmt:message> 	 
+</c:if>
+<c:if test="${count == 1}"> 	 
+	<fmt:message key="viewPresentationStats_countReport_one"> 	 
+	 <fmt:param><c:out value="${presentationName}" /></fmt:param> 	 
+	 <fmt:param><c:out value="${count}" /></fmt:param> 	 
+	</fmt:message> 	 
+</c:if> 	 
+	  	 
+<c:if test="${count > 1}"> 	 
+	<fmt:message key="viewPresentationStats_countReport_more"> 	 
+	 <fmt:param><c:out value="${presentationName}" /></fmt:param> 	 
+	 <fmt:param><c:out value="${count}" /></fmt:param> 	 
+	</fmt:message> 	 
+</c:if>
 <table class="listHier">
     <tr>
         <th><c:out value="${msgs.table_header_viewer}"/></th>

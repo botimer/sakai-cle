@@ -167,7 +167,7 @@ public class PresentationService {
 		return !disabled;
 	}
 	
-	public boolean updatePresentation(String presentationId, String name, String description, Boolean active, Boolean allowComments) {
+	public boolean updatePresentation(String presentationId, String name, String description, Boolean active, Boolean allowComments, Boolean searchable) {
 		Presentation presentation = getPresentation(presentationId);
 		
 		if (name != null)
@@ -185,6 +185,13 @@ public class PresentationService {
 			presentation.setAllowComments(true);
 		else if (Boolean.FALSE.equals(allowComments))
 			presentation.setAllowComments(false);
+		
+		if (Boolean.TRUE.equals(searchable)) {
+			presentation.setIsSearchable(true);
+		}
+		else {
+			presentation.setIsSearchable(false);
+		}
 		
 		presentation = presentationManager.storePresentation(presentation, false, true);
 		return (presentation != null);
@@ -260,6 +267,42 @@ public class PresentationService {
 		return editForm(presentationId, formTypeId, null, itemDefId, true);
 	}
 
+	/**
+     * 
+     * @param presentationId
+     * @param formTypeId
+     * @param formId
+     * @return
+     */
+    public Map<String, Object> copyForm(String presentationId, String formTypeId, String formId) {
+        HashMap<String, Object> params = new HashMap<String, Object>();
+        if (formTypeId == null)
+            formTypeId = getFormType(formId);
+        
+        if (formTypeId == null)
+            throw new IllegalArgumentException("Cannot edit with null form type");
+        
+        if (formId == null)
+            throw new IllegalArgumentException("Cannot edit null form");
+        
+        formId = contentHostingService.resolveUuid(formId);
+        if (formId == null)
+            throw new IllegalArgumentException("Cannot edit nonexistent form");
+        
+        String copyId = null;
+        try {
+            copyId = contentHostingService.copy(formId, formId);
+        } catch (Exception e) {
+            // This copy method wanted me to catch 7 different exceptions.  That seemed excessive, so just catching Exception.
+            log.error("Error copying form", e);
+        } 
+        
+        params.put(ResourceEditingHelper.ATTACHMENT_ID, copyId);
+        params.put(ResourceEditingHelper.CREATE_TYPE, ResourceEditingHelper.CREATE_TYPE_FORM);
+        params.put(ResourceEditingHelper.CREATE_SUB_TYPE, formTypeId);
+        return params;
+    }
+    
 	public Map<String, Object> editForm(String presentationId, String formTypeId, String formId, String itemDefId) {
 		return editForm(presentationId, formTypeId, formId, itemDefId, false);
 	}

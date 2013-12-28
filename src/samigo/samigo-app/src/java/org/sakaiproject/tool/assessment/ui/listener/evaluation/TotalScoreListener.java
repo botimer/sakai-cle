@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/sam/trunk/samigo-app/src/java/org/sakaiproject/tool/assessment/ui/listener/evaluation/TotalScoreListener.java $
- * $Id: TotalScoreListener.java 121792 2013-03-26 16:07:29Z azeckoski@unicon.net $
+ * $Id: TotalScoreListener.java 132095 2013-12-02 19:20:11Z ktsao@stanford.edu $
  ***********************************************************************************
  *
  * Copyright (c) 2004, 2005, 2006, 2007, 2008, 2009 The Sakai Foundation
@@ -82,7 +82,7 @@ import org.sakaiproject.util.FormattedText;
  * <p>Copyright: Copyright (c) 2004</p>
  * <p>Organization: Sakai Project</p>
  * @author Ed Smiley
- * @version $Id: TotalScoreListener.java 121792 2013-03-26 16:07:29Z azeckoski@unicon.net $
+ * @version $Id: TotalScoreListener.java 132095 2013-12-02 19:20:11Z ktsao@stanford.edu $
  */
 
 public class TotalScoreListener
@@ -359,8 +359,12 @@ public class TotalScoreListener
         p.setSectionSet(sectionSet);
         Iterator sectionIter = sectionSet.iterator();
         boolean isAutoScored = true;
+        boolean hasFileUpload = false;
 		while (sectionIter.hasNext()) {
 			if (!isAutoScored) {
+				break;
+			}
+			if (hasFileUpload) {
 				break;
 			}
 			PublishedSectionData section = (PublishedSectionData) sectionIter.next();
@@ -369,18 +373,29 @@ public class TotalScoreListener
 			while (itemIter.hasNext()) {
 				PublishedItemData item = (PublishedItemData) itemIter.next();
 				Long typeId = item.getTypeId();
-				if (typeId.equals(TypeIfc.FILE_UPLOAD) 
-						|| typeId.equals(TypeIfc.ESSAY_QUESTION) 
+				if (typeId.equals(TypeIfc.ESSAY_QUESTION) 
 						|| typeId.equals(TypeIfc.AUDIO_RECORDING))
 				{ 
 					bean.setIsAutoScored(false); 
 					isAutoScored = false;
 					break; 
 				}
+				
+				if (typeId.equals(TypeIfc.FILE_UPLOAD))
+				{ 
+					bean.setIsAutoScored(false); 
+					isAutoScored = false;
+					bean.setHasFileUpload(true);
+					hasFileUpload = true;
+					break; 
+				}
 			}
 		}
 		if (isAutoScored) {
 			bean.setIsAutoScored(true); 
+		}
+		if (!hasFileUpload) {
+			bean.setHasFileUpload(false); 
 		}
 				
         bean.setFirstItem(getFirstItem(p));
@@ -695,9 +710,12 @@ log.debug("totallistener: firstItem = " + bean.getFirstItem());
     	  results.setLastInitial("Anonymous");
       results.setIdString(agent.getIdString());
       results.setAgentEid(agent.getEidString());
+      results.setAgentDisplayId(agent.getDisplayIdString());
       log.debug("testing agent getEid agent.getFirstname= " + agent.getFirstName());
       log.debug("testing agent getEid agent.getid= " + agent.getIdString());
       log.debug("testing agent getEid agent.geteid = " + agent.getEidString());
+      log.debug("testing agent getDisplayId agent.getdisplayid = " + agent.getDisplayIdString());
+
       results.setRole((String)userRoles.get(gdata.getAgentId()));
 
 
@@ -776,6 +794,7 @@ log.debug("totallistener: firstItem = " + bean.getFirstItem());
     bs = new BeanSort(agents, sortProperty);
 
     if ((sortProperty).equals("lastName")) bs.toStringSort();
+    if ((sortProperty).equals("agentDisplayId")) bs.toStringSort();
     if ((sortProperty).equals("idString")) bs.toStringSort();
     if ((sortProperty).equals("agentEid")) bs.toStringSort();
     if ((sortProperty).equals("role")) bs.toStringSort();
@@ -849,6 +868,7 @@ log.debug("totallistener: firstItem = " + bean.getFirstItem());
       //results.setIdString(agent.getEidString());
       results.setIdString(agent.getIdString());
       results.setAgentEid(agent.getEidString());
+      results.setAgentDisplayId(agent.getDisplayIdString());
       results.setRole((String)userRoles.get(studentid));
       // use -1 to indicate this is an unsubmitted agent
       results.setAssessmentGradingId(Long.valueOf(-1));

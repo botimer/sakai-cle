@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/syllabus/trunk/syllabus-impl/src/java/org/sakaiproject/component/app/syllabus/SyllabusManagerImpl.java $
- * $Id: SyllabusManagerImpl.java 125925 2013-06-18 19:10:51Z holladay@longsight.com $
+ * $Id: SyllabusManagerImpl.java 129426 2013-09-06 19:58:44Z holladay@longsight.com $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2008 The Sakai Foundation
@@ -168,7 +168,8 @@ public class SyllabusManagerImpl extends HibernateDaoSupport implements Syllabus
    */
   public SyllabusData createSyllabusDataObject(String title, Integer position,
         String asset, String view, String status, String emailNotification,
-        Date startDate, Date endDate, boolean linkCalendar)      
+        Date startDate, Date endDate, boolean linkCalendar, String calendarEventIdStartDate,
+        String calendarEventIdEndDate)      
   {
     if (position == null)
     {
@@ -187,6 +188,8 @@ public class SyllabusManagerImpl extends HibernateDaoSupport implements Syllabus
       data.setStartDate(startDate);
       data.setEndDate(endDate);
       data.setLinkCalendar(linkCalendar);
+      data.setCalendarEventIdStartDate(calendarEventIdStartDate);
+      data.setCalendarEventIdEndDate(calendarEventIdEndDate);
       saveSyllabus(data, false);
       return data;
     }
@@ -194,7 +197,8 @@ public class SyllabusManagerImpl extends HibernateDaoSupport implements Syllabus
   
   public SyllabusData createSyllabusDataObject(String title, Integer position,
 	        String asset, String view, String status, String emailNotification,
-	        Date startDate, Date endDate, boolean linkCalendar, SyllabusItem syllabusItem)      
+	        Date startDate, Date endDate, boolean linkCalendar, String calendarEventIdStartDate,
+	        String calendarEventIdEndDate, SyllabusItem syllabusItem)      
 	  {
 	    if (position == null)
 	    {
@@ -214,7 +218,8 @@ public class SyllabusManagerImpl extends HibernateDaoSupport implements Syllabus
 	      data.setEndDate(endDate);
 	      data.setLinkCalendar(linkCalendar);
 	      data.setSyllabusItem(syllabusItem);
-	            
+	      data.setCalendarEventIdStartDate(calendarEventIdStartDate);
+	      data.setCalendarEventIdEndDate(calendarEventIdEndDate);
 	      saveSyllabus(data);
 	      return data;
 	    }

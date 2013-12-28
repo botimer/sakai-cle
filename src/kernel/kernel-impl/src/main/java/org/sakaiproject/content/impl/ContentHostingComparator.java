@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/kernel/trunk/kernel-impl/src/main/java/org/sakaiproject/content/impl/ContentHostingComparator.java $
- * $Id: ContentHostingComparator.java 105077 2012-02-24 22:54:29Z ottenhoff@longsight.com $
+ * $Id: ContentHostingComparator.java 127834 2013-07-26 15:34:45Z matthew.buckett@it.ox.ac.uk $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008 Sakai Foundation
@@ -69,7 +69,7 @@ public class ContentHostingComparator implements Comparator
 	 * 
 	 * @param property
 	 *        The property name used for the sort.
-	 * @param asc
+	 * @param ascending
 	 *        true if the sort is to be ascending (false for descending).
 	 */
 	public ContentHostingComparator(String property, boolean ascending, boolean is_smart) {

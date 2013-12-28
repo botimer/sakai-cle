@@ -1,6 +1,6 @@
 /**********************************************************************************
 * $URL: https://source.sakaiproject.org/svn/osp/trunk/common/api-impl/src/java/org/theospi/portfolio/review/impl/ReviewManagerImpl.java $
-* $Id: ReviewManagerImpl.java 105079 2012-02-24 23:08:11Z ottenhoff@longsight.com $
+* $Id: ReviewManagerImpl.java 130580 2013-10-17 17:43:15Z dsobiera@indiana.edu $
 ***********************************************************************************
 *
  * Copyright (c) 2005, 2006, 2007, 2008 The Sakai Foundation
@@ -151,6 +151,12 @@ public class ReviewManagerImpl extends HibernateDaoSupport implements ReviewMana
            Node node = getNode(review.getReviewContent(), parentId, siteId, producer);
            review.setReviewContentNode(node);
         }
+    }
+    
+    public List<Review> getReviewsByItemAndType(String itemRef, int type, String parentId, String siteId, String producer) {
+    	
+    	Object[] params = new Object[]{itemRef, new Integer(type)};
+        return getReviewsByParent("getReviewsByItemAndType", params, parentId, siteId, producer);
     }
 
     public Review saveReview(Review review) {

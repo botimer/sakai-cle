@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/portal/trunk/portal-render-impl/impl/src/java/org/sakaiproject/portal/render/iframe/IFrameToolRenderService.java $
- * $Id: IFrameToolRenderService.java 105079 2012-02-24 23:08:11Z ottenhoff@longsight.com $
+ * $Id: IFrameToolRenderService.java 128674 2013-08-20 15:14:33Z csev@umich.edu $
  ***********************************************************************************
  *
  * Copyright (c) 2005, 2006, 2007, 2008 The Sakai Foundation
@@ -58,7 +58,7 @@ import org.sakaiproject.util.Web;
  * 
  * @author ddwolf
  * @since Sakai 2.4
- * @version $Rev: 105079 $
+ * @version $Rev: 128674 $
  */
 public class IFrameToolRenderService implements ToolRenderService
 {
@@ -329,7 +329,7 @@ public class IFrameToolRenderService implements ToolRenderService
 
 		// System.out.println("portal.forwardTool siteTool="+siteTool+"
 		// TCP="+toolContextPath+" TPI="+toolPathInfo);
-		String option = req.getPathInfo();
+		String option = URLUtils.getSafePathInfo(req);
 		String[] parts = option.split("/");
 		String toolContextPath = req.getContextPath()
 		+ req.getServletPath() + Web.makePath(parts, 1, 3);

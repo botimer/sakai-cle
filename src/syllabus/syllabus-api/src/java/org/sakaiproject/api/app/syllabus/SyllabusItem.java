@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/syllabus/trunk/syllabus-api/src/java/org/sakaiproject/api/app/syllabus/SyllabusItem.java $
- * $Id: SyllabusItem.java 105080 2012-02-24 23:10:31Z ottenhoff@longsight.com $
+ * $Id: SyllabusItem.java 130450 2013-10-14 21:24:08Z jbush@anisakai.com $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2008 The Sakai Foundation
@@ -77,6 +77,18 @@ public interface SyllabusItem
    * @param redirectURL The redirectURL to set.
    */
   public void setRedirectURL(String redirectURL);
+
+    /**
+     *
+     * @return  whether or not to open the redirect url in a new window
+     */
+  public Boolean isOpenInNewWindow();
+
+    /**
+     *
+     * @param openInNewWindow
+     */
+  public void setOpenInNewWindow(Boolean openInNewWindow);
 }
 
 

@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/sam/trunk/samigo-api/src/java/org/sakaiproject/tool/assessment/data/dao/grading/ItemGradingData.java $
- * $Id: ItemGradingData.java 121258 2013-03-15 15:03:36Z ottenhoff@longsight.com $
+ * $Id: ItemGradingData.java 128452 2013-08-13 23:32:58Z ktsao@stanford.edu $
  ***********************************************************************************
  *
  * Copyright (c) 2004, 2005, 2006, 2008 The Sakai Foundation
@@ -203,9 +203,6 @@ public class ItemGradingData implements java.io.Serializable {
 	}
 	
 	public Boolean getIsCorrect() {
-		if (isCorrect == null) {
-			isCorrect = Boolean.FALSE;
-		}
 		return isCorrect;
 	}
 

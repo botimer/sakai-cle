@@ -1,6 +1,6 @@
 /**********************************************************************************
 * $URL: https://source.sakaiproject.org/svn/osp/trunk/presentation/api/src/java/org/theospi/portfolio/presentation/model/PresentationPage.java $
-* $Id: PresentationPage.java 105079 2012-02-24 23:08:11Z ottenhoff@longsight.com $
+* $Id: PresentationPage.java 131548 2013-11-14 16:42:13Z dsobiera@indiana.edu $
 ***********************************************************************************
 *
  * Copyright (c) 2005, 2006, 2008 The Sakai Foundation
@@ -24,6 +24,8 @@ import java.io.Serializable;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
+
+import org.apache.commons.lang.StringEscapeUtils;
 
 import org.sakaiproject.metaobj.shared.model.Id;
 import org.sakaiproject.metaobj.shared.model.IdentifiableObject;
@@ -91,7 +93,8 @@ public class PresentationPage extends IdentifiableObject implements Serializable
       return title;
    }
    public void setTitle(String title) {
-      this.title = title;
+       // avoid problems with insertion of invalid text (e.g. <script>)
+       this.title = StringEscapeUtils.escapeHtml(title);
    }
    public Date getCreated() {
       return created;

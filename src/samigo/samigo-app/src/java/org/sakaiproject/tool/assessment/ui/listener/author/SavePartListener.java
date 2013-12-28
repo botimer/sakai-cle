@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/sam/trunk/samigo-app/src/java/org/sakaiproject/tool/assessment/ui/listener/author/SavePartListener.java $
- * $Id: SavePartListener.java 121258 2013-03-15 15:03:36Z ottenhoff@longsight.com $
+ * $Id: SavePartListener.java 128687 2013-08-20 18:46:26Z ktsao@stanford.edu $
  ***********************************************************************************
  *
  * Copyright (c) 2004, 2005, 2006, 2007, 2008, 2009 The Sakai Foundation
@@ -66,7 +66,7 @@ import org.sakaiproject.util.FormattedText;
  * <p>Title: Samigo</p>2
  * <p>Description: Sakai Assessment Manager</p>
  * @author Ed Smiley
- * @version $Id: SavePartListener.java 121258 2013-03-15 15:03:36Z ottenhoff@longsight.com $
+ * @version $Id: SavePartListener.java 128687 2013-08-20 18:46:26Z ktsao@stanford.edu $
  */
 
 public class SavePartListener
@@ -317,6 +317,11 @@ public class SavePartListener
     		 return false;
     	 }
      }
+     else {
+		 err=ContextUtil.getLocalizedString("org.sakaiproject.tool.assessment.bundle.AuthorMessages","qdrawn_null_error_pos");
+		 context.addMessage(null,new FacesMessage(err ));
+		 return false;
+     }
 
      String randomDiscount = sectionBean.getRandomPartDiscount();
      if (randomDiscount != null && !randomDiscount.equals("")) {
@@ -332,6 +337,11 @@ public class SavePartListener
     		 context.addMessage(null,new FacesMessage(err ));
     		 return false;
     	 }
+     }
+     else {
+		 err=ContextUtil.getLocalizedString("org.sakaiproject.tool.assessment.bundle.AuthorMessages","qdrawn_null_error_neg");
+		 context.addMessage(null,new FacesMessage(err ));
+		 return false; 
      }
      return true;
   }

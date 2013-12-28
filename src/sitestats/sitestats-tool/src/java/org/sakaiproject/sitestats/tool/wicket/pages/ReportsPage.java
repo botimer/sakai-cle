@@ -74,11 +74,6 @@ public class ReportsPage extends BasePage {
 	public void renderHead(IHeaderResponse response) {
 		super.renderHead(response);
 		response.renderJavascriptReference(JQUERYSCRIPT);
-		response.renderJavascriptReference(StatsManager.SITESTATS_WEBAPP+"/script/jquery.ifixpng2.js");
-		StringBuilder onDomReady = new StringBuilder();
-		onDomReady.append("jQuery.ifixpng('"+StatsManager.SITESTATS_WEBAPP+"/images/transparent.gif');");
-		onDomReady.append("jQuery('img').ifixpng();");
-		response.renderOnDomReadyJavascript(onDomReady.toString());
 	}
 	
 	private void renderBody() {	
@@ -306,7 +301,8 @@ public class ReportsPage extends BasePage {
 				}					
 				@Override
 				protected CharSequence getOnClickScript(CharSequence url) {
-					String msg = new StringResourceModel("report_confirm_delete", getPage(), model).getString();
+					String msg = new StringResourceModel("report_confirm_delete", getPage(), model,
+						new String[] {(String) new ResourceModel(reportDef.getTitleBundleKey()).getObject()}).getString();
 					return "return confirm('"+msg+"');";
 				}
 			};

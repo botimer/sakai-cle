@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/sam/trunk/samigo-app/src/java/org/sakaiproject/tool/assessment/ui/bean/author/AssessmentSettingsBean.java $
- * $Id: AssessmentSettingsBean.java 121791 2013-03-26 16:03:44Z azeckoski@unicon.net $
+ * $Id: AssessmentSettingsBean.java 128879 2013-08-21 23:29:31Z ktsao@stanford.edu $
  ***********************************************************************************
  *
  * Copyright (c) 2004, 2005, 2006, 2007, 2008, 2009 The Sakai Foundation
@@ -1414,16 +1414,19 @@ public class AssessmentSettingsBean
     HashMap targets = ptHelper.getTargets();
     Set e = targets.keySet();
     Iterator iter = e.iterator();
-    int numSelections = getNumberOfGroupsForSite() > 0 ? 2 : 1;
+    int numSelections = getNumberOfGroupsForSite() > 0 ? 3 : 2;
    	SelectItem[] target = new SelectItem[numSelections];
    	ResourceLoader rb = new ResourceLoader("org.sakaiproject.tool.assessment.bundle.AssessmentSettingsMessages");
     while (iter.hasNext()){
 	    String t = (String)iter.next();
-	    if (numSelections == 2 && t.equals(AssessmentAccessControl.RELEASE_TO_SELECTED_GROUPS)) {
-	      target[1] = new SelectItem(t, rb.getString("selected_groups"));
+	    if ("Anonymous Users".equals(t)) {
+	    	target[0] = new SelectItem(t, rb.getString("anonymous_users"));
+	    }
+	    else if (numSelections == 3 && t.equals(AssessmentAccessControl.RELEASE_TO_SELECTED_GROUPS)) {
+	      target[2] = new SelectItem(t, rb.getString("selected_groups"));
 	    }
 	    else if (t.equals(AgentFacade.getCurrentSiteName())) {
-	      target[0] = new SelectItem(t, rb.getString("entire_site"));
+	      target[1] = new SelectItem(t, rb.getString("entire_site"));
 	    }
     }
     return target;

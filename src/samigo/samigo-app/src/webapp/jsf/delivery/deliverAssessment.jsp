@@ -8,7 +8,7 @@
      "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
 <!--
-* $Id: deliverAssessment.jsp 125267 2013-05-30 18:04:08Z ktsao@stanford.edu $
+* $Id: deliverAssessment.jsp 130983 2013-10-30 21:21:40Z ottenhoff@longsight.com $
 <%--
 ***********************************************************************************
 *
@@ -32,7 +32,6 @@
   <f:view>
     <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
       <head><%= request.getAttribute("html.head") %>
-	  <script type="text/javascript" src="/samigo-app/js/saveForm.js"></script>	  	  
       <title> <h:outputText value="#{delivery.assessmentTitle}"/>
       </title>
       <style type="text/css">
@@ -48,14 +47,10 @@
          border-color: light grey;
        }
       </style>
-      </head>
-	
-      <body onload="<%= request.getAttribute("html.body.onload") %>; setLocation(); checkRadio(); SaveFormContentAsync('deliverAssessment.faces', 'takeAssessmentForm', 'takeAssessmentForm:save', 'takeAssessmentForm:lastSubmittedDate1', 'takeAssessmentForm:lastSubmittedDate2',  <h:outputText value="#{delivery.autoSaveRepeatMilliseconds}"/>, true); setTimeout('setLocation2()',2)" >
- 
-      <h:outputText value="<a name='top'></a>" escape="false" />
-      
+
       <%@ include file="/jsf/delivery/deliveryjQuery.jsp" %>
-      
+      <script type='text/javascript' src='/library/js/headscripts.js'></script><script type='text/javascript'>var sakai = sakai || {}; sakai.editor = sakai.editor || {};sakai.editor.enableResourceSearch = false;</script><script type='text/javascript'>var CKEDITOR_BASEPATH='/library/editor/ckeditor/';</script><script type='text/javascript' src='/library/editor/ckeditor/ckeditor.js'></script><script type='text/javascript' src='/library/editor/ckeditor.launch.js'></script>
+	  <script type="text/javascript" src="/samigo-app/js/saveForm.js"></script>	  	  
       <script type="text/javascript">
 		
 		function whichradio(obj){ 
@@ -115,6 +110,12 @@
       </script>
       
  
+      </head>
+	
+      <body onload="<%= request.getAttribute("html.body.onload") %>; setLocation(); checkRadio(); SaveFormContentAsync('deliverAssessment.faces', 'takeAssessmentForm', 'takeAssessmentForm:save', 'takeAssessmentForm:lastSubmittedDate1', 'takeAssessmentForm:lastSubmittedDate2',  <h:outputText value="#{delivery.autoSaveRepeatMilliseconds}"/>, true); setTimeout('setLocation2()',2)" >
+ 
+      <h:outputText value="<a name='top'></a>" escape="false" />
+      
        <div id="timer-warning" style="display:none" title="&nbsp;<span class='skip'>
          <h:outputText value="#{deliveryMessages.five_minutes_left1} " />
 	     <h:outputText value="#{deliveryMessages.five_minutes_left2}" />

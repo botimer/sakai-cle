@@ -533,6 +533,14 @@
        <ref bean="matrixManager"/>
     </property>
     <property name="authzManager"><ref bean="authzManager"/></property>
+      <property name="reviewManager"><ref bean="org.theospi.portfolio.review.mgt.ReviewManager"/></property>
+      <property name="siteService" ref="org.sakaiproject.site.api.SiteService" />
+      <property name="serverConfigurationService">
+         <ref bean="org.sakaiproject.component.api.ServerConfigurationService" />
+      </property>
+      <property name="userDirectoryService">
+         <ref bean="org.sakaiproject.user.api.UserDirectoryService" />
+      </property>
    </bean>
    
    <bean id="org.sakaiproject.user.api.UserNotificationPreferencesRegistration.matrix"

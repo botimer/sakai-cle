@@ -19,7 +19,7 @@ $(document).ready(function() {
 			<spring:bind path="presentation.name">
 				<div id="presentationName">
 					<span class="editableText portfolio_name"><c:out value="${status.value}"/></span>
-					<input class="inlineEdit" type="text" style="display:none;margin:0;" size="40" />
+					<input class="inlineEdit" type="text" style="display:none;margin:0;" size="40" title="<fmt:message key="label_portfolioName"/>" />
 					<span class="itemAction">
 						<a href="#" class="editLink"><fmt:message key="action_edit_title"/></a>
 						<a href="#" class="saveLink" style="display: none;"><fmt:message key="button_saveEdit"/></a>
@@ -48,7 +48,7 @@ $(document).ready(function() {
       			<span class="editableText"><c:out value="${status.value}" /></span>
       			<textarea class="inlineEdit" cols="40" rows="4" style="display:none;"></textarea>
       			<span class="itemAction">
-                  <a href="#" class="editLink"><fmt:message key="edit"/></a>
+                  <a href="#" class="editLink"><fmt:message key="action_edit_description"/></a>
       				<a href="#" class="saveLink" style="display: none;"><fmt:message key="button_saveEdit"/></a>
       				<a href="#" class="undoLink" style="display: none;"><fmt:message key="button_cancel"/></a>
       			</span>

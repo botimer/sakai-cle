@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/osp/trunk/wizard/tool/src/java/org/theospi/portfolio/wizard/tool/DecoratedWizard.java $
- * $Id: DecoratedWizard.java 105400 2012-03-02 16:21:20Z chmaurer@iupui.edu $
+ * $Id: DecoratedWizard.java 131548 2013-11-14 16:42:13Z dsobiera@indiana.edu $
  ***********************************************************************************
  *
  * Copyright (c) 2005, 2006, 2007, 2008 The Sakai Foundation
@@ -45,6 +45,7 @@ import org.theospi.portfolio.guidance.model.Guidance;
 import org.theospi.portfolio.guidance.model.GuidanceItem;
 import org.theospi.portfolio.style.StyleHelper;
 import org.theospi.portfolio.style.model.Style;
+import org.theospi.portfolio.wizard.WizardFunctionConstants;
 import org.theospi.portfolio.wizard.mgt.WizardManager;
 import org.theospi.portfolio.wizard.model.Wizard;
 import org.theospi.portfolio.wizard.model.CompletedWizard;
@@ -187,6 +188,10 @@ public class DecoratedWizard implements DecoratedListInterface {
 						groupSelect.add(getParent().createSelect(group.getId(), group.getTitle()));
 				}
 			}
+			
+	         if (allowAllGroups) {
+	                groupSelect.add(getParent().createSelect(WizardFunctionConstants.UNASSIGNED_GROUP, myResources.getString("wizard_groups_unassigned")));
+	         }
 		} 
 		catch (IdUnusedException e) {
 			logger.error("", e);
@@ -219,6 +224,17 @@ public class DecoratedWizard implements DecoratedListInterface {
 				if (allowAllGroups && (filterGroupId == null || filterGroupId.equals(""))) {
 					userIds.addAll(site.getUsers());
 				}
+                else if (filterGroupId != null && WizardFunctionConstants.UNASSIGNED_GROUP.equals(filterGroupId)) {
+                    //get all users not in a group
+                    //TODO Is there a more efficient way to do this?
+                    Set<String> siteMemberIds = site.getUsers();
+                    for (String siteMemberId : siteMemberIds) {
+                        Collection memberGroups = site.getGroupsWithMember(siteMemberId);
+                        if (memberGroups == null || (memberGroups != null && (memberGroups.isEmpty() || memberGroups.size() == 0))) {
+                            userIds.add(siteMemberId);
+                        }
+                    }
+                }
 				else if ( filterGroupId != null && !filterGroupId.equals("") ) {
 					Group group = site.getGroup(filterGroupId);
 					userIds.addAll(group.getUsers());

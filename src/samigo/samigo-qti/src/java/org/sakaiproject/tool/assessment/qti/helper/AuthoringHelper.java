@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/sam/trunk/samigo-qti/src/java/org/sakaiproject/tool/assessment/qti/helper/AuthoringHelper.java $
- * $Id: AuthoringHelper.java 124466 2013-05-17 23:11:31Z ktsao@stanford.edu $
+ * $Id: AuthoringHelper.java 130191 2013-10-04 19:52:29Z ottenhoff@longsight.com $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008, 2009 The Sakai Foundation
@@ -41,6 +41,8 @@ import javax.xml.transform.Source;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.*;
+import org.sakaiproject.site.cover.SiteService;
+import org.sakaiproject.tool.cover.ToolManager;
 import org.xml.sax.SAXException;
 
 
@@ -93,7 +95,7 @@ import org.sakaiproject.util.FormattedText;
  * <p>Organization: Sakai Project</p>
  * @author Ed Smiley esmiley@stanford.edu
  * @author Shastri, Rashmi <rshastri@iupui.edu>
- * @version $Id: AuthoringHelper.java 124466 2013-05-17 23:11:31Z ktsao@stanford.edu $
+ * @version $Id: AuthoringHelper.java 130191 2013-10-04 19:52:29Z ottenhoff@longsight.com $
  */
 public class AuthoringHelper
 {
@@ -720,6 +722,11 @@ public class AuthoringHelper
       
       // Assessment Attachment
       exHelper.makeAssessmentAttachmentSet(assessment);
+
+      String siteTitle = SiteService.getSite(ToolManager.getCurrentPlacement().getContext()).getTitle();
+      if(siteTitle != null && !siteTitle.equals(assessment.getAssessmentAccessControl().getReleaseTo())){
+          assessment.getAssessmentAccessControl().setReleaseTo(siteTitle);
+      }
 
       assessmentService.saveAssessment(assessment);
       return assessment;

@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/kernel/trunk/api/src/main/java/org/sakaiproject/content/cover/ContentHostingService.java $
- * $Id: ContentHostingService.java 124939 2013-05-23 22:12:00Z azeckoski@unicon.net $
+ * $Id: ContentHostingService.java 130683 2013-10-21 14:52:02Z azeckoski@unicon.net $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008 Sakai Foundation
@@ -27,10 +27,18 @@ import java.util.Set;
 import org.sakaiproject.antivirus.api.VirusFoundException;
 import org.sakaiproject.component.cover.ComponentManager;
 import org.sakaiproject.content.api.ContentResource;
+import org.sakaiproject.exception.IdInvalidException;
+import org.sakaiproject.exception.IdUnusedException;
+import org.sakaiproject.exception.IdUsedException;
+import org.sakaiproject.exception.InUseException;
+import org.sakaiproject.exception.InconsistentException;
+import org.sakaiproject.exception.OverQuotaException;
 import org.sakaiproject.content.api.ContentResourceFilter;
 import org.sakaiproject.content.api.GroupAwareEdit;
 import org.sakaiproject.entity.api.Entity;
 import org.sakaiproject.exception.PermissionException;
+import org.sakaiproject.exception.ServerOverloadException;
+
 import org.sakaiproject.exception.TypeException;
 
 /**
@@ -832,7 +840,7 @@ public class ContentHostingService
 		org.sakaiproject.content.api.ContentHostingService service = getInstance();
 		if (service == null) return null;
 
-		return service.findResources(type, primaryMimeType, subMimeType);
+		return service.findResources(type, primaryMimeType, subMimeType, contextIds);
 	}
   
 	public static java.util.List findResources(String type, String primaryMimeType, String subMimeType)
@@ -1113,6 +1121,24 @@ public class ContentHostingService
 		if (service == null) return null;
 		
 		return service.getResourcesOfType(resourceType, pageSize, page);
+	}
+
+	public static void restoreResource(String resourceId) throws PermissionException, IdUsedException, IdUnusedException, 
+		IdInvalidException, InconsistentException, OverQuotaException, ServerOverloadException, TypeException, InUseException 
+	{
+    	org.sakaiproject.content.api.ContentHostingService service = getInstance();
+		if (service == null) return ;
+		
+		service.restoreResource(resourceId);
+	}
+
+	public static void removeDeletedResource(String resourceId) throws PermissionException, 
+			IdUnusedException, TypeException, InUseException 
+	{
+    	org.sakaiproject.content.api.ContentHostingService service = getInstance();
+		if (service == null) return ;
+		
+		service.removeDeletedResource(resourceId);
 	}
 
 	/**

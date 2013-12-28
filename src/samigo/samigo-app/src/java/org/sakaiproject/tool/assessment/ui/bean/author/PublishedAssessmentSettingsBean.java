@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/sam/trunk/samigo-app/src/java/org/sakaiproject/tool/assessment/ui/bean/author/PublishedAssessmentSettingsBean.java $
- * $Id: PublishedAssessmentSettingsBean.java 121791 2013-03-26 16:03:44Z azeckoski@unicon.net $
+ * $Id: PublishedAssessmentSettingsBean.java 130838 2013-10-24 19:13:38Z ktsao@stanford.edu $
  ***********************************************************************************
  *
  * Copyright (c) 2004, 2005, 2006, 2007, 2008, 2009 The Sakai Foundation
@@ -1307,16 +1307,20 @@ public void setFeedbackComponentOption(String feedbackComponentOption) {
 	  HashMap targets = ptHelper.getTargets();
 	  Set e = targets.keySet();
 	  Iterator iter = e.iterator();
-	  int numSelections = getNumberOfGroupsForSite() > 0 ? 2 : 1;
+	  int numSelections = getNumberOfGroupsForSite() > 0 ? 3 : 2;
 	  SelectItem[] target = new SelectItem[numSelections];
 	  ResourceLoader rb = new ResourceLoader("org.sakaiproject.tool.assessment.bundle.AssessmentSettingsMessages");
 	  while (iter.hasNext()){
-	      String t = (String)iter.next();
-	      if (numSelections == 2 && t.equals(AssessmentAccessControl.RELEASE_TO_SELECTED_GROUPS)) {
-	          target[1] = new SelectItem(t, rb.getString("selected_groups"));
-	      } else if (t.equals(AgentFacade.getCurrentSiteName())) {
-	        target[0] = new SelectItem(t, rb.getString("entire_site"));
-	      }
+		  String t = (String)iter.next();
+		  if (t.equals("Anonymous Users")) {
+			  target[0] = new SelectItem(t, rb.getString("anonymous_users"));
+		  }
+		  else if (numSelections == 3 && t.equals(AssessmentAccessControl.RELEASE_TO_SELECTED_GROUPS)) {
+			  target[2] = new SelectItem(t, rb.getString("selected_groups"));
+		  }
+		  else if (t.equals(AgentFacade.getCurrentSiteName())) {
+			  target[1] = new SelectItem(t, rb.getString("entire_site"));
+		  }
 	  }
 	  return target;
   }

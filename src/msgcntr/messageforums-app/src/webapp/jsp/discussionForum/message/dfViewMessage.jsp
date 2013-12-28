@@ -9,11 +9,10 @@
 <f:view>
 	<sakai:view toolCssHref="/messageforums-tool/css/msgcntr.css">
 		<h:form id="msgForum" styleClass="specialLink">
-			<script type="text/javascript" language="JavaScript" src="/library/js/jquery-ui-latest/js/jquery.min.js"></script>
-			<sakai:script contextBase="/messageforums-tool" path="/js/jquery.qtip.js"/>
+			<script type="text/javascript" src="/library/js/jquery/jquery-1.9.1.min.js"></script>
+			<script type="text/javascript" src="/library/js/jquery/qtip/jquery.qtip-latest.min.js"></script>
 			<sakai:script contextBase="/messageforums-tool" path="/js/forum.js"/>
 			<sakai:script contextBase="/messageforums-tool" path="/js/sak-10625.js"/>
-			<sakai:script contextBase="/messageforums-tool" path="/js/forum.js"/>
 			<sakai:script contextBase="/messageforums-tool" path="/js/messages.js"/>
 			
 			<!--jsp/discussionForum/message/dfViewMessage.jsp-->
@@ -151,7 +150,7 @@
 					</h:commandLink>
 					
 					<h:commandLink title="#{msgs.cdfm_button_bar_reply_to_thread}" action="#{ForumTool.processDfMsgReplyThread}" 
-							rendered="#{ForumTool.selectedTopic.isNewResponse && ForumTool.selectedThreadHead.msgApproved && !ForumTool.selectedTopic.locked && !ForumTool.selectedForum.locked == 'true'}">
+							rendered="#{ForumTool.selectedTopic.isNewResponseToResponse && ForumTool.selectedThreadHead.msgApproved && !ForumTool.selectedTopic.locked && !ForumTool.selectedForum.locked == 'true'}">
 						<h:graphicImage value="/../../library/image/silk/folder_go.png" alt="#{msgs.cdfm_button_bar_reply_to_thread}" />
 						<h:outputText value=" #{msgs.cdfm_button_bar_reply_to_thread}" />
 					</h:commandLink>

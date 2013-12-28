@@ -17,13 +17,13 @@ org.sakaiproject.tool.cover.SessionManager.getCurrentToolSession().
 
 <f:view>
   <sakai:view title="#{msgs.cdfm_discussion_forums}" toolCssHref="/messageforums-tool/css/msgcntr.css">
-  		<script type="text/javascript" src="/library/js/jquery/1.4.2/jquery-1.4.2.min.js"></script>
+  		<script type="text/javascript" src="/library/js/jquery/jquery-1.9.1.min.js"></script>
   		<sakai:script contextBase="/messageforums-tool" path="/js/sak-10625.js"/>
 		<sakai:script contextBase="/messageforums-tool" path="/js/forum.js"/>
 
 	<h:form id="msgForum">
   <sakai:tool_bar separator="#{msgs.cdfm_toolbar_separator}" >
-  	<h:graphicImage url="/images/silk/date_delete.png" title="#{msgs.area_restricted_message}" alt="#{msgs.area_restricted_message}" rendered="#{ForumTool.instructor && ForumTool.template.availability == 'false'}" style="margin-right:.5em"/>
+ 
     <sakai:tool_bar_item value="#{msgs.cdfm_new_forum}" action="#{ForumTool.processActionNewForum}" rendered="#{ForumTool.newForum}"/>
     <sakai:tool_bar_item value="#{msgs.cdfm_organize}" action="#{ForumTool.processActionTemplateOrganize}" rendered="#{ForumTool.instructor}" />
 	  <sakai:tool_bar_item value="#{msgs.cdfm_template_setting}" action="#{ForumTool.processActionTemplateSettings}" rendered="#{ForumTool.instructor}" />

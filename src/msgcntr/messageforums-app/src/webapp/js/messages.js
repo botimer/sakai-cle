@@ -61,7 +61,7 @@ $(document).ready(function(){
 		  $("body").append('<img id="displayWait" src="/messageforums-tool/images/wait_sakai.gif" width="50" height="50" style="display:none" />');
 	  }
 	  var loadUI = function() {
-		  $.getScript("/messageforums-tool/js/jquery.blockUI.js",
+		  $.getScript("/library/js/jquery/blockUI/2.66/jquery.blockUI.js",
 			function(){
 			  $('input[type=submit]').click(function() {
 		        $.blockUI({ 
@@ -83,3 +83,32 @@ $(document).ready(function(){
 		loadUI();  
 	  }
 });
+
+//This is the profile display on user's names.
+$(document).ready(function() {			
+	$('.authorProfile').each(function() {
+		$(this).qtip({ 
+			content: {text: msgs_js.loading_wait,
+				url: $(this).attr('href'), title: {	text: msgs_js.cdfm_profile_information,button: '[ X ]' }
+			},
+			position: {	corner: {target: 'center', tooltip: 'leftMiddle'} },
+			show: { when: 'click', solo: true, effect: {length:0} },
+			hide: { when:'unfocus', fixed:true, delay: 300,  effect: {length:0} },
+			style: { tip: true, border: {color:'#687E9C'}, name: 'light', width: 570 }
+		});
+		$(this).attr('href', 'javascript:;');
+	});
+});	
+
+
+function changeSelect(obj) {
+	$(obj).trigger("change");
+}
+
+function addTagSelector(obj) {
+  	if (obj) {
+	  	$(obj).select2({formatNoMatches:function(){return'';}});
+	  	$(obj).on('change',function(){resize();});
+  	}
+}
+

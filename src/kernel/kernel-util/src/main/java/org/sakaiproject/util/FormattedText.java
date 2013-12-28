@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/kernel/trunk/kernel-util/src/main/java/org/sakaiproject/util/FormattedText.java $
- * $Id: FormattedText.java 121948 2013-03-29 12:39:06Z azeckoski@unicon.net $
+ * $Id: FormattedText.java 127811 2013-07-25 23:08:16Z azeckoski@unicon.net $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008 Sakai Foundation
@@ -159,6 +159,13 @@ public class FormattedText {
 
     public static String decodeNumericCharacterReferences(String value) {
         return getFormattedText().decodeNumericCharacterReferences(value);
+    }
+
+    /**
+     * @see org.sakaiproject.util.api.FormattedText#validateURL(String)
+     */
+    public static boolean validateURL(String urlToValidate) {
+        return getFormattedText().validateURL(urlToValidate);
     }
 
 }

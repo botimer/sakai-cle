@@ -1,8 +1,9 @@
 package org.theospi.portfolio.tagging.api;
 
+import org.sakaiproject.taggable.api.EvaluationProvider;
 import org.sakaiproject.taggable.api.TaggingProvider;
 
-public interface MatrixTaggingProvider extends TaggingProvider {
+public interface MatrixTaggingProvider extends TaggingProvider, EvaluationProvider {
 
 	
 	/**

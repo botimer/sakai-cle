@@ -477,7 +477,7 @@ body{
 	color:blue;
 	margin:0;
 	padding:0 15px 0 0;
-	background:url(../img/collapse.gif) center right no-repeat;
+/*	background:url(../img/collapse.gif) center right no-repeat; */
 }
 .inlineMenu .makeMenuChild{
 	list-style: none;
@@ -580,7 +580,8 @@ em.closeMe{font-style:normal;cursor:pointer;padding-left:1em}
 
 .editableActive{
 	padding:4px !important; 
-	background:#cef
+	background:#cef;
+	border: 1px solid #CCCCCC;
 }
 
 .presentationTypeGroup{

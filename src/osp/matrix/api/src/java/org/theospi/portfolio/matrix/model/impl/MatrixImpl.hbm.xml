@@ -152,6 +152,14 @@
            <key column="parent_id" />
            <one-to-many class="org.theospi.portfolio.workflow.model.Workflow" />
         </set>
+        
+        <property name="itemLevelEvals" type="boolean" column="itemLevelEvals"  not-null="false"/>
+        <property name="itemLevelEvaluationDevice" column="item_lev_eval_device_id" length="36"
+            type="org.sakaiproject.metaobj.shared.IdType"/>
+        <property name="itemLevelEvaluationDeviceType" type="string" column="item_lev_eval_device_type" />
+        
+        <property name="enableItemLevelEvalsInLinkedTools" type="boolean" column="enableItemLevEvalsInLnkdTools"  not-null="false"/>
+        <property name="hideItemLevelEvals" type="boolean" column="hideItemLevelEvals"  not-null="false"/>        
          
     </class>
     
@@ -269,7 +277,8 @@
       <property name="defaultReviewers" type="boolean" column="defaultReviewers"  not-null="false"/> 
       <property name="defaultEvaluationForm" type="boolean" column="defaultEvaluationForm"  not-null="false"/> 
       <property name="defaultEvaluators" type="boolean" column="defaultEvaluators"  not-null="false"/>    
-      
+      <property name="defaultItemLevelEval" type="boolean" column="defaultItemLevelEval"  not-null="false"/>
+
       <property name="allowRequestFeedback" type="boolean" column="allowRequestFeedback"  not-null="false"/>
       <property name="hideEvaluations" type="boolean" column="hideEvaluations"  not-null="false"/>
       <property name="type" type="string" column="type" not-null="true" length="1"/>

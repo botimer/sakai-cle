@@ -3,12 +3,14 @@
 
 
 <jsp:useBean id="msgs" class="org.sakaiproject.util.ResourceLoader" scope="request"><jsp:setProperty name="msgs" property="baseName" value="org.theospi.portfolio.presentation.bundle.Messages"/></jsp:useBean>
+<fmt:setLocale value="${locale}" />
+<fmt:setBundle basename="org.theospi.portfolio.presentation.bundle.Messages" />
 
 <script type="text/javascript">
 	setMainFrameHeight('previewFrame');
 </script>
 <div style="padding:0 1em">
-	<h3><c:out value="${msgs.title_preview}"/> <c:out value="${template.name}"/></h3>
+	<h3><fmt:message key="title_preview"><fmt:param><c:out value="${template.name}"/></fmt:param></fmt:message></h3>
 	<div class="textPanel indnt2">
 		<h4>Template Description</h4>
 		<div class="textPanel">

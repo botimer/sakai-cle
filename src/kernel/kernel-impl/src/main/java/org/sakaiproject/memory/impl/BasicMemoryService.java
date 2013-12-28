@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/kernel/trunk/kernel-impl/src/main/java/org/sakaiproject/memory/impl/BasicMemoryService.java $
- * $Id: BasicMemoryService.java 125957 2013-06-19 02:23:55Z azeckoski@unicon.net $
+ * $Id: BasicMemoryService.java 129412 2013-09-06 17:38:55Z azeckoski@unicon.net $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008 Sakai Foundation
@@ -51,6 +51,7 @@ import org.sakaiproject.memory.api.GenericMultiRefCache;
 import org.sakaiproject.memory.api.MemoryPermissionException;
 import org.sakaiproject.memory.api.MemoryService;
 import org.sakaiproject.memory.api.MultiRefCache;
+import org.sakaiproject.memory.util.CacheInitializer;
 
 /**
  * <p>

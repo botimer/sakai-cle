@@ -68,6 +68,7 @@ import org.sakaiproject.event.api.EventTrackingService;
 import org.sakaiproject.exception.IdUnusedException;
 import org.sakaiproject.id.api.IdManager;
 import org.sakaiproject.site.api.Site;
+import org.sakaiproject.site.api.ToolConfiguration;
 import org.sakaiproject.site.cover.SiteService;
 import org.sakaiproject.tool.api.Placement;
 import org.sakaiproject.tool.api.SessionManager;
@@ -1110,6 +1111,11 @@ public class MessageForumsForumManagerImpl extends HibernateDaoSupport implement
         // re-retrieve the forum with the area populated so we don't have to
         // rely on "current context"
         forum = (DiscussionForum)getForumById(true, id);
+        List<Topic> topics = getTopicsByIdWithMessages(id);
+        for (Topic topic : topics) {
+            forum.removeTopic(topic);
+        }
+        
         //Area area = getAreaByContextIdAndTypeId(typeManager.getDiscussionForumType());
         Area area = forum.getArea();
         area.removeDiscussionForum(forum);
@@ -1267,8 +1273,19 @@ public class MessageForumsForumManagerImpl extends HibernateDaoSupport implement
         if (TestUtil.isRunningTests()) {
             return "test-context";
         }
+        String presentSiteId = null;
         Placement placement = ToolManager.getCurrentPlacement();
-        String presentSiteId = placement.getContext();
+        if(placement == null){
+        	//current placement is null.. let's try another approach to getting the site id
+        	if(sessionManager.getCurrentToolSession() != null){
+        		ToolConfiguration toolConfig = SiteService.findTool(sessionManager.getCurrentToolSession().getId());
+        		if(toolConfig != null){
+        			presentSiteId = toolConfig.getSiteId();
+        		}
+        	}
+        }else{
+        	presentSiteId = placement.getContext();
+        }
         return presentSiteId;
     }
 

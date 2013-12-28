@@ -1,10 +1,10 @@
-<%-- $Id: deliverMatching.jsp 104419 2012-02-06 16:06:52Z aaronz@vt.edu $
+<%-- $Id: deliverMatching.jsp 130954 2013-10-29 21:29:31Z ktsao@stanford.edu $
 include file for delivering matching questions
 should be included in file importing DeliveryMessages
 --%>
 <%@ taglib uri="http://myfaces.apache.org/tomahawk" prefix="t"%>
 <!--
-* $Id: deliverMatching.jsp 104419 2012-02-06 16:06:52Z aaronz@vt.edu $
+* $Id: deliverMatching.jsp 130954 2013-10-29 21:29:31Z ktsao@stanford.edu $
 <%--
 ***********************************************************************************
 *
@@ -34,7 +34,7 @@ should be included in file importing DeliveryMessages
      <h:outputText value="#{answer}" escape="false" />
    </h:column>
   </h:dataTable>
-  <h:outputText escape="false" value="<hr style='border:none;border-top:solid black 1px'/>" />
+
   <h:dataTable value="#{question.matchingArray}" var="matching">
     <h:column rendered="#{delivery.feedback eq 'true' &&
        delivery.feedbackComponent.showCorrectResponse && !delivery.noFeedback=='true'}">

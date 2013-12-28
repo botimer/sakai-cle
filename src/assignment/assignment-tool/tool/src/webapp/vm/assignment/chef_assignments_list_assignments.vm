@@ -1,10 +1,10 @@
-<!-- $Id: chef_assignments_list_assignments.vm 122725 2013-04-12 21:05:51Z ottenhoff@longsight.com $ -->
+<!-- $Id: chef_assignments_list_assignments.vm 132512 2013-12-12 12:10:12Z jean-francois.leveque@upmc.fr $ -->
 <!-- start: chef_assignments_list_assignments.vm  -->
 ##<!-- $Header: Exp $ -->
 ## Assignments - list view
 #parse("/vm/assignment/assignment_macros.vm")
 <link href="/sakai-assignment-tool/css/assignment.css" type="text/css" rel="stylesheet" media="all" />
-<script type="text/javascript" language="JavaScript">
+<script type="text/javascript">
   focus_path = ["search"];
 </script>
 <script type='text/javascript'>
@@ -521,11 +521,30 @@ function allowClick(object)
 								   $!assignment.getStatus()
 								#else
 									#if ($!submission)
-										$submission.getStatus()
-										#if ($submission.getSubmitted()) 
-											#if ($assignment.getDueTime() && $submission.getTimeSubmitted() && $submission.getTimeSubmitted().after($assignment.getDueTime()))
+										#if($assignment.isPeerAssessmentOpen())
+											##student has submitted, check if the assignment is peer assessment
+											##and if the time is available
+											#set($totalReviews = $peerAssessmentItemsMap.get($assignment.id))
+											#if($totalReviews == -1)
+												##something is wrong here, don't show anything to the user, just show the peer review start date (could be waiting for the job to run)
+												$tlang.getFormattedMessage("peerassessment.reviewStartsOn", $!assignment.closeTime.toStringLocalFull())
+											#elseif($totalReviews == 0)
+												##user has submitted every review already
+												$tlang.getString("gen.peerreview.subm4")
+											#else
+												##user still has at least one review to submit
+												<a href="#toolLinkParam("$action" "doEdit_review" "assignmentId=$validator.escapeUrl($assignmentReference)")">$tlang.getFormattedMessage("gen.peerreview.todo", $totalReviews, $!assignment.peerAssessmentPeriod.toStringLocalFull())</a>
+											#end
+										#elseif ($assignment.isPeerAssessmentPending() && $submission.getSubmitted())
+											##student has submitted but the review period hasn't started
+											$tlang.getFormattedMessage("peerassessment.reviewStartsOn", $!assignment.closeTime.toStringLocalFull())
+										#else
+											$submission.getStatus()
+											#if ($submission.getSubmitted()) 
+												#if ($assignment.getDueTime() && $submission.getTimeSubmitted() && $submission.getTimeSubmitted().after($assignment.getDueTime()))
                                                                                         	<span class="highlight">$tlang.getString("gen.late2")</span>
                                                                                 	#end
+											#end
 										#end
 									#else
 										$tlang.getString("gen.notsta")
@@ -536,7 +555,12 @@ function allowClick(object)
 								$!assignment.openTime.toStringLocalFull()
 							</td>
 							<td headers="dueDate">
-								$!assignment.dueTime.toStringLocalFull()
+							#if ($assignment.getContent().getHideDueDate() != "true" || $!allowUpdateAssignment)
+
+                                ##Instructors can still see the due date
+                                <span class="highlight">$!assignment.dueTime.toStringLocalFull()</span>
+                            #end
+
 							</td>
 							#if ($!allowGradeSubmission)
 								#if ($!view.equals('lisofass1'))

@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/portal/trunk/portal-impl/impl/src/java/org/sakaiproject/portal/charon/SkinnableCharonPortal.java $
- * $Id: SkinnableCharonPortal.java 127018 2013-07-15 11:31:05Z a.fish@lancaster.ac.uk $
+ * $Id: SkinnableCharonPortal.java 132925 2013-12-27 04:14:26Z csev@umich.edu $
  ***********************************************************************************
  *
  * Copyright (c) 2005, 2006, 2007, 2008 The Sakai Foundation
@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.TimeZone;
+import java.text.SimpleDateFormat;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
@@ -43,7 +44,9 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.sakaiproject.authz.cover.SecurityService;
+import org.sakaiproject.authz.api.SecurityAdvisor;
+import org.sakaiproject.authz.api.SecurityAdvisor.SecurityAdvice;
+import org.sakaiproject.authz.api.SecurityService;
 import org.sakaiproject.component.cover.ComponentManager;
 import org.sakaiproject.component.cover.ServerConfigurationService;
 import org.sakaiproject.entity.api.ResourceProperties;
@@ -54,6 +57,7 @@ import org.sakaiproject.exception.PermissionException;
 import org.sakaiproject.portal.api.Editor;
 import org.sakaiproject.portal.api.PageFilter;
 import org.sakaiproject.portal.api.Portal;
+import org.sakaiproject.portal.api.PortalService;
 import org.sakaiproject.portal.api.PortalChatPermittedHelper;
 import org.sakaiproject.portal.api.PortalHandler;
 import org.sakaiproject.portal.api.PortalRenderContext;
@@ -67,8 +71,6 @@ import org.sakaiproject.portal.charon.handlers.AtomHandler;
 import org.sakaiproject.portal.charon.handlers.DirectToolHandler;
 import org.sakaiproject.portal.charon.handlers.ErrorDoneHandler;
 import org.sakaiproject.portal.charon.handlers.ErrorReportHandler;
-import org.sakaiproject.portal.charon.handlers.GalleryHandler;
-import org.sakaiproject.portal.charon.handlers.GalleryResetHandler;
 import org.sakaiproject.portal.charon.handlers.HelpHandler;
 import org.sakaiproject.portal.charon.handlers.JoinHandler;
 import org.sakaiproject.portal.charon.handlers.LoginHandler;
@@ -98,6 +100,8 @@ import org.sakaiproject.portal.render.cover.ToolRenderService;
 import org.sakaiproject.portal.util.ErrorReporter;
 import org.sakaiproject.portal.util.ToolURLManagerImpl;
 import org.sakaiproject.portal.util.URLUtils;
+import org.sakaiproject.portal.util.CSSUtils;
+import org.sakaiproject.portal.util.ToolUtils;
 import org.sakaiproject.site.api.Site;
 import org.sakaiproject.site.api.SitePage;
 import org.sakaiproject.site.api.ToolConfiguration;
@@ -132,7 +136,7 @@ import au.com.flyingkite.mobiledetect.UAgentInfo;
  * </p>
  * 
  * @since Sakai 2.4
- * @version $Rev: 127018 $
+ * @version $Rev: 132925 $
  * 
  */
 @SuppressWarnings("deprecation")
@@ -164,6 +168,14 @@ public class SkinnableCharonPortal extends HttpServlet implements Portal
 
 	private PortalService portalService;
 	
+	private SecurityService securityService = null;
+        
+	/**
+	 * Keyword to look for in sakai.properties copyright message to replace
+	 * for the server's time's year for auto-update of Copyright end date
+	 */
+	private static final String SERVER_COPYRIGHT_CURRENT_YEAR_KEYWORD = "currentYearFromServer";
+
 	/**
 	 * Chat helper.
 	 */
@@ -183,8 +195,6 @@ public class SkinnableCharonPortal extends HttpServlet implements Portal
 	// private HashMap<String, PortalHandler> handlerMap = new HashMap<String,
 	// PortalHandler>();
 
-	private GalleryHandler galleryHandler;
-	
 	private String gatewaySiteUrl;
 
 	private String gatewayPdaSiteUrl;
@@ -259,16 +269,8 @@ public class SkinnableCharonPortal extends HttpServlet implements Portal
 			{
 			case ERROR_SITE:
 			{
-				siteHandler.doSite(req, res, session, "!error", null, null, req
-						.getContextPath()
-						+ req.getServletPath());
-				break;
-			}
-			case ERROR_GALLERY:
-			{
-				galleryHandler.doGallery(req, res, session, "!error", null, req
-						.getContextPath()
-						+ req.getServletPath());
+				siteHandler.doSite(req, res, session, "!error", null, null, null, null,
+					req.getContextPath() + req.getServletPath());
 				break;
 			}
 			case ERROR_WORKSITE:
@@ -570,14 +572,7 @@ public class SkinnableCharonPortal extends HttpServlet implements Portal
 
 	public boolean isPortletPlacement(Placement placement)
 	{
-		if (placement == null) return false;
-		Tool t = placement.getTool();
-		if (t == null) return false;
-		Properties toolProps = t.getFinalConfig();
-		if (toolProps == null) return false;
-		String portletContext = toolProps
-		.getProperty(PortalService.TOOL_PORTLET_CONTEXT_PATH);
-		return (portletContext != null);
+		return ToolUtils.isPortletPlacement(placement);
 	}
 
 	public Map includeTool(HttpServletResponse res, HttpServletRequest req,
@@ -618,7 +613,7 @@ public class SkinnableCharonPortal extends HttpServlet implements Portal
 		// let the tool do some the work (include) (see note above)
 
 		String toolUrl = ServerConfigurationService.getToolUrl() + "/"
-		+ Web.escapeUrl(placement.getId()) + "/";
+		   + Web.escapeUrl(placement.getId()) + "/";
 		String titleString = Web.escapeHtml(placement.getTitle());
 		String toolId = Web.escapeHtml(placement.getToolId());
 
@@ -638,22 +633,22 @@ public class SkinnableCharonPortal extends HttpServlet implements Portal
 
 		String resetActionUrl = PortalStringUtil.replaceFirst(toolUrl, "/tool/", "/tool-reset/");
 
-                String sakaiPanel = req.getParameter("panel");
-                if ( sakaiPanel != null && sakaiPanel.matches(".*[\"'<>].*" ) ) sakaiPanel=null;
-                if ( sakaiPanel == null ) sakaiPanel="Main";
-                resetActionUrl = URLUtils.addParameter(resetActionUrl, "panel", sakaiPanel);
+		String sakaiPanel = req.getParameter("panel");
+		if ( sakaiPanel != null && sakaiPanel.matches(".*[\"'<>].*" ) ) sakaiPanel=null;
+		if ( sakaiPanel == null ) sakaiPanel="Main";
+		resetActionUrl = URLUtils.addParameter(resetActionUrl, "panel", sakaiPanel);
 
-                // SAK-20462 - Pass through the sakai_action parameter
-                String sakaiAction = req.getParameter("sakai_action");
-                if ( sakaiAction != null && sakaiAction.matches(".*[\"'<>].*" ) ) sakaiAction=null;
-                if ( sakaiAction != null ) resetActionUrl = URLUtils.addParameter(resetActionUrl, "sakai_action", sakaiAction);
+		// SAK-20462 - Pass through the sakai_action parameter
+		String sakaiAction = req.getParameter("sakai_action");
+		if ( sakaiAction != null && sakaiAction.matches(".*[\"'<>].*" ) ) sakaiAction=null;
+		if ( sakaiAction != null ) resetActionUrl = URLUtils.addParameter(resetActionUrl, "sakai_action", sakaiAction);
 
 		// Reset is different for Portlets
 		if (isPortletPlacement(placement))
 		{
 			resetActionUrl = Web.serverUrl(req)
 			+ ServerConfigurationService.getString("portalPath")
-			+ req.getPathInfo() + "?sakai.state.reset=true";
+			+ URLUtils.getSafePathInfo(req) + "?sakai.state.reset=true";
 		}
 
 		// for the help button
@@ -699,7 +694,7 @@ public class SkinnableCharonPortal extends HttpServlet implements Portal
 		// Must have site.upd to see the Edit button
 		if (result.getJSR168EditUrl() != null && site != null)
 		{
-			if (SecurityService.unlock(SiteService.SECURE_UPDATE_SITE, site
+			if (securityService.unlock(SiteService.SECURE_UPDATE_SITE, site
 					.getReference()))
 			{
 				String editUrl = Web.serverUrl(req) + result.getJSR168EditUrl();
@@ -841,7 +836,7 @@ public class SkinnableCharonPortal extends HttpServlet implements Portal
 			Session session = SessionManager.getCurrentSession();
 
 			// recognize what to do from the path
-			String option = req.getPathInfo();
+			String option = URLUtils.getSafePathInfo(req);
 
 			//FindBugs thinks this is not used but is passed to the portal handler
 			String[] parts = {};
@@ -1249,7 +1244,7 @@ public class SkinnableCharonPortal extends HttpServlet implements Portal
 			Session session = SessionManager.getCurrentSession();
 
 			// recognize what to do from the path
-			String option = req.getPathInfo();
+			String option = URLUtils.getSafePathInfo(req);
 
 			// if missing, we have a stray post
 			if ((option == null) || ("/".equals(option)))
@@ -1347,7 +1342,7 @@ public class SkinnableCharonPortal extends HttpServlet implements Portal
 		    // you aren't known to the system.
 		    if (session.getUserId() == null)
 			{
-			    doLogin(req, res, session, req.getPathInfo(), false);
+			    doLogin(req, res, session, URLUtils.getSafePathInfo(req), false);
 			}
 		    // If the login was successful lookup the myworkworkspace site.
 		    if (session.getUserId() != null) {
@@ -1372,7 +1367,7 @@ public class SkinnableCharonPortal extends HttpServlet implements Portal
 			// punt
 			if (session.getUserId() == null)
 			{
-				doLogin(req, res, session, req.getPathInfo(), false);
+				doLogin(req, res, session, URLUtils.getSafePathInfo(req), false);
 				return null;
 			}
 			return placementId; // cannot resolve placement
@@ -1409,25 +1404,25 @@ public class SkinnableCharonPortal extends HttpServlet implements Portal
 		String templates = ServerConfigurationService.getString("portal.templates", "neoskin");
 		String skinRepo = ServerConfigurationService.getString("skin.repo");
 		// Adjust skin name if we are in the neo Portal
-		skin = getSkin(skin);
 		String headCssToolBase = "<link href=\""
-			+ skinRepo
-			+ "/tool_base.css\" type=\"text/css\" rel=\"stylesheet\" media=\"all\" />\n";
-		String headCssToolSkin = "<link href=\"" + skinRepo + "/" + skin
-		+ "/tool.css\" type=\"text/css\" rel=\"stylesheet\" media=\"all\" />\n";
+			+ CSSUtils.getCssToolBase()
+			+ "\" type=\"text/css\" rel=\"stylesheet\" media=\"all\" />\n";
+		String headCssToolSkin = "<link href=\"" 
+			+ CSSUtils.getCssToolSkin(skin)
+			+ "\" type=\"text/css\" rel=\"stylesheet\" media=\"all\" />\n";
 		String headCss = headCssToolBase + headCssToolSkin;
 		
 		Editor editor = portalService.getActiveEditor(placement);
 		String preloadScript = editor.getPreloadScript() == null ? ""
-				: "<script type=\"text/javascript\" language=\"JavaScript\">" + editor.getPreloadScript() + "</script>\n";
+				: "<script type=\"text/javascript\">" + editor.getPreloadScript() + "</script>\n";
 		String editorScript = editor.getEditorUrl() == null ? ""
-				: "<script type=\"text/javascript\" language=\"JavaScript\" src=\"" + editor.getEditorUrl() + "\"></script>\n";
+				: "<script type=\"text/javascript\" src=\"" + editor.getEditorUrl() + "\"></script>\n";
 		String launchScript = editor.getLaunchUrl() == null ? ""
-				: "<script type=\"text/javascript\" language=\"JavaScript\" src=\"" + editor.getLaunchUrl() + "\"></script>\n";
+				: "<script type=\"text/javascript\" src=\"" + editor.getLaunchUrl() + "\"></script>\n";
 		
 		StringBuilder headJs = new StringBuilder();
-		headJs.append("<script type=\"text/javascript\" language=\"JavaScript\" src=\"/library/js/headscripts.js\"></script>\n");
-		headJs.append("<script type=\"text/javascript\" language=\"JavaScript\">var sakai = sakai || {}; sakai.editor = sakai.editor || {};  sakai.locale = sakai.locale || {};\n");
+		headJs.append("<script type=\"text/javascript\" src=\"/library/js/headscripts.js\"></script>\n");
+		headJs.append("<script type=\"text/javascript\">var sakai = sakai || {}; sakai.editor = sakai.editor || {};  sakai.locale = sakai.locale || {};\n");
 		headJs.append("sakai.locale.userCountry = '" + rloader.getLocale().getCountry() + "';\n");
 		headJs.append("sakai.locale.userLanguage = '" + rloader.getLocale().getLanguage() + "';\n");
 		headJs.append("sakai.locale.userLocale = '" + rloader.getLocale().toString() + "';\n");
@@ -1436,14 +1431,25 @@ public class SkinnableCharonPortal extends HttpServlet implements Portal
 		headJs.append(preloadScript);
 		headJs.append(editorScript);
 		headJs.append(launchScript);
-		
+
+		Session s = SessionManager.getCurrentSession();
+		String userWarning = (String) s.getAttribute("userWarning");
+		if (StringUtils.isNotEmpty(userWarning)) {
+			headJs.append("<script type=\"text/javascript\">window.parent.jQuery.pnotify({pnotify_title: '");
+			headJs.append(rloader.getString("pnotify_notice"));
+			headJs.append("', pnotify_text: '");
+			headJs.append(userWarning);
+			headJs.append("', type: 'error' });</script>");
+			s.removeAttribute("userWarning");
+		}
+
 		// TODO: Should we include jquery here?  See includeStandardHead.vm
 		String head = headCss + headJs.toString();
 
 		retval.setProperty("sakai.html.head", head);
 		retval.setProperty("sakai.html.head.css", headCss);
-		retval.setProperty("sakai.html.head.css.base", headCssToolBase);
-		retval.setProperty("sakai.html.head.css.skin", headCssToolSkin);
+		retval.setProperty("sakai.html.head.css.base", SessionManager.getCurrentSession().getAttribute(PortalService.SAKAI_CONTROLLING_PORTAL) == "pda" ? "" : headCssToolBase);
+		retval.setProperty("sakai.html.head.css.skin", SessionManager.getCurrentSession().getAttribute(PortalService.SAKAI_CONTROLLING_PORTAL) == "pda" ? "" : headCssToolSkin);
 		retval.setProperty("sakai.html.head.js", headJs.toString());
 
 		return retval;
@@ -1635,6 +1641,15 @@ public class SkinnableCharonPortal extends HttpServlet implements Portal
 
 			String copyright = ServerConfigurationService
 			.getString("bottom.copyrighttext");
+
+			/**
+			 * Replace keyword in copyright message from sakai.properties 
+			 * with the server's current year to auto-update of Copyright end date 
+			 */
+			SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy");
+			String currentServerYear = simpleDateFormat.format(new Date());
+			copyright = copyright.replaceAll(SERVER_COPYRIGHT_CURRENT_YEAR_KEYWORD, currentServerYear);
+
 			String service = ServerConfigurationService.getString("ui.service", "Sakai");
 			String serviceVersion = ServerConfigurationService.getString(
 					"version.service", "?");
@@ -1678,21 +1693,42 @@ public class SkinnableCharonPortal extends HttpServlet implements Portal
                         		rcontext.put("tutorial", true);
                         		//now save this in the user's prefefences so we don't show it again
                         		PreferencesEdit preferences = null;
+                        		SecurityAdvisor secAdv = null;
                         		try {
-                        			preferences = preferencesService.edit(thisUser);
-                        		} catch (Exception e1) {
+                        			secAdv = new SecurityAdvisor(){
+                        				@Override
+                        				public SecurityAdvice isAllowed(String userId, String function,
+                        						String reference) {
+                        					if("prefs.add".equals(function) || "prefs.upd".equals(function)){
+                        						return SecurityAdvice.ALLOWED;
+                        					}
+                        					return null;
+                        				}
+                        			};
+                        			securityService.pushAdvisor(secAdv);
+                        			
                         			try {
-                        				preferences = preferencesService.add(thisUser);
-                        			} catch (IdUsedException e2) {
-                        				M_log.error(e2);
-                        			} catch (PermissionException e2) {
-                        				M_log.error(e2);
+                        				preferences = preferencesService.edit(thisUser);
+                        			} catch (IdUnusedException ex1 ) {
+                        				try {
+                        					preferences = preferencesService.add( thisUser );
+                        				} catch (IdUsedException ex2) {
+                        					M_log.error(ex2);
+                        				} catch( PermissionException ex3) {
+                        					M_log.error(ex3);
+                        				}
                         			}
-                        		}
-                        		if (preferences != null) {
-                        			ResourcePropertiesEdit props = preferences.getPropertiesEdit();
-                        			props.addProperty("sakaiTutorialFlag", "1");
-                        			preferencesService.commit(preferences);   
+                            		if (preferences != null) {
+                            			ResourcePropertiesEdit props = preferences.getPropertiesEdit();
+                            			props.addProperty("sakaiTutorialFlag", "1");
+                            			preferencesService.commit(preferences);   
+                            		}
+                        		} catch (Exception e1) {
+                        			M_log.error(e1);
+                        		}finally{
+                        			if(secAdv != null){
+                        				securityService.popAdvisor(secAdv);
+                        			}
                         		}
                         	}
                         }
@@ -1935,6 +1971,7 @@ public class SkinnableCharonPortal extends HttpServlet implements Portal
 		siteHelper = new PortalSiteHelperImpl(this, findPageAliases);
 
 		portalService = org.sakaiproject.portal.api.cover.PortalService.getInstance();
+		securityService = (SecurityService) ComponentManager.get("org.sakaiproject.authz.api.SecurityService");
 		chatHelper = org.sakaiproject.portal.api.cover.PortalChatPermittedHelper.getInstance();
 		M_log.info("init()");
 
@@ -1959,7 +1996,6 @@ public class SkinnableCharonPortal extends HttpServlet implements Portal
 		// warning messages will appear, but the end state will be the same.
 		portalService.addPortal(this);
 
-		galleryHandler = new GalleryHandler();
 		worksiteHandler = new WorksiteHandler();
 		siteHandler = new SiteHandler();
 
@@ -1975,8 +2011,6 @@ public class SkinnableCharonPortal extends HttpServlet implements Portal
 		addHandler(new PDAHandler());
 		addHandler(new AtomHandler());
 		addHandler(new OpmlHandler());
-		addHandler(galleryHandler);
-		addHandler(new GalleryResetHandler());
 		addHandler(new NavLoginHandler());
 		addHandler(new PresenceHandler());
 		addHandler(new HelpHandler());
@@ -2246,15 +2280,7 @@ public class SkinnableCharonPortal extends HttpServlet implements Portal
 	 */
 	protected String getSkin(String skin)
 	{
-		if (skin == null)
-		{
-			skin = ServerConfigurationService.getString("skin.default");
-		}
-		String templates = ServerConfigurationService.getString("portal.templates", "neoskin");
-		String prefix = portalService.getSkinPrefix();
-		// Don't add the prefix twice
-		if ( "neoskin".equals(templates) && !StringUtils.startsWith(skin, prefix) ) skin = prefix + skin;
-		return skin;
+		return CSSUtils.adjustCssSkinFolder(skin);
 	}
 
 }

@@ -32,7 +32,14 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.*;
 
 /**
- * Created with IntelliJ IDEA.
+ *
+ *
+ * Read this thread http://stackoverflow.com/questions/12935810/integration-test-elastic-search-timing-issue-document-not-found
+ *
+ * You have to call refresh on the index after you make any changes, before you query it.  Because ES
+ * waits a second for more data to arrive.
+ *
+ *
  * User: jbush
  * Date: 1/16/13
  * Time: 9:10 PM
@@ -169,6 +176,7 @@ public class ElasticSearchTest {
         when(siteService.getSites(SiteService.SelectionType.ANY, null, null, null, SiteService.SortType.NONE, null)).thenReturn(sites);
         when(siteService.isSpecialSite(siteId)).thenReturn(false);
         elasticSearchIndexBuilder = new ElasticSearchIndexBuilder();
+        elasticSearchIndexBuilder.setTestMode(true);
         elasticSearchIndexBuilder.setOnlyIndexSearchToolSites(false);
         elasticSearchIndexBuilder.setExcludeUserSites(false);
         elasticSearchIndexBuilder.setSecurityService(securityService);
@@ -282,6 +290,7 @@ public class ElasticSearchTest {
         elasticSearchIndexBuilder.setOnlyIndexSearchToolSites(false);
         filter.setSearchIndexBuilder(elasticSearchIndexBuilder);
         elasticSearchService.setFilter(filter);
+        elasticSearchService.setLocalNode(true);
         elasticSearchIndexBuilder.setIgnoredSites("!admin,~admin");
         elasticSearchService.init();
 
@@ -289,7 +298,7 @@ public class ElasticSearchTest {
         elasticSearchIndexBuilder.registerEntityContentProducer(entityContentProducer);
     }
 
-/*    @Test
+    @Test
     public void testAddingResourceWithNoContent(){
         Resource resource = new Resource(null, "xyz", "resource_with_no_content");
 
@@ -300,10 +309,10 @@ public class ElasticSearchTest {
         when(entityContentProducer.getSiteContentIterator("xyz")).thenReturn(resourceList.iterator());
 
         elasticSearchIndexBuilder.addResource(notification, event);
-        wait(5000);
+
         assertTrue(elasticSearchService.getNDocs() == 0);
 
-    }*/
+    }
 
 
     private void addResources() {
@@ -321,14 +330,15 @@ public class ElasticSearchTest {
     public void testAddResource() {
         elasticSearchIndexBuilder.addResource(notification, event);
         addResources();
-        wait(5000);
-        assertTrue(elasticSearchService.getNDocs() == 106);
+        elasticSearchIndexBuilder.refreshIndex();
+        assertTrue("the number of docs is " + elasticSearchService.getNDocs() + " expecting 106.",
+                elasticSearchService.getNDocs() == 106);
     }
 
     @Test
     public void testGetSearchSuggestions() {
         elasticSearchIndexBuilder.addResource(notification, event);
-        wait(2000);
+        elasticSearchIndexBuilder.refreshIndex();
         String[] suggestions = elasticSearchService.getSearchSuggestions("key", siteId, false);
         List suggestionList = Arrays.asList(suggestions);
         assertTrue(suggestionList.contains(resourceName));
@@ -343,10 +353,10 @@ public class ElasticSearchTest {
     public void deleteDoc(){
         assertTrue(elasticSearchService.getNDocs() == 0);
         elasticSearchIndexBuilder.addResource(notification, event);
-        wait(2000);
+        elasticSearchIndexBuilder.refreshIndex();
         assertTrue(elasticSearchService.getNDocs() == 1);
         elasticSearchIndexBuilder.deleteDocument(resourceName, siteId);
-        wait(2000);
+        elasticSearchIndexBuilder.refreshIndex();
         assertTrue(elasticSearchService.getNDocs() == 0);
         try {
             SearchList list = elasticSearchService.search("asdf", siteIds, 0, 10);
@@ -362,8 +372,9 @@ public class ElasticSearchTest {
     public void deleteAllDocumentForSite(){
         elasticSearchIndexBuilder.addResource(notification, event);
         addResources();
-        wait(5000);
         elasticSearchIndexBuilder.deleteAllDocumentForSite(siteId);
+        elasticSearchIndexBuilder.refreshIndex();
+
         try {
             SearchList list = elasticSearchService.search("asdf", siteIds, 0, 10);
             assertFalse(list.size() > 0);
@@ -386,7 +397,8 @@ public class ElasticSearchTest {
     public void testSearch() {
         elasticSearchIndexBuilder.addResource(notification, event);
         addResources();
-        wait(2000);
+        elasticSearchIndexBuilder.refreshIndex();
+
         try {
             SearchList list = elasticSearchService.search("asdf", siteIds, 0, 10);
             assertNotNull(list.get(0) ) ;
@@ -403,13 +415,15 @@ public class ElasticSearchTest {
     public void testRebuildSiteIndex() {
         elasticSearchIndexBuilder.addResource(notification, event);
         addResources();
-        wait(2000);
         elasticSearchIndexBuilder.rebuildIndex(siteId);
-        wait(2000);
         elasticSearchIndexBuilder.setContentIndexBatchSize(200);
         elasticSearchIndexBuilder.setBulkRequestSize(400);
+
+        elasticSearchIndexBuilder.refreshIndex();
+
         elasticSearchIndexBuilder.processContentQueue();
-        wait(2000);
+
+        elasticSearchIndexBuilder.refreshIndex();
 
         System.out.println(elasticSearchService.getNDocs());
         assertTrue(elasticSearchService.getNDocs() == 106);
@@ -423,20 +437,16 @@ public class ElasticSearchTest {
         elasticSearchIndexBuilder.addResource(notification, event);
         addResources();
 
-        wait(2000);
+        elasticSearchIndexBuilder.refreshIndex();
 
         elasticSearchIndexBuilder.processContentQueue();
-        wait(2000);
 
-        assertTrue(elasticSearchIndexBuilder.getPendingDocuments() == 0);
+        elasticSearchIndexBuilder.refreshIndex();
+
         assertTrue(elasticSearchService.getNDocs() == 106);
 
         elasticSearchService.refreshSite(siteId);
-        wait(1000);
-        assertTrue(elasticSearchIndexBuilder.getPendingDocuments() > 0);
-        elasticSearchIndexBuilder.processContentQueue();
 
-        wait(2000);
         assertTrue("the number of pending docs is " + elasticSearchIndexBuilder.getPendingDocuments() + ", expecting 0.",
                 elasticSearchIndexBuilder.getPendingDocuments() == 0);
         assertTrue(elasticSearchService.getNDocs() == 106);
@@ -447,8 +457,10 @@ public class ElasticSearchTest {
     public void testRefresh() {
         elasticSearchIndexBuilder.addResource(notification, event);
         addResources();
-        wait(2000);
+
         elasticSearchService.refreshInstance();
+        assertTrue(elasticSearchService.getNDocs() == 106);
+
     }
 
     @Test
@@ -481,13 +493,17 @@ public class ElasticSearchTest {
 
         when(entityContentProducer.getSiteContentIterator(siteId)).thenReturn(resources.keySet().iterator());
 
-        wait(2000);
 
         elasticSearchService.rebuildInstance();
-        wait(3000);
-        assertTrue(elasticSearchIndexBuilder.getPendingDocuments() > 0);
+
+        //assertTrue(elasticSearchIndexBuilder.getPendingDocuments() > 0);
+        elasticSearchIndexBuilder.refreshIndex();
+
         elasticSearchIndexBuilder.processContentQueue();
-        wait(3000);
+
+        elasticSearchIndexBuilder.refreshIndex();
+
+
         verify(entityContentProducer, atLeast(106)).getContent(any(String.class));
         assertTrue("pending doc=" + elasticSearchIndexBuilder.getPendingDocuments() + ", expecting 0",
                 elasticSearchIndexBuilder.getPendingDocuments() == 0);

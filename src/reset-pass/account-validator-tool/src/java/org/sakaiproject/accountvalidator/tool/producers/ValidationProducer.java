@@ -1,5 +1,5 @@
 /**
- * $Id: ValidationProducer.java 111737 2012-08-22 14:16:32Z david.horwitz@uct.ac.za $
+ * $Id: ValidationProducer.java 129269 2013-08-30 21:13:05Z matthew@longsight.com $
  * $URL: https://source.sakaiproject.org/svn/reset-pass/trunk/account-validator-tool/src/java/org/sakaiproject/accountvalidator/tool/producers/ValidationProducer.java $
  * 
  **************************************************************************
@@ -178,6 +178,7 @@ ViewParamsReporter, ActionResultInterceptor {
 				isReset = true;
 			}
 			
+            UIMessage.make(tofill, "validate.or", "validate.or", args);
 			if (!isReset) {
 				UIMessage.make(tofill, "welcome1", "validate.welcome1", args);
 				UIMessage.make(tofill, "welcome", "validate.welcome", args);

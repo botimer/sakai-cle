@@ -13,75 +13,6 @@
     	thisId = "Main" + org.sakaiproject.tool.cover.ToolManager.getCurrentPlacement().getId();
  		 }
 %>
-<script type="text/javascript">
-	function resize(){
-		mySetMainFrameHeight('<%= org.sakaiproject.util.Web.escapeJavascript(thisId)%>');
-	}
-
-
-function mySetMainFrameHeight(id)
-{
-	// run the script only if this window's name matches the id parameter
-	// this tells us that the iframe in parent by the name of 'id' is the one who spawned us
-	if (typeof window.name != "undefined" && id != window.name) return;
-
-	var frame = parent.document.getElementById(id);
-	if (frame)
-	{
-
-		var objToResize = (frame.style) ? frame.style : frame;
-  
-    // SAK-11014 revert           if ( false ) {
-
-		var height; 		
-		var offsetH = document.body.offsetHeight;
-		var innerDocScrollH = null;
-
-		if (typeof(frame.contentDocument) != 'undefined' || typeof(frame.contentWindow) != 'undefined')
-		{
-			// very special way to get the height from IE on Windows!
-			// note that the above special way of testing for undefined variables is necessary for older browsers
-			// (IE 5.5 Mac) to not choke on the undefined variables.
- 			var innerDoc = (frame.contentDocument) ? frame.contentDocument : frame.contentWindow.document;
-			innerDocScrollH = (innerDoc != null) ? innerDoc.body.scrollHeight : null;
-		}
-	
-		if (document.all && innerDocScrollH != null)
-		{
-			// IE on Windows only
-			height = innerDocScrollH;
-		}
-		else
-		{
-			// every other browser!
-			height = offsetH;
-		}
-   // SAK-11014 revert		} 
-
-   // SAK-11014 revert             var height = getFrameHeight(frame);
-
-		// here we fudge to get a little bigger
-		var newHeight = height + 40;
-
-		// but not too big!
-		if (newHeight > 32760) newHeight = 32760;
-
-		// capture my current scroll position
-		var scroll = findScroll();
-
-		// resize parent frame (this resets the scroll as well)
-		objToResize.height=newHeight + "px";
-
-		// reset the scroll, unless it was y=0)
-		if (scroll[1] > 0)
-		{
-			var position = findPosition(frame);
-			parent.window.scrollTo(position[0]+scroll[0], position[1]+scroll[1]);
-		}
-	}
-}
-
-</script>
 
 <form name="form" method="post">
 
@@ -919,7 +850,7 @@ function mySetMainFrameHeight(id)
 					<input type="checkbox" name="defaultReviewers" value="true"  id="defaultReviewers" 
 					<c:if test="${status.value}">checked</c:if> 
 					onclick="$('div.toggle:first', $(this).parents('div:first')).slideToggle(resize);$('div.toggle2:first', $(this).parents('div:first')).slideToggle(resize);"
-					
+					/>
 					<label for="defaultReviewers" ><c:out value="${msgs.defaultReviewersText}"/></label> 
 				</spring:bind>
 				
@@ -1027,7 +958,7 @@ function mySetMainFrameHeight(id)
 			<div name="defaultEvaluationFormSpan" id="defaultEvaluationFormSpan" class="toggle" <c:if test="${!scaffoldingCell.wizardPageDefinition.defaultEvaluationForm}">style='display:none' </c:if>>
 				<spring:bind path="scaffoldingCell.scaffolding.evaluationDevice">
 					<p class="indnt1">
-						<input type="checkbox" name="diabledCheckbox2" value="true"  id="disabledCheckbox" 
+						<input type="checkbox" name="diabledCheckbox2" value="true"  id="disabledCheckbox2" 
 							<c:if test="${scaffoldingCell.scaffolding.hideEvaluations}">checked</c:if> disabled/>
 						<label for="diabledCheckbox2" ><c:out value="${msgs.hideEvaluations}"/></label> 
 					</p>
@@ -1102,7 +1033,145 @@ function mySetMainFrameHeight(id)
 				
 		</div>		
 				
-				
+		<!-- ************* Item-Level Evaluation Area Start ************* -->				
+		<c:if test="${!isWizard}">
+		<div>	
+		
+		<h5><fmt:message key="header_itemLevEvaluation"/></h5>
+		
+		<spring:bind path="scaffoldingCell.wizardPageDefinition.defaultItemLevelEval">  		
+				<input type="hidden" name="hiddenDefaultItemLevelEval" value="${status.value}"/>
+				<input type="checkbox" name="defaultItemLevelEval" value="true"  id="defaultItemLevelEval" 
+					<c:if test="${status.value}">checked</c:if> 
+					onclick="$('div.toggle:first', $(this).parents('div:first')).slideToggle(resize);$('div.toggle2:first', $(this).parents('div:first')).slideToggle(resize);document.forms[0].hiddenDefaultItemLevelEval.value=this.checked;"
+					<c:if test="${evaluationFormUsed}"><c:out value="${localDisabledText}"/></c:if>  
+				/>
+				<label for="defaultItemLevelEval" ><fmt:message key="header_defaultItemLevEvaluation"/></label> 
+			</spring:bind>
+		
+		<div name="defaultItemLevEvalSpan" id="defaultItemLevEvalSpan" class="toggle" <c:if test="${!scaffoldingCell.wizardPageDefinition.defaultItemLevelEval}">style='display:none' </c:if>>
+		
+		
+		<p class="indnt1">
+			<spring:bind path="scaffoldingCell.scaffolding.itemLevelEvals">  	
+				<span>		
+					<input type="checkbox" name="disabledItemLevelEvals" value="true"  id="disabledItemLevelEvals" 
+						<c:if test="${status.value}">checked</c:if> disabled />				
+					<label for="disabledItemLevelEvals" ><fmt:message key="enable_item_level"/></label>
+				</span>    
+			</spring:bind>
+		</p>
+		<div name="itemLevelSpan" id="itemLevelSpan" <c:if test="${!isWizard and !scaffoldingCell.scaffolding.itemLevelEvals}">style='display:none' </c:if>>
+		<p class="indnt1">
+			<fmt:message key="evaluation_select_instructions"/>
+		</p>
+		<p class="indnt1">
+			
+			<spring:bind path="scaffoldingCell.scaffolding.itemLevelEvaluationDevice">  
+				<c:if test="${status.error}">
+			<div class="validation"><c:out value="${status.errorMessage}"/></div>
+			</c:if>
+				<p class="shorttext">
+					<label for="<c:out value="${status.expression}-id"/>"><fmt:message key="header_itemLevEvaluation"/></label>    
+					<select name="<c:out value="${status.expression}"/>" id="<c:out value="${status.expression}-id"/>" disabled>
+						<option value=""><fmt:message key="select_form_text" /></option>
+						<c:forEach var="evalDev" items="${evaluationDevices}" varStatus="loopCount">
+							<option	value="<c:out value="${evalDev.id}"/>" <c:if test="${status.value==evalDev.id}"> selected="selected"</c:if>><c:out value="${evalDev.name}"/></option>
+						</c:forEach>
+					</select>
+				</p>
+			</spring:bind>
+		</p>
+		<p class="indnt1">
+			
+			<spring:bind path="scaffoldingCell.scaffolding.enableItemLevelEvalsInLinkedTools">  	
+				<span>		
+					<input type="checkbox" name="disabledEnableItemLevelEvalsInLinkedTools" value="true"  id="disabledEnableItemLevelEvalsInLinkedTools" 
+						<c:if test="${status.value}">checked</c:if> disabled />				
+					<label for="disabledEnableItemLevelEvalsInLinkedTools" ><fmt:message key="enable_item_level_linked"/></label>
+				</span>    
+			</spring:bind>
+		</p>
+		<p class="indnt1">
+			
+			<spring:bind path="scaffoldingCell.scaffolding.hideItemLevelEvals">  	
+				<span>		
+					<input type="checkbox" name="disabledHideItemLevelEvals" value="true"  id="disabledHideItemLevelEvals" 
+						<c:if test="${status.value}">checked</c:if> disabled />				
+					<label for="disabledHideItemLevelEvals" ><fmt:message key="hide_item_level"/></label>
+				</span>    
+			</spring:bind>
+		</p>
+		</div>
+		</div>
+		<!-- cell overrides -->
+		<div name="cellItemLevEvalSpan" id="cellItemLevEvalSpan" class="toggle2" <c:if test="${scaffoldingCell.wizardPageDefinition.defaultItemLevelEval}">style='display:none' </c:if>>
+		<spring:bind path="scaffoldingCell.wizardPageDefinition.itemLevelEvaluationDeviceType">  
+			<input type="hidden" name="<c:out value="${status.expression}"/>"
+			value="<c:out value="${status.value}"/>" />
+		</spring:bind>
+		
+		
+		
+		<p class="indnt1">
+			<spring:bind path="scaffoldingCell.wizardPageDefinition.itemLevelEvals">  	
+				<span>		
+					<input type="checkbox" name="itemLevelEvals" value="true"  id="itemLevelEvals" 
+						<c:if test="${status.value}">checked</c:if>
+						onclick="$('div.toggle3:first', $(this).parents('div:first')).slideToggle(resize);" />				
+					<label for="itemLevelEvals" ><fmt:message key="enable_item_level"/></label>
+				</span>    
+			</spring:bind>
+		</p>
+		<div name="itemLevelSpan" id="itemLevelSpan" class="toggle3" <c:if test="${!isWizard and !scaffoldingCell.wizardPageDefinition.itemLevelEvals}">style='display:none' </c:if>>
+		<p class="indnt1">
+			<fmt:message key="evaluation_select_instructions"/>
+		</p>
+		<p class="indnt1">
+			
+			<spring:bind path="scaffoldingCell.wizardPageDefinition.itemLevelEvaluationDevice">  
+				<c:if test="${status.error}">
+			<div class="validation"><c:out value="${status.errorMessage}"/></div>
+			</c:if>
+				<p class="shorttext">
+					<label for="<c:out value="${status.expression}-id"/>"><fmt:message key="header_itemLevEvaluation"/></label>    
+					<select name="<c:out value="${status.expression}"/>" id="<c:out value="${status.expression}-id"/>"
+						<c:if test="${not empty status.value}"> <c:out value="${localDisabledText}"/> </c:if>>
+						<option onclick="document.forms[0].itemLevelEvaluationDeviceType.value='';" value=""><fmt:message key="select_form_text" /></option>
+						<c:forEach var="evalDev" items="${evaluationDevices}" varStatus="loopCount">
+							<option onclick="document.forms[0].itemLevelEvaluationDeviceType.value='<c:out value="${evalDev.type}"/>';" 
+							value="<c:out value="${evalDev.id}"/>" <c:if test="${status.value==evalDev.id}"> selected="selected"</c:if>><c:out value="${evalDev.name}"/></option>
+						</c:forEach>
+					</select>
+				</p>
+			</spring:bind>
+		</p>
+		<p class="indnt1">
+			
+			<spring:bind path="scaffoldingCell.wizardPageDefinition.enableItemLevelEvalsInLinkedTools">  	
+				<span>		
+					<input type="checkbox" name="enableItemLevelEvalsInLinkedTools" value="true"  id="enableItemLevelEvalsInLinkedTools" 
+						<c:if test="${status.value}">checked</c:if> />				
+					<label for="enableItemLevelEvalsInLinkedTools" ><fmt:message key="enable_item_level_linked"/></label>
+				</span>    
+			</spring:bind>
+		</p>
+		<p class="indnt1">
+			
+			<spring:bind path="scaffoldingCell.wizardPageDefinition.hideItemLevelEvals">  	
+				<span>		
+					<input type="checkbox" name="hideItemLevelEvals" value="true"  id="hideItemLevelEvals" 
+						<c:if test="${status.value}">checked</c:if> />				
+					<label for="hideItemLevelEvals" ><fmt:message key="hide_item_level"/></label>
+				</span>    
+			</spring:bind>
+		</p>
+		</div>
+		</div>
+		
+		</div>	
+		</c:if>
+		<!-- ************* Item-Level Evaluation Area End ************* -->				
 				
 		<!--  Evaluator List Area Start --->
 		<h5><c:out value="${msgs.label_evaluators}"/></h5>

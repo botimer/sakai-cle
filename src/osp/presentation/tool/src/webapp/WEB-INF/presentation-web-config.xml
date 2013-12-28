@@ -288,6 +288,21 @@
         </property>
     </bean>
 
+   <bean id="org.theospi.portfolio.presentation.control.ListPresentationController.cache"
+      class="org.springframework.cache.ehcache.EhCacheFactoryBean">
+      <property name="cacheManager">
+         <ref bean="org.sakaiproject.memory.api.MemoryService.cacheManager" />
+      </property>
+      <property name="cacheName">
+         <value>org.theospi.portfolio.presentation.control.ListPresentationController.cache</value>
+      </property>
+      <property name="maxElementsInMemory"><value>500</value></property>
+      <property name="diskPersistent"><value>false</value></property>
+      <property name="eternal"><value>false</value></property>
+      <property name="timeToLive"><value>60</value></property>
+      <property name="timeToIdle"><value>10</value></property>
+   </bean>
+
     <bean id="listPresentationController" class="org.sakaiproject.metaobj.utils.mvc.impl.servlet.ViewControllerImpl">
         <property name="controller">
             <bean class="org.theospi.portfolio.presentation.control.ListPresentationController" parent="listScrollerController">
@@ -296,7 +311,16 @@
                 </property>
                 <property name="presentationService">
                   <ref bean="org.theospi.portfolio.presentation.support.PresentationService" />
-                </property>		
+                </property>
+                <property name="siteService">
+                    <ref bean="org.sakaiproject.site.api.SiteService"/>
+                </property>
+                <property name="toolManager">
+                    <ref bean="org.sakaiproject.tool.api.ToolManager"/>
+                </property>
+                <property name="preferencesService"
+                    ref="org.sakaiproject.user.api.PreferencesService" />
+                <property name="userToolCache" ref="org.theospi.portfolio.presentation.control.ListPresentationController.cache"/>
             </bean>
         </property>
         <property name="customTypedEditors">
@@ -317,6 +341,43 @@
         </property>
     </bean>
 
+	<bean id="requestPresentationController" class="org.sakaiproject.metaobj.utils.mvc.impl.servlet.ViewControllerImpl">
+        <property name="controller">
+            <bean class="org.theospi.portfolio.presentation.control.RequestPresentationController">
+		         <property name="presentationManager">
+		            <ref bean="presentationManager"/>
+		        </property>
+            	<property name="idManager">
+			        <ref bean="idManager"/>
+		        </property>	
+		        <property name="authzManager">
+		            <ref bean="authzManager"/>
+		        </property>
+		         <property name="agentManager">
+			         <ref bean="agentManager"/>
+		         </property>
+                <property name="userDirectoryService">
+                    <ref bean="org.sakaiproject.user.api.UserDirectoryService"/>
+                </property>
+                <property name="emailService">
+                    <ref bean="org.sakaiproject.email.api.EmailService"/>
+                </property>
+                <property name="portalService">
+                    <ref bean="org.sakaiproject.portal.api.PortalService"/>
+                </property>
+                <property name="siteService">
+                    <ref bean="org.sakaiproject.site.api.SiteService"/>
+                </property>
+            </bean>
+        </property>
+        <property name="screenMappings">
+            <props>
+              <prop key="success">requestPresentationRedirect</prop>
+              <prop key="list">listPresentationRedirect</prop>
+            </props>
+        </property>
+    </bean>
+	
     <bean id="deletePresentationController" class="org.sakaiproject.metaobj.utils.mvc.impl.servlet.ViewControllerImpl">
         <property name="controller">
             <bean class="org.theospi.portfolio.presentation.control.DeletePresentationController" parent="abstractPresentationController">
@@ -342,6 +403,31 @@
         </property>
     </bean>
 
+    <bean id="presentationShareUserService" class="org.theospi.portfolio.presentation.support.PresentationShareUserService"
+          init-method="init" lazy-init="false">
+        <property name="memoryService"><ref bean="org.sakaiproject.memory.api.MemoryService"/></property>
+        <property name="presentationService">
+            <ref bean="org.theospi.portfolio.presentation.support.PresentationService" /> 
+        </property>
+        <property name="eventService">
+            <ref bean="org.theospi.event.EventService"/>
+        </property>
+		<property name="agentManager">
+			<ref bean="agentManager"/>
+		</property>
+    </bean>   
+      
+    <bean id="org.theospi.portfolio.presentation.ShareUserCacheListener"
+          class="org.theospi.portfolio.presentation.support.ShareUserCacheListener"
+          init-method="init" lazy-init="false">
+        <property name="presentationShareUserService">
+            <ref bean="presentationShareUserService"/>
+        </property>
+        <property name="serverConfigurationService">
+            <ref bean="org.sakaiproject.component.api.ServerConfigurationService"/>
+        </property>
+    </bean>
+
     <bean id="sharePresentationController" class="org.sakaiproject.metaobj.utils.mvc.impl.servlet.ViewControllerImpl">
         <property name="controller">
             <bean class="org.theospi.portfolio.presentation.control.SharePresentationController" parent="abstractPresentationController">
@@ -355,8 +441,11 @@
                   <ref bean="org.sakaiproject.email.api.EmailService"/>
                 </property>
                 <property name="presentationService">
-                  <ref bean="org.theospi.portfolio.presentation.support.PresentationService" />
-                </property>		
+                  <ref bean="org.theospi.portfolio.presentation.support.PresentationService" /> 
+                </property>
+                <property name="presentationShareUserService">
+                  <ref bean="presentationShareUserService" /> 
+                </property>
             </bean>
         </property>
         <property name="customTypedEditors">
@@ -394,6 +483,9 @@
                 <property name="emailService">
                   <ref bean="org.sakaiproject.email.api.EmailService"/>
                 </property>
+                <property name="presentationShareUserService">
+                  <ref bean="presentationShareUserService" /> 
+                </property>
             </bean>
         </property>
         <property name="customTypedEditors">
@@ -424,6 +516,15 @@
                 <property name="presentationService">
                   <ref bean="org.theospi.portfolio.presentation.support.PresentationService" />
                 </property>		
+                <property name="siteService">
+                    <ref bean="org.sakaiproject.site.api.SiteService"/>
+                </property>
+                <property name="toolManager">
+                    <ref bean="org.sakaiproject.tool.api.ToolManager"/>
+                </property>
+                <property name="preferencesService"
+                    ref="org.sakaiproject.user.api.PreferencesService" />
+                <property name="userToolCache" ref="org.theospi.portfolio.presentation.control.ListPresentationController.cache"/>
             </bean>
         </property>
         <property name="customTypedEditors">
@@ -483,6 +584,15 @@
          <property name="serverConfigurationService">
            <ref bean="org.sakaiproject.component.api.ServerConfigurationService"/>
          </property>
+           <property name="siteService">
+               <ref bean="org.sakaiproject.site.api.SiteService"/>
+           </property>
+           <property name="toolManager">
+               <ref bean="org.sakaiproject.tool.api.ToolManager"/>
+           </property>
+           <property name="preferencesService"
+               ref="org.sakaiproject.user.api.PreferencesService" />
+           <property name="userToolCache" ref="org.theospi.portfolio.presentation.control.ListPresentationController.cache"/>
        </bean>
      </property>
      <property name="customTypedEditors">
@@ -561,6 +671,12 @@
 	</bean>
 	
 	<bean id="updatePresentationController" class="org.theospi.portfolio.presentation.control.UpdatePresentationController" parent="supportedController">
+		<property name="authzManager">
+			<ref bean="authzManager"/>
+		</property>
+        <property name="authManager">
+        	<ref bean="authManager" />
+        </property>
 	</bean>
 	
 	<bean id="editPresentationFormController" class="org.theospi.portfolio.presentation.control.EditPresentationFormController" parent="supportedController">

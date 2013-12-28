@@ -1,0 +1,28 @@
+.presentationRequestDialogGray  {
+    color: Gray;
+}
+
+.ui-dialog-titlebar-close {
+	display: none;
+}
+
+.ui-widget-header 
+{ 
+	border: 1px solid #cccccc;
+	background: #cccccc;
+	font-weight: bold; 
+}
+
+.ui-state-default, .ui-widget-content .ui-state-default { 
+	border: 1px solid #cccccc; 
+	background: #f6f6f6; 
+	font-weight: bold; 
+	color: #000000; 
+	outline: none; 
+}
+	
+.ui-state-default a, .ui-state-default a:link, .ui-state-default a:visited { 
+	color: #000000; 
+	text-decoration: none; 
+	outline: none; 
+}

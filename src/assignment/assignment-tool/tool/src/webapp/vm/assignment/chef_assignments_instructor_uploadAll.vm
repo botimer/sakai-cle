@@ -1,7 +1,7 @@
-<!-- $Id: chef_assignments_instructor_uploadAll.vm 122725 2013-04-12 21:05:51Z ottenhoff@longsight.com $ -->
+<!-- $Id: chef_assignments_instructor_uploadAll.vm 131328 2013-11-07 22:25:15Z ottenhoff@longsight.com $ -->
 <!-- start: chef_assignments_instructor_uploadALL.vm  -->
 ## showing the page for preparing upload zip file
-<script language="JavaScript" type="text/JavaScript">
+<script type="text/JavaScript">
 	<!--
 		function submitform(id)
 		{
@@ -158,7 +158,7 @@
 		</div>
 		<input type="hidden" name="sakai_csrf_token" value="$sakai_csrf_token" />
 	</form>
-	<script language="JavaScript" type="text/JavaScript">
+	<script type="text/JavaScript">
 		<!--
 			function toggleSelectAll(caller, elementName)
 			{

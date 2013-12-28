@@ -42,4 +42,9 @@ public interface EventConstants {
 	   public static final String EVENT_REVIEW_REVISE = "org.theospi.review.revise";
 	   public static final String EVENT_REVIEW_DELETE = "org.theospi.review.delete";
 
+       /** presentation share user events */
+       public static final String EVENT_PRESENTATION_USER_CLEAR = "org.theospi.presentuser.clear";
+       public static final String EVENT_PRESENTATION_USER_ADD = "org.theospi.presentuser.add";
+       public static final String EVENT_PRESENTATION_USER_REVISE = "org.theospi.presentuser.revise";
+       public static final String EVENT_PRESENTATION_USER_DELETE = "org.theospi.presentuser.delete";
 }

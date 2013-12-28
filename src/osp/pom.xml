@@ -4,21 +4,16 @@
     <parent>
         <artifactId>base</artifactId>
         <groupId>org.sakaiproject</groupId>
-        <version>2.10-SNAPSHOT</version>
+        <version>10.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
+
     <name>Sakai OSP Project</name>
     <groupId>org.sakaiproject.osp</groupId>
     <artifactId>osp-base</artifactId>
-  <version>2.10-SNAPSHOT</version>
+    <version>10.0-SNAPSHOT</version>
     <packaging>pom</packaging>
     
-    <scm>
-        <connection>scm:svn:https://source.sakaiproject.org/svn/osp/trunk</connection>
-        <developerConnection>scm:svn:https://source.sakaiproject.org/svn/osp/trunk</developerConnection>
-        <url>https://source.sakaiproject.org/svn/osp/trunk</url>
-    </scm>
-
     <modules>
         <module>common</module>
         <module>glossary</module>
@@ -37,43 +32,45 @@
             <dependency>
                 <groupId>org.sakaiproject.metaobj</groupId>
                 <artifactId>sakai-metaobj-impl</artifactId>
-                <version>2.10-SNAPSHOT</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.sakaiproject.metaobj</groupId>
                 <artifactId>sakai-metaobj-tool-lib</artifactId>
-                <version>2.10-SNAPSHOT</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.sakaiproject.osp</groupId>
                 <artifactId>osp-glossary-impl</artifactId>
-                <version>2.10-SNAPSHOT</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.sakaiproject.osp</groupId>
                 <artifactId>osp-common-impl</artifactId>
-                <version>2.10-SNAPSHOT</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.sakaiproject.osp</groupId>
                 <artifactId>osp-common-tool-lib</artifactId>
-                <version>2.10-SNAPSHOT</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.sakaiproject.osp</groupId>
                 <artifactId>osp-glossary-tool-lib</artifactId>
-                <version>2.10-SNAPSHOT</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>jta</groupId>
                 <artifactId>jta</artifactId>
                 <version>h2.1.8</version>
             </dependency>
-            <dependency>
-                <groupId>org.sakaiproject.sitemanage</groupId>
-                <artifactId>sakai-site-manage-util</artifactId>
-                <version>2.10-SNAPSHOT</version>
-            </dependency>
         </dependencies>
     </dependencyManagement>
+
+    <scm>
+        <connection>scm:svn:https://source.sakaiproject.org/svn/osp/trunk</connection>
+        <developerConnection>scm:svn:https://source.sakaiproject.org/svn/osp/trunk</developerConnection>
+        <url>https://source.sakaiproject.org/svn/osp/trunk</url>
+    </scm>
+
 </project>

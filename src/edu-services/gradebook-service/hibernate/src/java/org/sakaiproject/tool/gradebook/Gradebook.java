@@ -1,6 +1,6 @@
 /**********************************************************************************
 *
-* $Id: Gradebook.java 105077 2012-02-24 22:54:29Z ottenhoff@longsight.com $
+* $Id: Gradebook.java 130402 2013-10-11 18:54:57Z matthew@longsight.com $
 *
 ***********************************************************************************
 *
@@ -45,6 +45,8 @@ public class Gradebook implements Serializable {
     private Set<GradeMapping> gradeMappings;
     private boolean assignmentsDisplayed;
     private boolean courseGradeDisplayed;
+    private boolean totalPointsDisplayed;
+    private boolean courseAverageDisplayed;
     private boolean allAssignmentsEntered;
     private boolean locked;
     private int grade_type;
@@ -218,6 +220,22 @@ public class Gradebook implements Serializable {
      */
     public void setCourseGradeDisplayed(boolean courseGradeDisplayed) {
         this.courseGradeDisplayed = courseGradeDisplayed;
+    }
+
+    public boolean isTotalPointsDisplayed() {
+      return totalPointsDisplayed;
+    }
+
+    public void setTotalPointsDisplayed(boolean totalPointsDisplayed) {
+      this.totalPointsDisplayed = totalPointsDisplayed;
+    }
+
+    public boolean isCourseAverageDisplayed() {
+      return courseAverageDisplayed;
+    }
+
+    public void setCourseAverageDisplayed(boolean courseAverageDisplayed) {
+      this.courseAverageDisplayed = courseAverageDisplayed;
     }
 
     public String toString() {

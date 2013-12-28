@@ -4,19 +4,16 @@
   <parent>
     <artifactId>base</artifactId>
     <groupId>org.sakaiproject</groupId>
-    <version>2.10-SNAPSHOT</version>
+    <version>10.0-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
+
   <name>Sakai Postem Project</name>
   <groupId>org.sakaiproject</groupId>
   <artifactId>postem-base</artifactId>
-  <version>2.10-SNAPSHOT</version>
+  <version>10.0-SNAPSHOT</version>
   <packaging>pom</packaging>
-  <scm>
-    <connection>scm:svn:https://source.sakaiproject.org/svn/postem/trunk</connection>
-    <developerConnection>scm:svn:https://source.sakaiproject.org/svn/postem/trunk</developerConnection>
-    <url>https://source.sakaiproject.org/svn/postem/trunk</url>
-  </scm>
+
   <modules>
     <module>components</module>
     <module>postem-api</module>
@@ -25,23 +22,24 @@
     <module>postem-impl</module>
     <module>postem-help</module>
   </modules>
+
   <dependencyManagement>
     <dependencies>
       <dependency>
         <groupId>org.sakaiproject</groupId>
         <artifactId>sakai-postem-impl</artifactId>
-        <version>2.10-SNAPSHOT</version>
-      </dependency>
-      <dependency>
-        <groupId>org.sakaiproject.jsf</groupId>
-        <artifactId>myfaces-tool</artifactId>
-        <version>${sakai.jsf.version}</version>
+        <version>${project.version}</version>
       </dependency>
       <dependency>
         <groupId>org.sakaiproject</groupId>
         <artifactId>sakai-postem-hbm</artifactId>
-        <version>2.10-SNAPSHOT</version>
+        <version>${project.version}</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
+  <scm>
+    <connection>scm:svn:https://source.sakaiproject.org/svn/postem/trunk</connection>
+    <developerConnection>scm:svn:https://source.sakaiproject.org/svn/postem/trunk</developerConnection>
+    <url>https://source.sakaiproject.org/svn/postem/trunk</url>
+  </scm>
 </project>

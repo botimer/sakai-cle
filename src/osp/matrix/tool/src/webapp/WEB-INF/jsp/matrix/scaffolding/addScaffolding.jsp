@@ -706,6 +706,74 @@
 		<!-- ************* Review and Evaluation Area End ************* -->
 		
 		
+		<!-- ************* Item-Level Evaluation Area Start ************* -->
+		
+		<spring:bind path="scaffolding.itemLevelEvaluationDeviceType">  
+			<input type="hidden" name="<c:out value="${status.expression}"/>"
+			value="<c:out value="${status.value}"/>" />
+		</spring:bind>
+		
+		<h5><fmt:message key="header_itemLevEvaluation"/></h5>
+		
+		<p class="indnt1">
+			<spring:bind path="scaffolding.itemLevelEvals">  	
+				<span>		
+					<input type="checkbox" name="itemLevelEvals" value="true"  id="itemLevelEvals" 
+						<c:if test="${status.value}">checked</c:if>
+						onclick="$('div.toggle:first', $(this).parents('div:first')).slideToggle(resize);" />				
+					<label for="itemLevelEvals" ><fmt:message key="enable_item_level"/></label>
+				</span>    
+			</spring:bind>
+		</p>
+		<div name="itemLevelSpan" id="itemLevelSpan" class="toggle" <c:if test="${!isWizard and !scaffolding.itemLevelEvals}">style='display:none' </c:if>>
+		<p class="indnt1">
+			<fmt:message key="evaluation_select_instructions"/>
+		</p>
+		<p class="indnt1">
+			
+			<spring:bind path="scaffolding.itemLevelEvaluationDevice">  
+				<c:if test="${status.error}">
+			<div class="validation"><c:out value="${status.errorMessage}"/></div>
+			</c:if>
+				<p class="shorttext">
+					<label for="<c:out value="${status.expression}-id"/>"><fmt:message key="header_itemLevEvaluation"/></label>    
+					<select name="<c:out value="${status.expression}"/>" id="<c:out value="${status.expression}-id"/>"
+						<c:if test="${not empty status.value}"> <c:out value="${localDisabledText}"/> </c:if>>
+						<option onclick="document.forms[0].itemLevelEvaluationDeviceType.value='';" value=""><fmt:message key="select_form_text" /></option>
+						<c:forEach var="evalDev" items="${evaluationDevices}" varStatus="loopCount">
+							<option onclick="document.forms[0].itemLevelEvaluationDeviceType.value='<c:out value="${evalDev.type}"/>';" 
+							value="<c:out value="${evalDev.id}"/>" <c:if test="${status.value==evalDev.id}"> selected="selected"</c:if>><c:out value="${evalDev.name}"/></option>
+						</c:forEach>
+					</select>
+				</p>
+			</spring:bind>
+		</p>
+		<p class="indnt1">
+			
+			<spring:bind path="scaffolding.enableItemLevelEvalsInLinkedTools">  	
+				<span>		
+					<input type="checkbox" name="enableItemLevelEvalsInLinkedTools" value="true"  id="enableItemLevelEvalsInLinkedTools" 
+						<c:if test="${status.value}">checked</c:if> />				
+					<label for="enableItemLevelEvalsInLinkedTools" ><fmt:message key="enable_item_level_linked"/></label>
+				</span>    
+			</spring:bind>
+		</p>
+		<p class="indnt1">
+			
+			<spring:bind path="scaffolding.hideItemLevelEvals">  	
+				<span>		
+					<input type="checkbox" name="hideItemLevelEvals" value="true"  id="hideItemLevelEvals" 
+						<c:if test="${status.value}">checked</c:if> />				
+					<label for="hideItemLevelEvals" ><fmt:message key="hide_item_level"/></label>
+				</span>    
+			</spring:bind>
+		</p>
+		</div>
+		
+		<!-- ************* Item-Level Evaluation Area End ************* -->
+		
+		
+		
 		<!-- ************* Evaluators List Start ************* -->            
 	
 		<h5  style="display:inline"><c:out value="${msgs.label_evaluators}"/></h5>

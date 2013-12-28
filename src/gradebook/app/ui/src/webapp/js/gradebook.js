@@ -204,14 +204,8 @@ function showHideDiv(hideDivisionNo, context, expandAlt, collapseAlt, expandTitl
     }
     else
     {
-      if(navigator.product == "Gecko")
-      {
-        divisionNo.style.display="table-row";
-      }
-      else
-      {
-        divisionNo.style.display="block";
-      }
+      divisionNo.style.display="table-row";
+
       if(imgNo)
       {
         imgNo.src = context + "/images/expand.gif";
@@ -256,15 +250,9 @@ function showHideAll(numToggles, context, expandAlt, collapseAlt, expandTitle, c
 		    }
 		  }
 		  else {
-		    if(navigator.product == "Gecko")
-      	{
-        	divisionNo.style.display="table-row";
-      	}
-      	else
-      	{
-        	divisionNo.style.display="block";
-     	 	}
-		    
+			  //Gecko specific fix no longer needed
+			  divisionNo.style.display="table-row";
+
 		    if (imgNo) {
 		      imgNo.src = context + "/images/expand.gif";
 		      imgNo.alt =  expandAlt;
@@ -290,18 +278,20 @@ function reEnableCategoryDropInputs(component) {
         var allElements = document.forms[0].elements;
         for(i=0; i < allElements.length; i++) {
                 var currentElement = allElements[i];
-                if(currentElement.name.indexOf(":pointValue") != -1
-                        || currentElement.name.indexOf(":relativeWeight") != -1
-                        || currentElement.name.indexOf(":dropHighest") != -1
-                        || currentElement.name.indexOf(":dropLowest") != -1
-                        || currentElement.name.indexOf(":keepHighest") != -1
-                   ) {
+                var currentElementName = currentElement.getAttribute('name');
+
+                if(currentElementName !== null && (currentElementName.indexOf(":pointValue") != -1
+                        || currentElementName.indexOf(":relativeWeight") != -1
+                        || currentElementName.indexOf(":dropHighest") != -1
+                        || currentElementName.indexOf(":dropLowest") != -1
+                        || currentElementName.indexOf(":keepHighest") != -1
+					)) {
                         // Recursive function call
                     reEnableCategoryDropInputs(currentElement);
                 }
         }
     } else {
-        var dropElement = getTheElement(component.name);
+		var dropElement = getTheElement(component.getAttribute('name'));
         dropElement.disabled = false;
     }
 }
@@ -316,6 +306,11 @@ function toggleVisibilityDropScoresFields() {
     var keepHighestVisibility = ""; // an unspecified display makes the column and column header visible
     var itemValueVisibility = "";
     var tbl  = document.getElementById(formName + ":categoriesTable");
+    if(!tbl) {
+        // No categories currently defined
+        return;
+    }
+
     var thead = tbl.getElementsByTagName('thead');
     var header = thead.item(0);
     var headerRows = header.getElementsByTagName('th');

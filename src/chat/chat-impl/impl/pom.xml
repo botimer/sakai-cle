@@ -4,9 +4,10 @@
   <parent>
     <artifactId>chat-base</artifactId>
     <groupId>org.sakaiproject</groupId>
-    <version>2.10-SNAPSHOT</version>
+    <version>10.0-SNAPSHOT</version>
     <relativePath>../../pom.xml</relativePath>
   </parent>
+
   <name>sakai-chat-impl</name>
   <groupId>org.sakaiproject</groupId>
   <artifactId>sakai-chat-impl</artifactId>
@@ -19,6 +20,7 @@
   <properties>
     <deploy.target />
   </properties>
+
   <dependencies>
     <dependency>
       <groupId>org.sakaiproject.kernel</groupId>
@@ -69,16 +71,16 @@
       <artifactId>entitybroker-api</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.sakaiproject.message</groupId>
-      <artifactId>sakai-message-impl</artifactId>
-    </dependency>
-    <dependency>
       <groupId>org.sakaiproject.courier</groupId>
       <artifactId>sakai-courier-api</artifactId>
     </dependency>
         <dependency>
       <groupId>org.sakaiproject.courier</groupId>
       <artifactId>sakai-courier-util</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>commons-lang</groupId>
+      <artifactId>commons-lang</artifactId>
     </dependency>
     <dependency>
       <groupId>commons-logging</groupId>

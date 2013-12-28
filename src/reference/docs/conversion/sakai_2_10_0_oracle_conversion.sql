@@ -1,13 +1,13 @@
---SAK-21225 Extra Credit in Gradebook
+-- SAK-21225 Extra Credit in Gradebook
 Update GB_CATEGORY_T
 set IS_EXTRA_CREDIT = 0
-where IS_EXTRA_CREDIT is null
+where IS_EXTRA_CREDIT is null;
 
 update GB_GRADABLE_OBJECT_T
 Set IS_EXTRA_CREDIT = 0
-Where IS_EXTRA_CREDIT is null
+Where IS_EXTRA_CREDIT is null;
 
---END SAK-21225
+-- END SAK-21225
 
 -- --------------------------------------------------------------------------------
 -- KNL-897 add !site.template.lti realm and associated roles/permissions
@@ -818,9 +818,6 @@ INSERT INTO SAKAI_SITE_PAGE VALUES('!admin-1230', '!admin', 'External Tools', '0
 INSERT INTO SAKAI_SITE_TOOL VALUES('!admin-1235', '!admin-1230', '!admin', 'sakai.basiclti.admin', 1, 'External Tools', NULL );
 INSERT INTO SAKAI_SITE_PAGE_PROPERTY VALUES('!admin', '!admin-1230', 'sitePage.customTitle', 'true');
 
--- SAM-973
-alter table SAM_ITEMGRADING_t add ISCORRECT number(1,0);
-
 -- SAM-2063
 alter table SAM_ASSESSMENTGRADING_T add HASAUTOSUBMISSIONRUN number(1,0) default 0 not null;
 
@@ -870,3 +867,73 @@ ALTER TABLE QRTZ_SIMPLE_TRIGGERS MODIFY TIMES_TRIGGERED BIGINT(10) NOT NULL;
 
 -- Increase size
 ALTER TABLE QRTZ_CRON_TRIGGERS MODIFY CRON_EXPRESSION VARCHAR(120) NOT NULL;
+
+-- ------------------------
+--
+-- SAK-23812 Peer Review feature for Assignments
+--
+-- ------------------------
+
+CREATE TABLE ASN_PEER_ASSESSMENT_ITEM_T  ( 
+	SUBMISSION_ID   	varchar2(255) NOT NULL,
+	ASSESSOR_USER_ID	varchar2(255) NOT NULL,
+	ASSIGNMENT_ID   	varchar2(255) NOT NULL,
+	SCORE           	NUMBER(11) NULL,
+	REVIEW_COMMENT         	varchar2(6000) NULL,
+	REMOVED         	NUMBER(1) NULL,
+	SUBMITTED         	NUMBER(1) NULL,
+	PRIMARY KEY(SUBMISSION_ID,ASSESSOR_USER_ID)
+);
+
+create index PEER_ASSESSOR_I on ASN_PEER_ASSESSMENT_ITEM_T (SUBMISSION_ID, ASSESSOR_USER_ID);
+create index PEER_ASSESSOR2_I on ASN_PEER_ASSESSMENT_ITEM_T (ASSIGNMENT_ID, ASSESSOR_USER_ID);
+
+-- --------------------
+--
+-- END SAK-23812 Peer Review feature for Assignments
+--
+-- --------------------
+
+-- https://jira.sakaiproject.org/browse/SAK-24207
+ALTER TABLE chat2_channel ADD COLUMN START_DATE TIMESTAMP NULL DEFAULT NULL;
+ALTER TABLE chat2_channel ADD COLUMN END_DATE TIMESTAMP NULL DEFAULT NULL;
+
+-- -------------
+--
+-- MSGCNTR-830 Mark replied messages on the "Received" folder.
+--
+-- -------------
+
+alter table MFR_PVT_MSG_USR_T add REPLIED number(1, 0) default 0 not null;
+
+-- ------------
+--
+-- END MSGCNTR-830 Mark replied messages on the "Received" folder.
+--
+-- ------------
+
+-- https://jira.sakaiproject.org/browse/SAK-24337
+alter table GB_GRADEBOOK_T add TOTAL_POINTS_DISPLAYED number(1, 0) not null;
+alter table GB_GRADEBOOK_T add COURSE_AVERAGE_DISPLAYED number(1, 0) not null;
+
+update GB_GRADEBOOK_T set TOTAL_POINTS_DISPLAYED=1, COURSE_AVERAGE_DISPLAYED=1 where COURSE_GRADE_DISPLAYED=1;
+update GB_GRADEBOOK_T set TOTAL_POINTS_DISPLAYED=0, COURSE_AVERAGE_DISPLAYED=0 where COURSE_GRADE_DISPLAYED=0;
+-- END SAK-24337 Gradebook edu service features
+
+-- SAK-23634 - new table to track user add/drop/update actions done in sites
+CREATE TABLE user_audits_log (
+	id NUMBER(19,0) NOT NULL,
+	site_id VARCHAR2(255) NOT NULL,
+	user_id VARCHAR2(99) NOT NULL,
+	role_name VARCHAR2(255) NOT NULL,
+	action_taken VARCHAR2(1) NOT NULL,
+	audit_stamp TIMESTAMP NOT NULL,
+	source VARCHAR2(1),
+	action_user_id VARCHAR2(99),
+	PRIMARY KEY(id)
+);
+
+CREATE INDEX user_audits_log_index ON user_audits_log (id,site_id);
+
+CREATE SEQUENCE user_audits_log_seq;
+-- END SAK-23634

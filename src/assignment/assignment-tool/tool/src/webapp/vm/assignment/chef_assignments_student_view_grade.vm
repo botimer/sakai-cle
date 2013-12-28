@@ -1,4 +1,4 @@
-<!-- $Id: chef_assignments_student_view_grade.vm 122725 2013-04-12 21:05:51Z ottenhoff@longsight.com $ -->
+<!-- $Id: chef_assignments_student_view_grade.vm 132398 2013-12-10 09:17:55Z jean-francois.leveque@upmc.fr $ -->
 <!-- start: chef_assignments_student_view_grade.vm  -->
 ##<!-- $Header: /cvs/sakai2/legacy/tools/src/webapp/vm/assignment/chef_assignments_student_view_grade.vm,v 1.2 2005/05/19 19:39:49 gsilver.umich.edu Exp $ -->
 <script type="text/javascript">
@@ -395,6 +395,21 @@
 							#end
 						#end
 					</ul>
+				#end
+				
+				##Show reviewer feedback from peer review (if exist and the peer review is closed)
+				#if ($peerReviews)
+					<h3>$tlang.getString("gen.peerReviews") </h3>
+					#foreach($review in $peerReviews)
+						<h5>$review.assessorDisplayName</h5>
+						<br/>
+						$tlang.getFormattedMessage("gen.score", $review.getScoreDisplay())
+						<br/>
+						#if($!review.getComment() && $review.getComment().length()>0)
+							<b>$tlang.getString("gen.comments")</b> 
+							<div class="textPanel">$validator.escapeHtmlFormattedText($review.getComment())</div>
+						#end
+					#end
 				#end
 			#end
 		<form action="#toolForm("AssignmentAction")" method="post" >

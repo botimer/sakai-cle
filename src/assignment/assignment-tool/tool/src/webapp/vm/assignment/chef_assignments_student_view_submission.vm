@@ -1,4 +1,4 @@
-<!-- $Id: chef_assignments_student_view_submission.vm 126289 2013-06-26 12:39:28Z holladay@longsight.com $ -->
+<!-- $Id: chef_assignments_student_view_submission.vm 130451 2013-10-14 21:27:02Z jbush@anisakai.com $ -->
 <!-- start: chef_assignments_student_view_submission.vm  -->
 <script type="text/javascript">
 $(document).ready(function(){
@@ -172,8 +172,11 @@ function submitform(id)
 					<th>
 						$tlang.getString("gen.due")
 					</th>
+					#set($allowUpdateAssignment=$!service.allowUpdateAssignment($assignment.Reference))
 					<td>
-						$!assignment.getDueTime().toStringLocalFull()
+					#if ($assignment.getContent().getHideDueDate() != "true" || $!allowUpdateAssignment)
+						$!assignment.dueTime.toStringLocalFull()
+					#end
 					</td>
 				</tr>
 				##resubmit number
@@ -572,6 +575,14 @@ function submitform(id)
 #end
 
 
+			## We are allowing the instructor to submit as long as assignment is not non-electronic and not deleted
+			#if (!$submissionType != 4 && !$!deleted.equalsIgnoreCase("true") && $!allowAddAssignment && $!allowSubmitByInstructor && $!student) 
+				<h4>$tlang.getString("submitforstudent")</h4>
+				<p class="instruction">
+					$student.getDisplayName()
+					<input type="hidden" name="submit_on_behalf_of" id="submit_on_behalf_of" value="$student.id" />		
+				</p>
+			#end
 
 			#if (($submissionType==1) || ($submissionType==3))
 				#if ($!deleted.equalsIgnoreCase("true"))
@@ -579,21 +590,6 @@ function submitform(id)
 					##if the assignment has been deleted, disable the action button
 					$validator.escapeHtmlFormattedText($!value_submission_text)
 				#else
-					#*
-					#if (!$submitted || ($submitted && !$timeSubmitted))
-						## for draft submission
-						#if ($!closeTime && $currentTime.after($closeTime))
-							##disable input for submitted and not returned submission or when later than assignment close date
-							##<h4>$tlang.getString("gen.yousub")</h4>
-							$validator.escapeHtmlFormattedText($!value_submission_text)
-						#else*#
-							#if ($!allowAddAssignment && $!allowSubmitByInstructor && $!student) 
-							<h4>$tlang.getString("submitforstudent")</h4>
-							<p class="instruction">
-								$student.getDisplayName()
-								<input type="hidden" name="submit_on_behalf_of" id="submit_on_behalf_of" value="$student.id" />		
-							</p>
-							#end
 							<h4>$tlang.getString("assignmenttext")</h4>
 							<p class="instruction">
 							#if ($returned)
@@ -718,10 +714,10 @@ function submitform(id)
 									<table border="0" cellpadding="0" cellspacing="0" class="listHier  centerLines" style="width:auto;margin:0">
 										<tr>
 											<td>
-												<span>$howManySubAtts</span>
+												<span><label for="clonableUpload">$howManySubAtts</label></span>
 											</td>
 											<td>
-												<div id="clonableUpload"> 
+												<div id="clonableUploadW"> 
 													<input type="file" name="upload" class="upload" id="clonableUpload" onchange="javascript:showNotif('submitnotifxxx','post','addSubmissionForm');document.getElementById('addSubmissionForm').action='#toolLinkParam("AssignmentAction" "doAttachUpload" "")';submitform('addSubmissionForm');""/> 
 													<span id="submitnotifxxx" class="messageProgress" style="visibility:hidden">$tlang.getString("processmessage.file")</span>
 												</div>
@@ -957,7 +953,12 @@ function submitform(id)
 								onclick="document.addSubmissionForm.onsubmit();document.addSubmissionForm.option.value='cancel'; document.addSubmissionForm.submit(); return false;"
 							/>
 							#end
-							<span class="messageInformation">$tlang.getString("stuviewsubm.submitreminder")</span>
+
+                            #if ($submissionType==5)
+                                <span class="messageInformation">$tlang.getString("stuviewsubm.reminder")</span>
+                            #else
+                                <span class="messageInformation">$tlang.getString("stuviewsubm.submitreminder")</span>
+                            #end
 					#end
 				<span id="submitnotif" style="visibility:hidden">$tlang.getString("gen.proces")</span>
 			</div>

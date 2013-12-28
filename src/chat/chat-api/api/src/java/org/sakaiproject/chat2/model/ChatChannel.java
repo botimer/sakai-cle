@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/chat/trunk/chat-api/api/src/java/org/sakaiproject/chat2/model/ChatChannel.java $
- * $Id: ChatChannel.java 105079 2012-02-24 23:08:11Z ottenhoff@longsight.com $
+ * $Id: ChatChannel.java 129909 2013-09-23 19:30:28Z azeckoski@unicon.net $
  ***********************************************************************************
  *
  * Copyright (c) 2007, 2008 The Sakai Foundation
@@ -55,8 +55,10 @@ public class ChatChannel implements Entity {
    private boolean enableUserOverride = true;
    private Set<ChatMessage> messages = new HashSet<ChatMessage>();
    private String migratedChannelId;
-   
-   
+   private Date startDate;
+   private Date endDate;
+
+
    public ChatChannel() {
    }
 
@@ -131,6 +133,18 @@ public class ChatChannel implements Entity {
    }
    public void setEnableUserOverride(boolean enableUserOverride) {
       this.enableUserOverride = enableUserOverride;
+   }
+   public Date getStartDate() {
+       return startDate;
+   }
+   public void setStartDate(Date startDate) {
+       this.startDate = startDate;
+   }
+   public Date getEndDate() {
+       return endDate;
+   }
+   public void setEndDate(Date endDate) {
+       this.endDate = endDate;
    }
 
    /**

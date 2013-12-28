@@ -1,6 +1,6 @@
 /**********************************************************************************
 * $URL: https://source.sakaiproject.org/svn/osp/trunk/common/api/src/java/org/theospi/portfolio/shared/model/EvaluationContentWrapper.java $
-* $Id: EvaluationContentWrapper.java 105079 2012-02-24 23:08:11Z ottenhoff@longsight.com $
+* $Id: EvaluationContentWrapper.java 131548 2013-11-14 16:42:13Z dsobiera@indiana.edu $
 ***********************************************************************************
 *
  * Copyright (c) 2006, 2008 The Sakai Foundation
@@ -27,20 +27,18 @@ import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.sakaiproject.exception.IdUnusedException;
 import org.sakaiproject.metaobj.shared.model.Agent;
 import org.sakaiproject.metaobj.shared.model.Id;
-import org.sakaiproject.site.api.Site;
-import org.sakaiproject.site.cover.SiteService;
 import org.sakaiproject.user.api.User;
 import org.sakaiproject.user.api.UserNotDefinedException;
-import org.sakaiproject.user.cover.UserDirectoryService;
+import org.theospi.portfolio.util.cover.CacheUtil;
 
 public abstract class EvaluationContentWrapper {
 
    private Id id;
    private String title;
    private User owner;
+   private String groups;
    private Date submittedDate;
    private String evalType;
    private String url;
@@ -55,8 +53,11 @@ public abstract class EvaluationContentWrapper {
       this.title = title;
       this.submittedDate = submittedDate;
       
-      this.owner = UserDirectoryService.getUser(owner.getId().getValue());
-      this.siteTitle = fetchSiteName(siteId);
+      if(owner != null && owner.getId() != null){
+          this.owner = CacheUtil.fetchUser(owner.getId().getValue());
+          this.groups = CacheUtil.fetchGroupList(owner.getId().getValue(), siteId);
+      }
+      this.siteTitle = CacheUtil.fetchSiteName(siteId);
       this.siteId = siteId;
    }
    
@@ -101,17 +102,6 @@ public abstract class EvaluationContentWrapper {
    }
    
    
-   public String fetchSiteName(String siteId) {
-      String title = null;
-      try {
-         Site site = SiteService.getSite(siteId);
-         title = site.getTitle();
-      } catch (IdUnusedException e) {
-         logger.warn(this+".fetchSiteName",e);
-      }
-      return title;
-   }
-   
    /**
     * @return Returns the owner.
     */
@@ -124,6 +114,14 @@ public abstract class EvaluationContentWrapper {
    public void setOwner(User owner) {
       this.owner = owner;
    }
+   public void setGroups(String groups) {
+       this.groups = groups;
+   }
+
+   public String getGroups() {
+       return groups;
+   }
+
    /**
     * @return Returns the submittedDate.
     */

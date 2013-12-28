@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/kernel/trunk/api/src/main/java/org/sakaiproject/site/api/SiteService.java $
- * $Id: SiteService.java 121766 2013-03-26 11:41:48Z steve.swinsburg@gmail.com $
+ * $Id: SiteService.java 130212 2013-10-07 16:16:02Z azeckoski@unicon.net $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008 Sakai Foundation
@@ -179,6 +179,16 @@ public interface SiteService extends EntityProducer
 	 */
 	static final String EVENT_SITE_USER_INVALIDATE = "site.usersite.invalidate";
 
+	/**
+	 * An event for starting the site import
+	 */
+	static final String EVENT_SITE_IMPORT_START = "site.import.start";
+	
+	/**
+	 * An event for ending the site import
+	 */
+	static final String EVENT_SITE_IMPORT_END = "site.import.end";
+	
 	/**
 	 * <p>
 	 * SelectionType enumerates different supported types of selection criteria for getting / counting sites.
@@ -828,6 +838,28 @@ public interface SiteService extends EntityProducer
 	 * @return The List of Site objects that meet specified criteria, with potentially empty descriptions based on requireDescription and caching.
 	 */
 	List<Site> getSites(SelectionType type, Object ofType, String criteria, Map<String, String> propertyCriteria, SortType sort, PagingPosition page, boolean requireDescription);
+
+	/**
+	 * Get the Site IDs for all sites matching criteria.
+	 * This is useful when you only need the listing of site ids (for other operations) and do not need the actual Site objects.
+	 *
+	 * All parameters are the same as {@link #getSites(org.sakaiproject.site.api.SiteService.SelectionType, Object, String, Map, org.sakaiproject.site.api.SiteService.SortType, PagingPosition)}
+	 * 
+	 * @param type
+	 *        The SelectionType specifying what sort of selection is intended.
+	 * @param ofType
+	 *        Site type criteria: null for any type; a String to match a single type; A String[], List or Set to match any type in the collection.
+	 * @param criteria
+	 *        Additional selection criteria: sites returned will match this string somewhere in their id, title, description, or skin.
+	 * @param propertyCriteria
+	 *        Additional selection criteria: sites returned will have a property named to match each key in the map, whose values match (somewhere in their value) the value in the map (may be null or empty).
+	 * @param sort
+	 *        A SortType indicating the desired sort. For no sort, set to SortType.NONE.
+	 * @param page
+	 *        The PagePosition subset of items to return.
+	 * @return a List of the Site IDs for the sites matching the criteria.
+	 */
+	List<String> getSiteIds(SelectionType type, Object ofType, String criteria, Map<String, String> propertyCriteria, SortType sort, PagingPosition page);
 
 	/**
 	 * Get all sites that have been softly deleted

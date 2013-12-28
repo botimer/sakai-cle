@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/kernel/trunk/kernel-impl/src/test/java/org/sakaiproject/site/impl/SiteServiceTest.java $
- * $Id: SiteServiceTest.java 107504 2012-04-24 13:20:06Z matthew.buckett@oucs.ox.ac.uk $
+ * $Id: SiteServiceTest.java 130212 2013-10-07 16:16:02Z azeckoski@unicon.net $
  ***********************************************************************************
  *
  * Copyright (c) 2006, 2008 Sakai Foundation
@@ -21,6 +21,7 @@
 
 package org.sakaiproject.site.impl;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -161,4 +162,11 @@ public class SiteServiceTest extends DbSiteService
 		// TODO Auto-generated method stub
 		return null;
 	}
+
+	@Override
+	public List<String> getSiteIds(SelectionType type, Object ofType, String criteria, Map<String, String> propertyCriteria, SortType sort,
+	        PagingPosition page) {
+	    return new ArrayList<String>(0);
+	}
+
 }

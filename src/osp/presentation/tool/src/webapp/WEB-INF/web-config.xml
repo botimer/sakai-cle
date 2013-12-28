@@ -121,6 +121,7 @@
                <prop key="/sharePresentation.osp">sharePresentationController</prop>
                <prop key="/sharePresentationMore.osp">sharePresentationMoreController</prop>
                <prop key="/hidePresentation.osp">hidePresentationController</prop>
+               <prop key="/requestPresentation.osp">requestPresentationController</prop>
                <prop key="/copyPresentation.osp">copyPresentationController</prop> <!-- SAK-17351 -->
                <prop key="/reviewPresentation.osp">reviewPresentationController</prop>
                <prop key="/addComment.osp">addCommentController</prop>

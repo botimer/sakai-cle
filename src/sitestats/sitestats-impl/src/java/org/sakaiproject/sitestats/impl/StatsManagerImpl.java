@@ -1,6 +1,6 @@
 /**
  * $URL: https://source.sakaiproject.org/svn/sitestats/trunk/sitestats-impl/src/java/org/sakaiproject/sitestats/impl/StatsManagerImpl.java $
- * $Id: StatsManagerImpl.java 120504 2013-02-27 20:58:22Z steve.swinsburg@gmail.com $
+ * $Id: StatsManagerImpl.java 129832 2013-09-19 14:57:13Z enietzel@anisakai.com $
  *
  * Copyright (c) 2006-2009 The Sakai Foundation
  *
@@ -41,6 +41,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
+import org.hibernate.FlushMode;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
@@ -3514,6 +3515,7 @@ public class StatsManagerImpl extends HibernateDaoSupport implements StatsManage
 			HibernateCallback hcb = new HibernateCallback() {
 				public Object doInHibernate(Session session) throws HibernateException, SQLException {
 					Query q = session.createQuery(hql);
+					q.setFlushMode(FlushMode.NEVER);
 					q.setString("siteid", siteId);
 					if(events != null && events.size() > 0)
 						q.setParameterList("eventlist", events);

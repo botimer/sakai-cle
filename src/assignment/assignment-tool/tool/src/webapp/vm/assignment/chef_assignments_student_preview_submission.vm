@@ -1,4 +1,4 @@
-<!-- $Id: chef_assignments_student_preview_submission.vm 122725 2013-04-12 21:05:51Z ottenhoff@longsight.com $ -->
+<!-- $Id: chef_assignments_student_preview_submission.vm 129976 2013-09-25 20:48:37Z matthew@longsight.com $ -->
 <!-- start: chef_assignments_student_preview_submission.vm -->
 <div class="portletBody">
 
@@ -6,6 +6,7 @@
 		$tlang.getString("gen.assig")<span class="highlight"> - $tlang.getString("gen.pre")</span>
 	</h3>	
 
+    #set($allowUpdateAssignment=$!service.allowUpdateAssignment($assignment.Reference))
 	#if ($alertMessage)<div class="alertMessage">$tlang.getString("gen.alert") $alertMessage</div><div class="clear"></div>#end
 	<table class="itemSummary" summary="$tlang.getString("gen.assdet")" border="0">
 		 <tr>
@@ -22,7 +23,10 @@
 				$tlang.getString("gen.due"):
 			</th>
 			<td>
-				$!assignment.getDueTime().toStringLocalFull()
+
+                #if ($assignment.getContent().getHideDueDate() != "true" || $!allowUpdateAssignment)
+                    $!assignment.dueTime.toStringLocalFull()
+                #end
 			</td>
 		</tr>
 		##resubmit number

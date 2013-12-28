@@ -1,6 +1,6 @@
 /**
  * $URL: https://source.sakaiproject.org/svn/basiclti/trunk/basiclti-impl/src/java/org/sakaiproject/basiclti/impl/BasicLTISecurityServiceImpl.java $
- * $Id: BasicLTISecurityServiceImpl.java 120423 2013-02-24 01:36:55Z csev@umich.edu $
+ * $Id: BasicLTISecurityServiceImpl.java 131688 2013-11-17 02:14:16Z csev@umich.edu $
  * 
  * Copyright (c) 2009 The Sakai Foundation
  *
@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
+import java.util.Properties;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -276,7 +277,30 @@ public class BasicLTISecurityServiceImpl implements EntityProducer {
 
 						   String refId = ref.getId();
 						   String [] retval = null;
-						   if ( refId.startsWith("content:") && refId.length() > 8 ) 
+						   if ( refId.startsWith("deploy:") && refId.length() > 7 )  
+						   {
+						       if ("!admin".equals(ref.getContext()) ) 
+						       {
+							       throw new EntityPermissionException(SessionManager.getCurrentSessionUserId(), "basiclti", ref.getReference());
+						       }
+							   Map<String,Object> deploy = null;
+							   String deployStr = refId.substring(7);
+							   Long deployKey = foorm.getLongKey(deployStr);
+							   if ( deployKey >= 0 ) deploy = ltiService.getDeployDao(deployKey);
+                               String placementId = req.getParameter("placement");
+                               // System.out.println("deployStr="+deployStr+" deployKey="+deployKey+" placementId="+placementId);
+                               // System.out.println(deploy);
+                               Long reg_state = foorm.getLongKey(deploy.get(LTIService.LTI_REG_STATE));
+                               if ( reg_state == 0 ) 
+                               { 
+                                   retval = SakaiBLTIUtil.postRegisterHTML(deployKey, deploy, rb, placementId);
+                               } 
+                               else
+                               { 
+                                   retval = SakaiBLTIUtil.postReRegisterHTML(deployKey, deploy, rb, placementId);
+                               } 
+						   } 
+						   else if ( refId.startsWith("content:") && refId.length() > 8 ) 
 						   {
 							   Map<String,Object> content = null;
 							   Map<String,Object> tool = null;
@@ -315,9 +339,11 @@ public class BasicLTISecurityServiceImpl implements EntityProducer {
 									   ltiService.filterContent(content, tool);
 								   }
 							   }
-							   String splash = (String) tool.get("splash");
+							   String splash = null;
+							   if ( tool != null ) splash = (String) tool.get("splash");
 							   String splashParm = req.getParameter("splash");
-							   String siteId = (String) tool.get(LTIService.LTI_SITE_ID);
+							   String siteId = null;
+							   if ( tool != null ) siteId = (String) tool.get(LTIService.LTI_SITE_ID);
 							   if ( splashParm == null && splash != null && splash.trim().length() > 1 )
 							   {
 									// XSS Note: Administrator-created tools can put HTML in the splash.
@@ -325,10 +351,41 @@ public class BasicLTISecurityServiceImpl implements EntityProducer {
 									doSplash(req, res, splash, rb);
 									return;
 							   }
-							   retval = SakaiBLTIUtil.postLaunchHTML(content, tool, rb);
+							   retval = SakaiBLTIUtil.postLaunchHTML(content, tool, ltiService, rb);
 						   }
 						   else
 						   {
+								String splashParm = req.getParameter("splash");
+								if ( splashParm == null ) 
+								{
+									ToolConfiguration placement = SiteService.findTool(refId);
+									Properties config = placement == null ? null : placement.getConfig();
+
+									if ( placement != null ) 
+									{
+										// XSS Note: Only the Administrator can set overridesplash - so we allow HTML
+										String splash = SakaiBLTIUtil.toNull(SakaiBLTIUtil.getCorrectProperty(config,"overridesplash", placement));
+										if ( splash == null ) 
+										{
+											// This may be user-set so no HTML
+											splash = SakaiBLTIUtil.toNull(SakaiBLTIUtil.getCorrectProperty(config,"splash", placement));
+											if ( splash != null ) splash = FormattedText.escapeHtml(splash,false);
+										} 
+
+										// XSS Note: Only the Administrator can set defaultsplash - so we allow HTML
+										if ( splash == null ) 
+										{
+											splash = SakaiBLTIUtil.toNull(SakaiBLTIUtil.getCorrectProperty(config,"defaultsplash", placement));
+										}
+
+										if ( splash != null && splash.trim().length() > 1 )
+										{
+											doSplash(req, res, splash, rb);
+											return;
+										}
+									}
+								}
+
 							   // Get the post data for the placement
 							   retval = SakaiBLTIUtil.postLaunchHTML(refId, rb);
 						   }

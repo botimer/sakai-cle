@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/mailarchive/trunk/mailarchive-tool/tool/src/java/org/sakaiproject/mailarchive/tool/MailboxAction.java $
- * $Id: MailboxAction.java 105724 2012-03-13 14:33:23Z matthew@longsight.com $
+ * $Id: MailboxAction.java 131929 2013-11-25 17:56:30Z dsobiera@indiana.edu $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008 The Sakai Foundation
@@ -179,9 +179,15 @@ public class MailboxAction extends PagedResourceActionII
         	try
 		{
 			MailArchiveChannel channel = MailArchiveService.getMailArchiveChannel((String) state.getAttribute(STATE_CHANNEL_REF));
-			int cCount = channel.getCount((Filter) getSearchFilter(search, 0, 0));
 
-			lastCount = Integer.valueOf(cCount);
+			int cCount = 0;
+			if(search == null) {
+			    cCount = channel.getCount();
+			} else {
+                cCount = channel.getCount((Filter) getSearchFilter(search, 0, 0));
+			}
+
+			lastCount = new Integer(cCount);
 			state.setAttribute(STATE_COUNT, lastCount);
 			state.setAttribute(STATE_COUNT_SEARCH, search);
 			return cCount;
@@ -540,6 +546,7 @@ public class MailboxAction extends PagedResourceActionII
 					String email = user.getEmail();
 					context.put("validFrom", email);
 				}
+				context.put(STATE_OPTION_SENDTO, channel.getSendToList());
 			}
 		}
 		catch (IdUnusedException e)

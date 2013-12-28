@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/textarea/trunk/FCKeditor/connector/src/java/org/sakaiproject/connector/fck/FCKConnectorServlet.java $
- * $Id: FCKConnectorServlet.java 123072 2013-04-19 22:41:37Z matthew@longsight.com $
+ * $Id: FCKConnectorServlet.java 130297 2013-10-09 21:02:55Z matthew@longsight.com $
  ***********************************************************************************
  *
  * Copyright (c) 2006, 2007, 2008, 2009 The Sakai Foundation
@@ -21,7 +21,9 @@
 
 package org.sakaiproject.connector.fck;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -30,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.UUID;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -45,6 +48,10 @@ import javax.xml.transform.stream.StreamResult;
 
 import org.apache.commons.fileupload.DiskFileUpload;
 import org.apache.commons.fileupload.FileItem;
+import org.apache.commons.fileupload.disk.DiskFileItemFactory;
+import org.apache.commons.fileupload.servlet.ServletFileUpload;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.commons.codec.binary.Base64;
 import org.sakaiproject.authz.api.SecurityAdvisor;
 import org.sakaiproject.authz.api.SecurityService;
@@ -61,7 +68,9 @@ import org.sakaiproject.entitybroker.entityprovider.extension.EntityData;
 import org.sakaiproject.event.api.NotificationService;
 import org.sakaiproject.exception.IdUsedException;
 import org.sakaiproject.exception.PermissionException;
+import org.sakaiproject.site.api.SiteService;
 import org.sakaiproject.tool.api.SessionManager;
+import org.sakaiproject.util.ResourceLoader;
 import org.sakaiproject.util.StringUtil;
 import org.sakaiproject.util.Validator;
 import org.w3c.dom.Document;
@@ -98,14 +107,16 @@ import org.sakaiproject.api.app.messageforums.entity.DecoratedTopicInfo;
 
 public class FCKConnectorServlet extends HttpServlet {
 
+	 private static Log M_log = LogFactory.getLog(FCKConnectorServlet.class);
+
      private static final long serialVersionUID = 1L;
 
      private static final String MFORUM_FORUM_PREFIX = "/direct/forum/";
      private static final String MFORUM_TOPIC_PREFIX = "/direct/forum_topic/";
      private static final String MFORUM_MESSAGE_PREFIX = "/direct/forum_message/";
      
-
      private static final String FCK_ADVISOR_BASE = "fck.security.advisor.";
+     private static final String CK_ADVISOR_BASE = "ck.security.advisor.";
      private static final String FCK_EXTRA_COLLECTIONS_BASE = "fck.extra.collections.";
 
      private String serverUrlPrefix = "";
@@ -114,6 +125,10 @@ public class FCKConnectorServlet extends HttpServlet {
      private SecurityService securityService = null;
      private SessionManager sessionManager = null;
      private NotificationService notificationService = null;
+     private SiteService siteService = null;
+     private SecurityAdvisor contentNewAdvisor = null;
+
+	 private ResourceLoader resourceBundle;
 
      /**
       * Injects dependencies using the ComponentManager cover.
@@ -146,13 +161,70 @@ public class FCKConnectorServlet extends HttpServlet {
           if (notificationService == null) {
                notificationService = (NotificationService) inject("org.sakaiproject.event.api.NotificationService");
           }
+          if (siteService == null) {
+              siteService = (SiteService) inject("org.sakaiproject.site.api.SiteService");
+     }
+
+          if (resourceBundle == null) {
+        	  resourceBundle = new ResourceLoader("org.sakaiproject.connector.fck.Messages");
+          }
+          if (contentNewAdvisor == null) {
+        	  contentNewAdvisor = new SecurityAdvisor(){
+        		  	public SecurityAdvice isAllowed(String userId, String function, String reference){
+        				try {
+        					securityService.popAdvisor();
+        					return securityService.unlock(userId, "content.new".equals(function)?"content.read":function, reference)?
+        							SecurityAdvice.ALLOWED:SecurityAdvice.NOT_ALLOWED;
+        				} catch (Exception ex) {
+        					return SecurityAdvice.NOT_ALLOWED;
+        				} finally {
+        					securityService.pushAdvisor(this);
+        				}
+        			}
+        	  };
+          }
      }
 
      public void init() throws ServletException {
           super.init();
           initialize();
      }
+     
+     /**
+     * pops a special private advisor when necessary
+     * @param thisDir Directory where this is referencing
+     * @param collectionBase base of the collection
+     */
+    private void popPrivateAdvisor(String thisDir, String collectionBase) {
+    	 if (thisDir.startsWith("/private/")) {
+    		 SecurityAdvisor advisor = (SecurityAdvisor) sessionManager.getCurrentSession().getAttribute(FCK_ADVISOR_BASE + collectionBase);
+    		 if (advisor != null) {
+    			 securityService.popAdvisor(advisor);
+    		 }
+    		 advisor = (SecurityAdvisor) sessionManager.getCurrentSession().getAttribute(CK_ADVISOR_BASE + collectionBase);
+    		 if (advisor != null) {
+    			 securityService.popAdvisor(advisor);
+    		 }
+    	 }
+     }
 
+    /**
+     * pushes a special private advisor when necessary
+     * @param thisDir Directory where this is referencing
+     * @param collectionBase base of the collection
+     */
+     private void pushPrivateAdvisor(String thisDir, String collectionBase) {
+    	 if (thisDir.startsWith("/private/")) {
+    		 SecurityAdvisor advisor = (SecurityAdvisor) sessionManager.getCurrentSession().getAttribute(FCK_ADVISOR_BASE + collectionBase);
+    		 if (advisor != null) {
+    			 securityService.pushAdvisor(advisor);
+    		 }
+    		 advisor = (SecurityAdvisor) sessionManager.getCurrentSession().getAttribute(CK_ADVISOR_BASE + collectionBase);
+    		 if (advisor != null) {
+    			 securityService.pushAdvisor(advisor);
+    		 }
+    	 }
+     }
      /**
       * Manage the Get requests (GetFolders, GetFoldersAndFiles, CreateFolder).<br>
       *
@@ -177,12 +249,6 @@ public class FCKConnectorServlet extends HttpServlet {
 
           String collectionBase = request.getPathInfo();
 
-          SecurityAdvisor advisor = (SecurityAdvisor) sessionManager.getCurrentSession()
-               .getAttribute(FCK_ADVISOR_BASE + collectionBase);
-          if (advisor != null) {
-               securityService.pushAdvisor(advisor);
-          }
-          
           Document document = null;
           try {
                DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
@@ -196,18 +262,27 @@ public class FCKConnectorServlet extends HttpServlet {
           Node root = createCommonXml(document, commandStr, type, currentFolder, 
                contentHostingService.getUrl(currentFolder));
           
+          //To support meletedocs, the call to getFolders has to be able to retrieve all folders that are part of melete private (which will be passed in) as 
+          //well as ones that are not. This is why the advisor is being manipulated inside the getfolders method.
+          
           if ("GetFolders".equals(commandStr)) {
                getFolders(currentFolder, root, document, collectionBase);
           }
           else if ("GetFoldersAndFiles".equals(commandStr)) {
                getFolders(currentFolder, root, document, collectionBase);
+               //Might need this advisor for files
+               pushPrivateAdvisor(currentFolder,collectionBase);
                getFiles(currentFolder, root, document, type);
+               popPrivateAdvisor(currentFolder,collectionBase);
           }
           else if ("GetFoldersFilesAssignsTestsTopics".equals(commandStr)) {
              ConnectorHelper thisConnectorHelper = new ConnectorHelper();
              thisConnectorHelper.init();
              getFolders(currentFolder, root, document, collectionBase);
+             //Might need this advisor for files
+             pushPrivateAdvisor(currentFolder,collectionBase);
              getFilesOnly(currentFolder, root, document, type);
+             popPrivateAdvisor(currentFolder,collectionBase);
              getAssignmentsOnly(currentFolder, root, document, type, thisConnectorHelper);
              getTestsOnly(currentFolder, root, document, type, thisConnectorHelper);
 
@@ -216,20 +291,25 @@ public class FCKConnectorServlet extends HttpServlet {
           else if ("GetResourcesAssignsTestsTopics".equals(commandStr)) {
              ConnectorHelper thisConnectorHelper = new ConnectorHelper();
              thisConnectorHelper.init();
+             pushPrivateAdvisor(currentFolder,collectionBase);
              getResources(currentFolder, root, document, collectionBase, type);
+             popPrivateAdvisor(currentFolder,collectionBase);
              getAssignmentsOnly(currentFolder, root, document, type, thisConnectorHelper);
              getTestsOnly(currentFolder, root, document, type, thisConnectorHelper);
 
              getForumsAndThreads(currentFolder, root, document, type, thisConnectorHelper);
           }
           else if ("GetResources".equals(commandStr)) {
+        	  pushPrivateAdvisor(currentFolder,collectionBase);
               getResources(currentFolder, root, document, collectionBase, type);
+        	  popPrivateAdvisor(currentFolder,collectionBase);
           }          
           
           
           else if ("CreateFolder".equals(commandStr)) {
                String newFolderStr = request.getParameter("NewFolderName");
                String status = "110";
+               pushPrivateAdvisor(currentFolder,collectionBase);
                
                try {
                     ContentCollectionEdit edit = contentHostingService
@@ -254,6 +334,7 @@ public class FCKConnectorServlet extends HttpServlet {
                     status = "102";               
                }
                setCreateFolderResponse(status, root, document);
+               popPrivateAdvisor(currentFolder,collectionBase);
           }          
           
           document.getDocumentElement().normalize();
@@ -277,9 +358,8 @@ public class FCKConnectorServlet extends HttpServlet {
                }
           }
           
-          if (advisor != null) {
-               securityService.popAdvisor();
-          }
+		  //Pop the advisor if we need to
+		  popPrivateAdvisor(currentFolder,collectionBase);
      }
      
 
@@ -303,24 +383,22 @@ public class FCKConnectorServlet extends HttpServlet {
           String currentFolder = request.getParameter("CurrentFolder");
           String collectionBase = request.getPathInfo();
           
-          SecurityAdvisor advisor = (SecurityAdvisor) sessionManager.getCurrentSession()
-               .getAttribute(FCK_ADVISOR_BASE + collectionBase);
-          if (advisor != null) {
-               securityService.pushAdvisor(advisor);
-          }
+          pushPrivateAdvisor(currentFolder,collectionBase);
           
           String fileName = "";
           String errorMessage = "";
           
           String status="0";
+          ContentResource attachment = null;
 
-          if (!"FileUpload".equals(command) && !"QuickUpload".equals(command) && !("QuickUploadEquation").equals(command)) {
+          if (!"FileUpload".equals(command) && !"QuickUpload".equals(command) && !("QuickUploadEquation").equals(command) && !("QuickUploadAttachment").equals(command)) {
                status = "203";
           }
           else {
                DiskFileUpload upload = new DiskFileUpload();
-               String mime;
-               byte [] bytes;
+               String mime="";
+               InputStream requestStream = null;
+               byte [] bytes=null;
                try {
                    //Special case for uploading fmath equations
                    if (("QuickUploadEquation").equals(command)) {
@@ -344,31 +422,41 @@ public class FCKConnectorServlet extends HttpServlet {
                        }
                    }
                    else {
-                       List items = upload.parseRequest(request);
-
-                       Map fields = new HashMap();
-
-                       Iterator iter = items.iterator();
-                       while (iter.hasNext()) {
-                           FileItem item = (FileItem) iter.next();
-                           if (item.isFormField()) {
-                               fields.put(item.getFieldName(), item.getString());
+                	   //If this is a multipart request
+                	   if (ServletFileUpload.isMultipartContent(request)) {
+	                       List items = upload.parseRequest(request);
+	
+	                       Map fields = new HashMap();
+	
+	                       Iterator iter = items.iterator();
+	                       while (iter.hasNext()) {
+	                           FileItem item = (FileItem) iter.next();
+	                           if (item.isFormField()) {
+	                               fields.put(item.getFieldName(), item.getString());
+	                           }
+	                           else {
+	                               fields.put(item.getFieldName(), item);
+	                           }
+	                       }
+	                       FileItem uplFile = (FileItem)fields.get("NewFile");
+	
+	                       String filePath = uplFile.getName();
+	                       filePath = filePath.replace('\\','/');
+	                       String[] pathParts = filePath.split("/");
+	                       fileName = pathParts[pathParts.length-1];
+	                       mime = uplFile.getContentType();
+	                       requestStream = uplFile.getInputStream();
+	                   }
+                	   else {
+                		   requestStream = request.getInputStream();
+                		   mime = request.getHeader("Content-Type");
                            }
-                           else {
-                               fields.put(item.getFieldName(), item);
-                           }
-                       }
-                       FileItem uplFile = (FileItem)fields.get("NewFile");
-
-                       String filePath = uplFile.getName();
-                       filePath = filePath.replace('\\','/');
-                       String[] pathParts = filePath.split("/");
-                       fileName = pathParts[pathParts.length-1];
-                       mime = uplFile.getContentType();
-                       bytes = uplFile.get();
-                   }
-
-                    
+                	   }
+                		   
+                    //If there's no filename, make a guid name with the mime extension?
+                    if ("".equals (fileName)) {
+                    	fileName = UUID.randomUUID().toString();
+                    }
                     String nameWithoutExt = fileName; 
                     String ext = ""; 
 
@@ -386,14 +474,26 @@ public class FCKConnectorServlet extends HttpServlet {
                              ResourcePropertiesEdit resourceProperties = contentHostingService.newResourceProperties();
                              resourceProperties.addProperty (ResourceProperties.PROP_DISPLAY_NAME, fileName);
 
-                             String altRoot = getAltReferenceRoot(currentFolder);
-                             if (altRoot != null)
-                                  resourceProperties.addProperty (ContentHostingService.PROP_ALTERNATE_REFERENCE, altRoot);
+                             if ("QuickUploadEquation".equals(command) || "QuickUploadAttachment".equals(command)) {
+                            	 attachment = bypassAddAttachment(request,fileName,mime,bytes,requestStream,resourceProperties);
+                             } else {
+	                             String altRoot = getAltReferenceRoot(currentFolder);
+	                             if (altRoot != null)
+	                                  resourceProperties.addProperty (ContentHostingService.PROP_ALTERNATE_REFERENCE, altRoot);
+	
+	                             int noti = NotificationService.NOTI_NONE;
+	                             if (bytes != null) {
+	                            	 contentHostingService.addResource(currentFolder+fileName, mime, bytes, resourceProperties, noti);
+	                             }
+	                             else if (requestStream != null) {
+	                            	 contentHostingService.addResource(currentFolder+fileName, mime, requestStream, resourceProperties, noti);
+	                             }
+	                             else {
+	                            	 //Nothing to do
+	                            	 
+	                             }
+                             }
 
-                             int noti = NotificationService.NOTI_NONE;
-
-                             contentHostingService.addResource(currentFolder+fileName, mime, bytes, 
-                                    resourceProperties, noti);
                              done = true;
                          }
                          catch (IdUsedException iue) {
@@ -419,8 +519,8 @@ public class FCKConnectorServlet extends HttpServlet {
 
           try {
                out = response.getWriter();
-               if ("QuickUploadEquation".equals(command)) {
-                   out.println(contentHostingService.getUrl(currentFolder) + fileName);
+               if ("QuickUploadEquation".equals(command) || "QuickUploadAttachment".equals(command)) {
+                   out.println(attachment!=null?attachment.getUrl():"");
                }
                else {
                    out.println("<script type=\"text/javascript\">");
@@ -430,7 +530,7 @@ public class FCKConnectorServlet extends HttpServlet {
                    out.println("try { document.domain = d ; } catch (e) { break ; }}})() ;");
 
                        out.println("window.parent.OnUploadCompleted(" + status + ",'"
-                               + contentHostingService.getUrl(currentFolder) + fileName
+                               + (attachment!=null?attachment.getUrl():"")
                                + "','" + fileName + "','" + errorMessage + "');");
 
                    out.println("</script>");
@@ -445,9 +545,7 @@ public class FCKConnectorServlet extends HttpServlet {
                }
           }
           
-          if (advisor != null) {
-               securityService.popAdvisor();
-          }
+          popPrivateAdvisor(currentFolder,collectionBase);
      }
 
      private void setCreateFolderResponse(String status, Node root, Document doc) {
@@ -464,12 +562,13 @@ public class FCKConnectorServlet extends HttpServlet {
           ContentCollection collection = null;
          
           Map<String, String> map = null; 
-          Iterator foldersIterator = null;
+          List <Iterator> foldersIterator = new ArrayList <Iterator> ();
    
           try {
                //hides the real root level stuff and just shows the users the
                //the root folders of all the top collections they actually have access to.
-               if (dir.split("/").length == 2) {
+        	   int dirlength = dir.split("/").length;
+               if (dirlength == 2 || dir.startsWith("/private/")) {
                     List<String> collections = new ArrayList<String>();
                     map = contentHostingService.getCollectionMap();
                     for (String key : map.keySet()) {
@@ -484,45 +583,58 @@ public class FCKConnectorServlet extends HttpServlet {
                          collections.addAll(extras);
                     }
 
-                    foldersIterator = collections.iterator();
+                    foldersIterator.add(collections.iterator());
                }
-               else if (dir.split("/").length > 2) {
-                    collection = contentHostingService.getCollection(dir);
-                    if (collection != null && collection.getMembers() != null) {
-                         foldersIterator = collection.getMembers().iterator();
-                    }
+               if (dirlength > 2) {
+            	   pushPrivateAdvisor(dir,collectionBase);
+            	   collection = contentHostingService.getCollection(dir);
+            	   if (collection != null && collection.getMembers() != null) {
+            		   foldersIterator.add(collection.getMembers().iterator());
+            	   }
+            	   popPrivateAdvisor(dir,collectionBase);
                }          
           }
           catch (Exception e) {    
                e.printStackTrace();
                //not a valid collection? file list will be empty and so will the doc
           }
-          if (foldersIterator != null) {
-               String current = null;
-               
-               // create a SortedSet using the elements that are going to be added to the XML doc
-               SortedSet<Element> sortedFolders = new TreeSet<Element>(new SortElementsForDisplay());
-               
-               while (foldersIterator.hasNext()) {
-                    try {
-                         current = (String) foldersIterator.next();
-                         ContentCollection myCollection = contentHostingService.getCollection(current);
-                         Element element=doc.createElement("Folder");
-                         element.setAttribute("url", current);
-                         element.setAttribute("name", myCollection.getProperties().getProperty(
-                                              myCollection.getProperties().getNamePropDisplayName()));
-                         // by adding the folders to this collection, they will be sorted for display
-                         sortedFolders.add(element);
-                    }
-                    catch (Exception e) {    
-                         //do nothing, we either don't have access to the collction or it's a resource
-                    }
-               }      
-               
-               // now append the folderse to the parent document in sorted order
-               for (Element folder: sortedFolders) {
-                  folders.appendChild(folder);
-               }
+          for (Iterator folderIterator : foldersIterator ) {
+        	  if (folderIterator != null) {
+        		  String current = null;
+
+        		  // create a SortedSet using the elements that are going to be added to the XML doc
+        		  SortedSet<Element> sortedFolders = new TreeSet<Element>(new SortElementsForDisplay());
+
+        		  while (folderIterator.hasNext()) {
+        			  try {
+        				  current = (String) folderIterator.next();
+       					  pushPrivateAdvisor(current,collectionBase);
+        				  ContentCollection myCollection = contentHostingService.getCollection(current);
+        				  Element element=doc.createElement("Folder");
+        				  element.setAttribute("url", current);
+        				  String collectionName =  myCollection.getProperties().getProperty(myCollection.getProperties().getNamePropDisplayName());
+        				  if (current.contains("/meleteDocs/")) {
+        					  if (resourceBundle != null)
+        						  collectionName =  resourceBundle.getString("melete_collectionname");
+        					  else
+        						  collectionName = "Melete Files";
+        				  }
+        				  element.setAttribute("name",collectionName); 
+        				  // by adding the folders to this collection, they will be sorted for display
+        				  sortedFolders.add(element);
+       					  popPrivateAdvisor(current,collectionBase);
+        			  }
+        			  catch (Exception e) {    
+        				  //do nothing, we either don't have access to the collction or it's a resource
+        				  M_log.debug("No access to display collection" + e.getMessage());
+        			  }
+        		  }      
+
+        		  // now append the folderse to the parent document in sorted order
+        		  for (Element folder: sortedFolders) {
+        			  folders.appendChild(folder);
+        		  }
+        	  }
           }
      }
 
@@ -898,4 +1010,32 @@ public class FCKConnectorServlet extends HttpServlet {
                return null;
      }
 
+     private ContentResource bypassAddAttachment(HttpServletRequest request, String fileName, String mimeType, byte[] bytes, InputStream requestStream, ResourceProperties props) throws Exception {
+    	 try {
+    		 
+             securityService.pushAdvisor(contentNewAdvisor);
+	         String path = request.getPathInfo();
+			 String resourceId = Validator.escapeResourceName(fileName);
+			 String siteId = "";
+			 if(path.contains("/user/")){
+				 siteId = siteService.getSite("~" + path.replaceAll("\\/user\\/(.*)\\/", "$1")).getId();
+			 } else {
+				 siteId = siteService.getSite(path.replaceAll("\\/group\\/(.*)\\/", "$1")).getId();
+}
+			 String toolName = "fckeditor";
+	    	 
+             if (bytes != null) {
+            	 return contentHostingService.addAttachmentResource(resourceId, siteId, toolName, mimeType, new ByteArrayInputStream(bytes), props);
+             }
+             else if (requestStream != null) {
+            	 return contentHostingService.addAttachmentResource(resourceId, siteId, toolName, mimeType, requestStream, props);
+             }
+			 
+    	 } catch (Exception ex) {
+    		 throw ex;
+    	 } finally {
+             securityService.popAdvisor(contentNewAdvisor);
+    	 }
+    	 return null;
+     }
 }

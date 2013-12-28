@@ -72,7 +72,7 @@ import org.sakaiproject.util.ResourceLoader;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- * @version $Id: HistogramListener.java 121258 2013-03-15 15:03:36Z ottenhoff@longsight.com $
+ * @version $Id: HistogramListener.java 131058 2013-11-01 17:04:40Z ktsao@stanford.edu $
  */
 
 public class HistogramListener
@@ -541,7 +541,13 @@ public class HistogramListener
 				  if (questionScores.getQuestionType().equals("1") 
 						  || questionScores.getQuestionType().equals("2")
 						  || questionScores.getQuestionType().equals("3")
-						  || questionScores.getQuestionType().equals("4")) {
+						  || questionScores.getQuestionType().equals("4")
+						  || questionScores.getQuestionType().equals("8")
+						  || questionScores.getQuestionType().equals("9")
+						  || questionScores.getQuestionType().equals("11")
+						  || questionScores.getQuestionType().equals("12")
+						  || questionScores.getQuestionType().equals("15")
+						) {
 					  detailedStatistics.add(questionScores);
 					  if (questionScores.getHistogramBars() != null) {
 						  maxNumOfAnswers = questionScores.getHistogramBars().length >maxNumOfAnswers ? questionScores.getHistogramBars().length : maxNumOfAnswers;
@@ -1237,7 +1243,7 @@ private void getCalculatedQuestionScores(List<ItemGradingData> scores, Histogram
         int correct = qbean.getNumResponses() - assessmentQuestionIncorrect.size();
         int total = qbean.getNumResponses();
         double percentCorrect = ((double) correct / (double) total) * 100;
-        String percentCorrectStr = Double.toString(percentCorrect);
+        String percentCorrectStr = Integer.toString((int)percentCorrect);
         qbean.setPercentCorrect(percentCorrectStr);
     }
 }
@@ -1502,13 +1508,30 @@ private void getCalculatedQuestionScores(List<ItemGradingData> scores, Histogram
 				  AnswerIfc answer1 = (AnswerIfc)publishedAnswerHash.get(id1);
 				  //log.info("kim debug:answer1.getText()  + ifc.getText()" + 
 				  //answer1.getText() + answer1.getItemText().getText() + ifc.getText() + answer1.getId());
-				  if ((answer1.getText()).equals((String)answerTextList.get(i)) && 
-						  ((answer1.getItemText()).getText()).equals(ifc.getText())){
+				  
+				  // bjones86 - SAM-2232 - null checks
+				  if( answer1 == null ) {
+					  continue;
+				  }
+				  ItemTextIfc answer1ItemText = answer1.getItemText();
+				  if( answer1ItemText == null ) {
+					  continue;
+				  }
+				  String answer1Text = answer1.getText();
+				  String answer1ItemTextText = answer1ItemText.getText();
+				  if( answer1Text == null || answer1ItemTextText == null ) {
+					  continue;
+				  }
+				  
+				  String answerText = (String) answerTextList.get( i );
+ 				  String ifcText = ifc.getText();
+ 				  if(answer1Text.equals(answerText) && answer1ItemTextText.equals(ifcText)) {
 					  //2. then get the count from HashMap
-					  if(answers.containsKey(answer1.getId()))
+					  if(answers.containsKey(answer1.getId())) {
 						  count =((Integer) answers.get(answer1.getId())).intValue();
-					  //log.info("kim debug: count " + count);
-					  break;
+						  //log.info("kim debug: count " + count);
+						  break;
+					  }
 				  }
 			  }
 			  if (count > 1)

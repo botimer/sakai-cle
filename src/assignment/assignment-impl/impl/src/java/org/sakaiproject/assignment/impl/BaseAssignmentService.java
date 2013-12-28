@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/assignment/trunk/assignment-impl/impl/src/java/org/sakaiproject/assignment/impl/BaseAssignmentService.java $
- * $Id: BaseAssignmentService.java 127569 2013-07-23 12:02:14Z azeckoski@unicon.net $
+ * $Id: BaseAssignmentService.java 131845 2013-11-21 17:53:50Z ottenhoff@longsight.com $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008, 2009 The Sakai Foundation
@@ -22,9 +22,12 @@
 package org.sakaiproject.assignment.impl;
 
 import java.io.BufferedInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.StringWriter;
 import java.text.NumberFormat;
 import java.text.Normalizer;
 import java.util.ArrayList;
@@ -73,6 +76,7 @@ import org.sakaiproject.assignment.api.AssignmentService;
 import org.sakaiproject.assignment.api.AssignmentSubmission;
 import org.sakaiproject.assignment.api.AssignmentSubmissionEdit;
 import org.sakaiproject.assignment.taggable.api.AssignmentActivityProducer;
+import org.sakaiproject.assignment.api.AssignmentPeerAssessmentService;
 import org.sakaiproject.authz.api.AuthzGroup;
 import org.sakaiproject.authz.api.AuthzPermissionException;
 import org.sakaiproject.authz.api.GroupNotDefinedException;
@@ -172,6 +176,8 @@ import org.xml.sax.Attributes;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 
+import au.com.bytecode.opencsv.CSVWriter;
+
 /**
  * <p>
  * BaseAssignmentService is the abstract service class for Assignments.
@@ -228,6 +234,11 @@ public abstract class BaseAssignmentService implements AssignmentService, Entity
 	protected ContentReviewService contentReviewService;
 	public void setContentReviewService(ContentReviewService contentReviewService) {
 		this.contentReviewService = contentReviewService;
+	}
+	
+	private AssignmentPeerAssessmentService assignmentPeerAssessmentService = null;
+	public void setAssignmentPeerAssessmentService(AssignmentPeerAssessmentService assignmentPeerAssessmentService){
+		this.assignmentPeerAssessmentService = assignmentPeerAssessmentService;
 	}
 
 	String newline = "<br />\n";
@@ -1322,7 +1333,7 @@ public abstract class BaseAssignmentService implements AssignmentService, Entity
 		// Check whether the user can add assignments for the site.
 		// If so, return the full list.
 		String siteRef = SiteService.siteReference(siteId);
-		boolean allowAdd = SecurityService.unlock(userId, SECURE_ADD_ASSIGNMENT, siteRef);
+		boolean allowAdd = SecurityService.unlock(userId, SECURE_ALL_GROUPS, siteRef);
 		if (allowAdd)
 		{
 			return siteAssignments;
@@ -1347,7 +1358,7 @@ public abstract class BaseAssignmentService implements AssignmentService, Entity
 		permitted.addAll(filterGroupedAssignmentsForAccess(grouped, siteId, userId));
 
 		// Filter for visibility/submission state
-		List<Assignment> visible = filterAssignmentsByVisibility(permitted, userId);
+		List<Assignment> visible = (SecurityService.unlock(userId, SECURE_ADD_ASSIGNMENT, siteRef))? permitted : filterAssignmentsByVisibility(permitted, userId);
 
 		// We are left with the original list filtered by site/group permissions and visibility/submission state
 		return visible;
@@ -1582,6 +1593,13 @@ public abstract class BaseAssignmentService implements AssignmentService, Entity
 
 		// complete the edit
 		m_assignmentStorage.commit(assignment);
+
+		//update peer assessment information:
+		if(!assignment.getDraft() && assignment.getAllowPeerAssessment()){
+			assignmentPeerAssessmentService.schedulePeerReview(assignment.getId());
+		}else{
+			assignmentPeerAssessmentService.removeScheduledPeerReview(assignment.getId());
+		}
 
 		// track it
 		EventTrackingService.post(EventTrackingService.newEvent(((BaseAssignmentEdit) assignment).getEvent(), assignment
@@ -2090,6 +2108,7 @@ public abstract class BaseAssignmentService implements AssignmentService, Entity
 				retVal.setTitle(existingContent.getTitle() + " - " + rb.getString("assignment.copy"));
 				retVal.setInstructions(existingContent.getInstructions());
 				retVal.setHonorPledge(existingContent.getHonorPledge());
+				retVal.setHideDueDate(existingContent.getHideDueDate());
 				retVal.setTypeOfSubmission(existingContent.getTypeOfSubmission());
 				retVal.setTypeOfGrade(existingContent.getTypeOfGrade());
 				retVal.setMaxGradePoint(existingContent.getMaxGradePoint());
@@ -2347,7 +2366,7 @@ public abstract class BaseAssignmentService implements AssignmentService, Entity
 
 		// complete the edit
 		m_contentStorage.commit(content);
-
+				
 		// track it
 		EventTrackingService.post(EventTrackingService.newEvent(((BaseAssignmentContentEdit) content).getEvent(), content
 				.getReference(), true));
@@ -4712,10 +4731,14 @@ public abstract class BaseAssignmentService implements AssignmentService, Entity
 									try
 									{
 										// numeric cell type?
-										String grade = submission.getGradeForUser(userId) == null ? submission.getGrade():
+										String grade = submission.getGradeForUser(userId) == null ? submission.getGradeDisplay():
                                                                                     submission.getGradeForUser(userId);
 
-                                                                                Float.parseFloat(grade);
+										//We get float number no matter the locale it was managed with.
+										NumberFormat nbFormat = NumberFormat.getNumberInstance(rb.getLocale());
+										nbFormat.setMaximumFractionDigits(1);
+										nbFormat.setMinimumFractionDigits(1);
+										float f = nbFormat.parse(grade).floatValue();
 
 										// remove the String-based cell first
 										cell = row.getCell(cellNum);
@@ -4723,7 +4746,7 @@ public abstract class BaseAssignmentService implements AssignmentService, Entity
 										// add number based cell
 										cell=row.createCell(cellNum);
 										cell.setCellType(0);
-										cell.setCellValue(Float.parseFloat(grade)/10);
+										cell.setCellValue(f);
 			
 										style = wb.createCellStyle();
 										style.setDataFormat(wb.createDataFormat().getFormat("#,##0.0"));
@@ -4732,10 +4755,10 @@ public abstract class BaseAssignmentService implements AssignmentService, Entity
 									catch (Exception e)
 									{
 										// if the grade is not numeric, let's make it as String type
-										row.removeCell(cell);
-										cell=row.createCell(cellNum);
+										// No need to remove the cell and create a new one, as the existing one is String type.
+										cell = row.getCell(cellNum);
 										cell.setCellType(1);
-										cell.setCellValue(submission.getGradeForUser(userId) == null ? submission.getGrade():
+										cell.setCellValue(submission.getGradeForUser(userId) == null ? submission.getGradeDisplay():
                                                                                     submission.getGradeForUser(userId));
 									}
 								}
@@ -4774,15 +4797,20 @@ public abstract class BaseAssignmentService implements AssignmentService, Entity
 									{
 										// numeric cell type?
 										String grade = submission.getGradeDisplay();
-										Float.parseFloat(grade);
 			
+										//We get float number no matter the locale it was managed with.
+										NumberFormat nbFormat = NumberFormat.getNumberInstance(rb.getLocale());
+										nbFormat.setMaximumFractionDigits(1);
+										nbFormat.setMinimumFractionDigits(1);
+										float f = nbFormat.parse(grade).floatValue();
+										
 										// remove the String-based cell first
 										cell = row.getCell(cellNum);
 										row.removeCell(cell);
 										// add number based cell
 										cell=row.createCell(cellNum);
 										cell.setCellType(0);
-										cell.setCellValue(Float.parseFloat(grade));
+										cell.setCellValue(f);
 			
 										style = wb.createCellStyle();
 										style.setDataFormat(wb.createDataFormat().getFormat("#,##0.0"));
@@ -4791,10 +4819,11 @@ public abstract class BaseAssignmentService implements AssignmentService, Entity
 									catch (Exception e)
 									{
 										// if the grade is not numeric, let's make it as String type
-										row.removeCell(cell);
-										cell=row.createCell(cellNum);
+										// No need to remove the cell and create a new one, as the existing one is String type. 
+										cell = row.getCell(cellNum);
 										cell.setCellType(1);
-										cell.setCellValue(submission.getGrade());
+										// Setting grade display instead grade.
+										cell.setCellValue(submission.getGradeDisplay());
 									}
 								}
 								else
@@ -5608,8 +5637,16 @@ public abstract class BaseAssignmentService implements AssignmentService, Entity
 			}
 			
 			// the buffer used to store grade information
-			StringBuilder gradesBuffer = new StringBuilder(assignmentTitle + "," + gradeTypeString + "\n\n");
-			gradesBuffer.append(rb.getString("grades.id") + "\t" + rb.getString("grades.eid") + "\t" + rb.getString("grades.lastname") + "\t" + rb.getString("grades.firstname") + "\t" + rb.getString("grades.grade") + "\n");
+			ByteArrayOutputStream gradesBAOS = new ByteArrayOutputStream();
+			CSVWriter gradesBuffer = new CSVWriter(new OutputStreamWriter(gradesBAOS));
+
+			String [] values = {assignmentTitle,gradeTypeString};
+			gradesBuffer.writeNext(values);
+			//Blank line was in original gradefile
+			values = new String[] {""};
+			gradesBuffer.writeNext(values);
+			values = new String[] {rb.getString("grades.id"),rb.getString("grades.eid"),rb.getString("grades.lastname"),rb.getString("grades.firstname"),rb.getString("grades.grade")};
+			gradesBuffer.writeNext(values);
 
 			// allow add assignment members
 			List allowAddSubmissionUsers = allowAddSubmissionUsers(assignmentReference);
@@ -5660,7 +5697,8 @@ public abstract class BaseAssignmentService implements AssignmentService, Entity
 								}
 								submittersString = escapeInvalidCharsEntry(submittersString);
 								// in grades file, Eid is used
-								gradesBuffer.append(submitters[i].getDisplayId() + "\t" + submitters[i].getEid() + "\t" + submitters[i].getLastName() + "\t" + submitters[i].getFirstName() + "\t" + s.getGradeDisplay() + "\n");
+								values = new String [] {submitters[i].getDisplayId(), submitters[i].getEid(), submitters[i].getLastName(), submitters[i].getFirstName(), s.getGradeDisplay()};
+								gradesBuffer.writeNext(values);
 							}
 							
 							if (StringUtils.trimToNull(submittersString) != null)
@@ -5767,9 +5805,11 @@ public abstract class BaseAssignmentService implements AssignmentService, Entity
 					// create a grades.csv file into zip
 					ZipEntry gradesCSVEntry = new ZipEntry(root + "grades.csv");
 					out.putNextEntry(gradesCSVEntry);
-					byte[] grades = gradesBuffer.toString().getBytes();
-					out.write(grades);
-					gradesCSVEntry.setSize(grades.length);
+
+					gradesBuffer.close();
+					out.write(gradesBAOS.toByteArray());
+					gradesCSVEntry.setSize(gradesBAOS.size());
+
 					out.closeEntry();
 				}
 			}
@@ -6784,6 +6824,7 @@ public abstract class BaseAssignmentService implements AssignmentService, Entity
 							nContent.setContext(toContext);
 							nContent.setGroupProject(oContent.getGroupProject());
 							nContent.setHonorPledge(oContent.getHonorPledge());
+							nContent.setHideDueDate(oContent.getHideDueDate());
 							nContent.setIndividuallyGraded(oContent.individuallyGraded());
 							// replace all occurrence of old context with new context inside instruction text
 							String instructions = oContent.getInstructions();
@@ -7237,6 +7278,8 @@ public abstract class BaseAssignmentService implements AssignmentService, Entity
 		protected List m_authors;
 
 		protected boolean m_draft;
+
+		protected boolean m_hideDueDate;
 		
                 protected boolean m_group;
                 
@@ -7247,6 +7290,18 @@ public abstract class BaseAssignmentService implements AssignmentService, Entity
 
 		/** The assignment access. */
 		protected AssignmentAccess m_access = AssignmentAccess.SITE;
+		
+		protected boolean m_allowPeerAssessment;
+
+		protected Time m_peerAssessmentPeriodTime;
+
+		protected boolean m_peerAssessmentAnonEval;
+
+		protected boolean m_peerAssessmentStudentViewReviews;
+
+		protected int m_peerAssessmentNumReviews;
+
+		protected String m_peerAssessmentInstructions;
 
 		/**
 		 * constructor
@@ -7278,8 +7333,15 @@ public abstract class BaseAssignmentService implements AssignmentService, Entity
 			m_section = "";
 			m_authors = new ArrayList();
 			m_draft = true;
+			m_hideDueDate = false;
 			m_groups = new ArrayList();
 			m_position_order = 0;
+			m_allowPeerAssessment = false;
+			m_peerAssessmentPeriodTime = null;
+			m_peerAssessmentAnonEval = false;
+			m_peerAssessmentStudentViewReviews = false;
+			m_peerAssessmentNumReviews = 0;
+			m_peerAssessmentInstructions = null;
 		}
 
 		/**
@@ -7305,6 +7367,7 @@ public abstract class BaseAssignmentService implements AssignmentService, Entity
 			m_title = el.getAttribute("title");
 			m_section = el.getAttribute("section");
 			m_draft = getBool(el.getAttribute("draft"));
+			m_hideDueDate = getBool(el.getAttribute("hideduedate"));
 			
 			m_group = getBool(el.getAttribute("group"));
 
@@ -7330,6 +7393,19 @@ public abstract class BaseAssignmentService implements AssignmentService, Entity
 			{
 				M_log.warn(": BaseAssignment(Element) " + e.getMessage());
 			}
+			m_allowPeerAssessment = getBool(el.getAttribute("allowpeerassessment"));
+			m_peerAssessmentPeriodTime = getTimeObject(el.getAttribute("peerassessmentperiodtime"));
+			m_peerAssessmentAnonEval = getBool(el.getAttribute("peerassessmentanoneval"));
+			m_peerAssessmentStudentViewReviews = getBool(el.getAttribute("peerassessmentstudentviewreviews"));
+			String numReviews = el.getAttribute("peerassessmentnumreviews");
+			m_peerAssessmentNumReviews = 0;
+			if(numReviews != null && !"".equals(numReviews)){
+				try{
+					m_peerAssessmentNumReviews = Integer.parseInt(numReviews);
+				}catch(Exception e){}
+			}
+			m_peerAssessmentInstructions = el.getAttribute("peerassessmentinstructions");
+
 
 			// READ THE AUTHORS
 			m_authors = new ArrayList();
@@ -7430,6 +7506,7 @@ public abstract class BaseAssignmentService implements AssignmentService, Entity
 							m_title = attributes.getValue("title");
 							m_section = attributes.getValue("section");
 							m_draft = getBool(attributes.getValue("draft"));
+							m_hideDueDate = getBool(attributes.getValue("hideduedate"));
 							
                                                         m_group = getBool(attributes.getValue("group"));
                                                         
@@ -7454,6 +7531,20 @@ public abstract class BaseAssignmentService implements AssignmentService, Entity
 							{
 								m_position_order = 0; // prevents null pointer if there is no position_order defined as well as helps with the sorting
 							}
+							
+							m_allowPeerAssessment = getBool(attributes.getValue("allowpeerassessment"));
+							m_peerAssessmentPeriodTime = getTimeObject(attributes.getValue("peerassessmentperiodtime"));
+							m_peerAssessmentAnonEval = getBool(attributes.getValue("peerassessmentanoneval"));
+							m_peerAssessmentStudentViewReviews = getBool(attributes.getValue("peerassessmentstudentviewreviews"));
+							String numReviews = attributes.getValue("peerassessmentnumreviews");
+							m_peerAssessmentNumReviews = 0;
+							if(numReviews != null && !"".equals(numReviews)){
+								try{
+									m_peerAssessmentNumReviews = Integer.parseInt(numReviews);
+								}catch(Exception e){}
+							}
+							m_peerAssessmentInstructions = attributes.getValue("peerassessmentinstructions");
+
 
 							// READ THE AUTHORS
 							m_authors = new ArrayList();
@@ -7544,12 +7635,19 @@ public abstract class BaseAssignmentService implements AssignmentService, Entity
 			assignment.setAttribute("assignmentcontent", m_assignmentContent == null ? "" : m_assignmentContent);
 			assignment.setAttribute("draft", getBoolString(m_draft));
                         assignment.setAttribute("group", getBoolString(m_group));
+			assignment.setAttribute("hideduedate", getBoolString(m_hideDueDate));
 			assignment.setAttribute("opendate", getTimeString(m_openTime));
 			assignment.setAttribute("duedate", getTimeString(m_dueTime));
 			assignment.setAttribute("visibledate", getTimeString(m_visibleTime));
 			assignment.setAttribute("dropdeaddate", getTimeString(m_dropDeadTime));
 			assignment.setAttribute("closedate", getTimeString(m_closeTime));
 			assignment.setAttribute("position_order", Long.valueOf(m_position_order).toString().trim());
+			assignment.setAttribute("allowpeerassessment", getBoolString(m_allowPeerAssessment));
+			assignment.setAttribute("peerassessmentperiodtime", getTimeString(m_peerAssessmentPeriodTime));
+			assignment.setAttribute("peerassessmentanoneval", getBoolString(m_peerAssessmentAnonEval));
+			assignment.setAttribute("peerassessmentstudentviewreviews", getBoolString(m_peerAssessmentStudentViewReviews));
+			assignment.setAttribute("peerassessmentnumreviews", "" + m_peerAssessmentNumReviews);
+			assignment.setAttribute("peerassessmentinstructions", m_peerAssessmentInstructions);
 
 			
 				M_log.debug(this + " BASE ASSIGNMENT : TOXML : saved regular properties");
@@ -7628,6 +7726,13 @@ public abstract class BaseAssignmentService implements AssignmentService, Entity
 				m_properties.addAll(assignment.getProperties());
 				m_groups = assignment.getGroups();
 				m_access = assignment.getAccess();
+				m_allowPeerAssessment = assignment.getAllowPeerAssessment();
+				m_peerAssessmentPeriodTime = assignment.getPeerAssessmentPeriod();
+				m_peerAssessmentAnonEval = assignment.getPeerAssessmentAnonEval();
+				m_peerAssessmentStudentViewReviews = assignment.getPeerAssessmentStudentViewReviews();
+				m_peerAssessmentNumReviews = assignment.getPeerAssessmentNumReviews();
+				m_peerAssessmentInstructions = assignment.getPeerAssessmentInstructions();
+
 			}
 		}
 
@@ -7745,7 +7850,73 @@ public abstract class BaseAssignmentService implements AssignmentService, Entity
 		{
 			return m_title;
 		}
+		
+		public Time getPeerAssessmentPeriod()
+		{
+			return m_peerAssessmentPeriodTime;
+		}
 
+		public boolean getPeerAssessmentAnonEval(){
+			return m_peerAssessmentAnonEval;
+		}
+
+		public boolean getPeerAssessmentStudentViewReviews(){
+			return m_peerAssessmentStudentViewReviews;
+		}
+
+		public int getPeerAssessmentNumReviews(){
+			return m_peerAssessmentNumReviews;
+		}
+
+		public String getPeerAssessmentInstructions(){
+			return m_peerAssessmentInstructions;
+		}
+
+		public boolean getAllowPeerAssessment()
+		{
+			return m_allowPeerAssessment;
+		}
+
+		/**
+		 * peer assessment is set for this assignment and the current time 
+		 * falls between the assignment close time and the peer asseessment period time
+		 * @return
+		 */
+		public boolean isPeerAssessmentOpen(){
+			if(getAllowPeerAssessment()){
+				Time now = TimeService.newTime();
+				return now.before(getPeerAssessmentPeriod()) && now.after(getCloseTime());
+			}else{
+				return false;
+			}
+		}
+		
+		/**
+		 * peer assessment is set for this assignment but the close time hasn't passed
+		 * @return
+		 */
+		public boolean isPeerAssessmentPending(){
+			if(getAllowPeerAssessment()){
+				Time now = TimeService.newTime();
+				return now.before(getCloseTime());
+			}else{
+				return false;
+			}
+		}
+		/**
+		 * peer assessment is set for this assignment but the current time is passed 
+		 * the peer assessment period
+		 * @return
+		 */
+		public boolean isPeerAssessmentClosed(){
+			if(getAllowPeerAssessment()){
+				Time now = TimeService.newTime();
+				return now.after(getPeerAssessmentPeriod());
+			}else{
+				return false;
+			}
+		}
+		
 		/**
 		 * @inheritDoc
 		 */
@@ -7977,7 +8148,12 @@ public abstract class BaseAssignmentService implements AssignmentService, Entity
 		{
 			return m_draft;
 		}
-		
+	
+		public boolean getHideDueDate()
+		{
+			return m_hideDueDate;
+		}
+	
                 public boolean isGroup()
                 {
                         return m_group;
@@ -8137,6 +8313,32 @@ public abstract class BaseAssignmentService implements AssignmentService, Entity
 			m_title = title;
 		}
 
+		public void setPeerAssessmentPeriod(Time time)
+		{
+			m_peerAssessmentPeriodTime = time;
+		}
+
+		public void setAllowPeerAssessment(boolean allow)
+		{
+			m_allowPeerAssessment = allow;
+		}
+
+		public void setPeerAssessmentAnonEval(boolean anonEval){
+			m_peerAssessmentAnonEval = anonEval;
+		}
+
+		public void setPeerAssessmentStudentViewReviews(boolean studentViewReviews){
+			m_peerAssessmentStudentViewReviews = studentViewReviews;
+		}
+
+		public void setPeerAssessmentNumReviews(int numReviews){
+			m_peerAssessmentNumReviews = numReviews;
+		}
+
+		public void setPeerAssessmentInstructions(String instructions){
+			m_peerAssessmentInstructions = instructions;
+		}
+
 		/**
 		 * Set the reference of the AssignmentContent of this Assignment.
 		 * 
@@ -8246,6 +8448,11 @@ public abstract class BaseAssignmentService implements AssignmentService, Entity
 		{
 			m_draft = draft;
 		}
+
+        public void setHideDueDate (boolean hide)
+        {
+            m_hideDueDate = hide;
+        }
 		
                 public void setGroup(boolean group) {
                         m_group = group;
@@ -8503,10 +8710,10 @@ public abstract class BaseAssignmentService implements AssignmentService, Entity
 
 		protected boolean m_releaseGrades;
 
-		
+		protected boolean m_hideDueDate;
 		
 		protected boolean m_allowAttachments;
-		
+
 		protected boolean m_allowReviewService;
 		
 		protected boolean m_allowStudentViewReport;
@@ -8585,6 +8792,7 @@ public abstract class BaseAssignmentService implements AssignmentService, Entity
 			m_individuallyGraded = getBool(el.getAttribute("indivgraded"));
 			m_releaseGrades = getBool(el.getAttribute("releasegrades"));
 			m_allowAttachments = getBool(el.getAttribute("allowattach"));
+			m_hideDueDate = getBool(el.getAttribute("hideduedate"));
 			m_allowReviewService = getBool(el.getAttribute("allowreview"));
 			m_allowStudentViewReport = getBool(el.getAttribute("allowstudentview"));
 			m_submitReviewRepo = el.getAttribute("submitReviewRepo");
@@ -8790,6 +8998,7 @@ public abstract class BaseAssignmentService implements AssignmentService, Entity
 							m_individuallyGraded = getBool(attributes.getValue("indivgraded"));
 							m_releaseGrades = getBool(attributes.getValue("releasegrades"));
 							m_allowAttachments = getBool(attributes.getValue("allowattach"));
+							m_hideDueDate = getBool(attributes.getValue("hideduedate"));
 							m_allowReviewService = getBool(attributes.getValue("allowreview"));
 							m_allowStudentViewReport = getBool(attributes.getValue("allowstudentview"));
 							m_submitReviewRepo = attributes.getValue("submitReviewRepo");
@@ -8963,6 +9172,7 @@ public abstract class BaseAssignmentService implements AssignmentService, Entity
 			content.setAttribute("indivgraded", getBoolString(m_individuallyGraded));
 			content.setAttribute("releasegrades", getBoolString(m_releaseGrades));
 			content.setAttribute("allowattach", getBoolString(m_allowAttachments));
+			content.setAttribute("hideduedate", getBoolString(m_hideDueDate));
 		
 			content.setAttribute("allowreview", getBoolString(m_allowReviewService));
 			content.setAttribute("allowstudentview", getBoolString(m_allowStudentViewReport));
@@ -9041,6 +9251,7 @@ public abstract class BaseAssignmentService implements AssignmentService, Entity
 				m_individuallyGraded = content.individuallyGraded();
 				m_releaseGrades = content.releaseGrades();
 				m_allowAttachments = content.getAllowAttachments();
+				m_hideDueDate = content.getHideDueDate();
 				//Uct
 				m_allowReviewService = content.getAllowReviewService();
 				m_allowStudentViewReport = content.getAllowStudentViewReport();
@@ -9342,7 +9553,17 @@ public abstract class BaseAssignmentService implements AssignmentService, Entity
 		{
 			return m_allowAttachments;
 		}
-		
+	
+		/**
+		 * Does this Assignment have a hidden due date
+		 * 
+		 * @return true if the Assignment due date hidden, false otherwise?
+		 */
+		public boolean getHideDueDate()
+		{
+			return m_hideDueDate;
+		}
+	
 		/**
 		 * Does this Assignment allow review service?
 		 * 
@@ -9741,6 +9962,11 @@ public abstract class BaseAssignmentService implements AssignmentService, Entity
 			m_releaseGrades = release;
 		}
 
+		public void setHideDueDate(boolean hide)
+		{	
+			m_hideDueDate = hide;
+		}
+
 		/**
 		 * Set the Honor Pledge type; values are NONE and ENGINEERING_HONOR_PLEDGE.
 		 * 
@@ -9763,7 +9989,7 @@ public abstract class BaseAssignmentService implements AssignmentService, Entity
 		{
 			m_allowReviewService = allow;
 		}
-		
+
 		/**
 		 * Does this Assignment allow students to view the report?
 		 * 
@@ -9970,6 +10196,8 @@ public abstract class BaseAssignmentService implements AssignmentService, Entity
 		protected boolean m_gradeReleased;
 
 		protected boolean m_honorPledgeFlag;
+
+		protected boolean m_hideDueDate;
 
 		
 		//The score given by the review service
@@ -10307,6 +10535,7 @@ public abstract class BaseAssignmentService implements AssignmentService, Entity
 			m_graded = getBool(el.getAttribute("graded"));
 			m_gradeReleased = getBool(el.getAttribute("gradereleased"));
 			m_honorPledgeFlag = getBool(el.getAttribute("pledgeflag"));
+			m_hideDueDate = getBool(el.getAttribute("hideduedate"));
 
 			m_submittedText = FormattedText.decodeFormattedTextAttribute(el, "submittedtext");
 			m_feedbackComment = FormattedText.decodeFormattedTextAttribute(el, "feedbackcomment");
@@ -10637,6 +10866,7 @@ public abstract class BaseAssignmentService implements AssignmentService, Entity
 							m_graded = getBool(attributes.getValue("graded"));
 							m_gradeReleased = getBool(attributes.getValue("gradereleased"));
 							m_honorPledgeFlag = getBool(attributes.getValue("pledgeflag"));
+							m_hideDueDate = getBool(attributes.getValue("hideduedate"));
 
 							m_submittedText = formattedTextDecodeFormattedTextAttribute(attributes, "submittedtext");
 							m_feedbackComment = formattedTextDecodeFormattedTextAttribute(attributes, "feedbackcomment");
@@ -10810,6 +11040,7 @@ public abstract class BaseAssignmentService implements AssignmentService, Entity
 			submission.setAttribute("graded", getBoolString(m_graded));
 			submission.setAttribute("gradereleased", getBoolString(m_gradeReleased));
 			submission.setAttribute("pledgeflag", getBoolString(m_honorPledgeFlag));
+			submission.setAttribute("hideduedate", getBoolString(m_hideDueDate));
 
 			if (M_log.isDebugEnabled()) M_log.debug(this + " BaseAssignmentSubmission: SAVED REGULAR PROPERTIES");
 

@@ -8,7 +8,7 @@
      "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
    
 <!--
-* $Id: authorIndex.jsp 121756 2013-03-25 21:57:51Z ktsao@stanford.edu $
+* $Id: authorIndex.jsp 131456 2013-11-12 21:44:55Z ottenhoff@longsight.com $
 <%--
 **********************************************************************************
 *
@@ -37,10 +37,10 @@
       <body onload="<%= request.getAttribute("html.body.onload") %>">
       <div class="portletBody">
 
-<script type="text/javascript" src="/library/js/jquery-latest.min.js"></script>
+<script type="text/javascript" src="/library/js/jquery/jquery-1.9.1.min.js"></script>
 <script type="text/javascript" src="/samigo-app/js/info.js"></script>
-<script type="text/javascript" src="/samigo-app/js/jquery-ui-1.7.2.custom.min.js"></script>
-<script type="text/javascript" src="/samigo-app/js/jquery.tablesorter.js"></script>
+<script type="text/javascript" src="/library/js/jquery/ui/1.10.3/jquery-ui.1.10.3.full.min.js"></script>
+<script type="text/javascript" src="/library/js/jquery/tablesorter/2.0.3/jquery.tablesorter-2.0.3.min.js"></script>
 <link type="text/css" href="/samigo-app/css/ui-lightness/jquery-ui-1.7.2.custom.css" rel="stylesheet" media="all"/>
 <script type="text/JavaScript">
 
@@ -93,6 +93,11 @@ $(document).ready(function() {
 	<h:outputText rendered="#{author.justPublishedAnAssessment}" value="selectedTab = 1;" />
 
 	$("#tabs").tabs({ selected: selectedTab });
+
+	// SET THE HEIGHT ON TABS CONTAINER IF PUBLISHED IS LARGER THAN WORKING COPIES
+	if ($('#tabs-2').height() > $('#tabs-1').height()) {
+		$("#tabs").height($('#tabs-2').height() + 170);
+	}
 
 	// ALLOW ACTIVE, ALL, INACTIVE LINKS FOR PUBLISHED ITEMS
 	$("#assessment-link-status-all").click(

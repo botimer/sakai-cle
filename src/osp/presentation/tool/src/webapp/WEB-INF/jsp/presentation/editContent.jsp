@@ -35,6 +35,22 @@ $(document).ready(function() {
 					+ '&itemDefId=' + itemDefId;
 		}		
 	});
+	$('a.inlineFormCopy').click(function(ev) {
+		ev.preventDefault();
+		var item = this.href.substring(this.href.indexOf('#') + 1);
+		if (osp.bag.selections[item]) {
+			var pieces = osp.bag.selections[item].split('.');
+			var itemDefId = pieces[0];
+			var formTypeId = osp.bag.formTypes[itemDefId];
+			var formId = pieces[1];
+			window.location = '<osp:url value="editPresentationForm.osp" />'
+					+ '&id=<c:out value="${presentation.id.value}" />'
+					+ '&formTypeId=' + formTypeId
+					+ '&formId=' + formId
+					+ '&itemDefId=' + itemDefId
+					+ '&formCopy=true';
+		}		
+	});
 });
 
 	 function showEditSelect(listId) {
@@ -43,10 +59,14 @@ $(document).ready(function() {
 		if ( selectedOption.className != 'readOnly' ) {
 			$("#noedit_"+listId).hide();
 			$("#edit_"+listId).show();
+			$("#nocopy_"+listId).hide();
+			$("#copy_"+listId).show();
 		}
 		else {
 			$("#edit_"+listId).hide();
 			$("#noedit_"+listId).show();
+			$("#copy_"+listId).hide();
+			$("#nocopy_"+listId).show();
 		}
 	 }
     
@@ -139,6 +159,13 @@ $(document).ready(function() {
 														<span id="noedit_<c:out value="${list1}"/>"
 															class="itemAction">
 													  <c:out value="${msgs.edit_selected}"/></span>
+													  <a href="#<c:out value="${list1}"/>" 
+															id="copy_<c:out value="${list1}"/>"
+															class="inlineFormCopy" style="display:none;">
+													  <fmt:message key="copy_selected"/></a>
+														<span id="nocopy_<c:out value="${list1}"/>"
+															class="itemAction">
+													  <fmt:message key="copy_selected"/></span>													  
 														</td>
 													</c:if>
 												</tr>
@@ -160,7 +187,14 @@ $(document).ready(function() {
 														<span id="noedit_<c:out value="${list2}"/>"
 															class="itemAction">
                                          <c:out value="${msgs.edit_selected}"/></span>
-													</td>
+                                         	<a href="#<c:out value="${list2}"/>" 
+															id="copy_<c:out value="${list2}"/>"
+															class="inlineFormCopy" style="display:none;">
+                                         <fmt:message key="copy_selected"/></a>
+														<span id="nocopy_<c:out value="${list2}"/>"
+															class="itemAction">
+                                         <fmt:message key="copy_selected"/></span>
+                                                    </td>
 													</c:if>
 												</tr>
 											</table>	
@@ -301,9 +335,12 @@ $(document).ready(function() {
 											<c:when test="${mine}">
 											  <a href="#<c:out value="${selectBox}" />"
 													class="inlineFormEdit"><c:out value="${msgs.edit_selected}"/></a>|
+											<a href="#<c:out value="${selectBox}" />"
+													class="inlineFormCopy"><fmt:message key="copy_selected"/></a>|
 											</c:when>
 											<c:otherwise>
 													<c:out value="${msgs.edit_selected}"/> |
+													<fmt:message key="copy_selected"/> |
 											</c:otherwise>
 											</c:choose>
 											<a href="#" onclick="document.wizardform.<c:out value='${selectBox}'/>.selectedIndex=0;updateItems()">

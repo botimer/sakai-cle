@@ -1,4 +1,4 @@
-<!-- $Id: chef_assignments_student_view_submission_confirmation.vm 126289 2013-06-26 12:39:28Z holladay@longsight.com $ -->
+<!-- $Id: chef_assignments_student_view_submission_confirmation.vm 130071 2013-09-30 23:56:12Z matthew@longsight.com $ -->
 <!-- start:  chef_assignments_student_view_submission_confirmation.vm  -->
 ## showing the submission confirmation page
 <link href="/sakai-assignment-tool/css/assignment.css" type="text/css" rel="stylesheet" media="all" />
@@ -116,7 +116,7 @@
 			#end
                                 #if ($!submission && $!submission.getSubmissionLog().size() > 0)
                                         <tr>
-                                                <th>History</th>
+                                                <th>$tlang.getString('gen.history')</th>
                                                 <td>
                                                         #foreach ($entry in $submission.getSubmissionLog())
                                                                 $entry<br>

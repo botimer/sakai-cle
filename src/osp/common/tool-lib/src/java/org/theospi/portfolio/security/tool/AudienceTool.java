@@ -747,6 +747,12 @@ public class AudienceTool extends HelperToolBase {
 	           Role role = (Role) i.next();
 	           if ( isWizardAudience() && !role.isAllowed(AudienceSelectionHelper.AUDIENCE_FUNCTION_WIZARD) )
 	              continue;
+               //This is used to check if this is a wizard page... if so, then only allow the roles with the correct
+               //evaluation permission to be listed.  This is not the same for a matrix cell
+               if ( isMatrixAudience() && getWizardPageEvaluateFunction() != null && !"".equals(getWizardPageEvaluateFunction())
+                       && !role.isAllowed(getWizardPageEvaluateFunction()))
+                   continue;
+               
 	           Agent roleAgent = getAgentManager().getWorksiteRole(role.getId(), site.getId());
 	           returned.add(new SelectItem(roleAgent.getId().getValue(), 
 	                                       role.getId(), 
@@ -1137,6 +1143,7 @@ public class AudienceTool extends HelperToolBase {
         session.removeAttribute(AudienceSelectionHelper.AUDIENCE_SAVE_TARGET);
         session.removeAttribute(AudienceSelectionHelper.CONTEXT);
         session.removeAttribute(AudienceSelectionHelper.CONTEXT2);
+        session.removeAttribute(AudienceSelectionHelper.WIZARD_PAGE_EVALUATE_FUNCTION);
         session.removeAttribute(AudienceSelectionHelper.MATRIX_REVIEWER_OBJECT_ID);
         session.removeAttribute(AudienceSelectionHelper.MATRIX_REVIEWER_FUNCTION);
         session.removeAttribute(SELECTED_MEMBERS);
@@ -1198,6 +1205,19 @@ public class AudienceTool extends HelperToolBase {
     public String getPageContext2(){
     	String context2 = (String) getAttribute(AudienceSelectionHelper.CONTEXT2);
     	return context2 != null ? context2 : "";
+    }
+    
+    /*
+     *  This is used to check if this is a wizard page... if so, then only allow the roles with the correct
+     *  evaluation permission to be listed.  This is not the same for a matrix cell
+     */
+    
+    public String getWizardPageEvaluateFunction(){
+        String wizardPageEvaluatePermission = "";
+        if(getAttribute(AudienceSelectionHelper.WIZARD_PAGE_EVALUATE_FUNCTION) != null){
+            wizardPageEvaluatePermission = (String) getAttribute(AudienceSelectionHelper.WIZARD_PAGE_EVALUATE_FUNCTION);
+        }
+        return wizardPageEvaluatePermission;
     }
     
     public String getSearchEmails() {

@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/syllabus/trunk/syllabus-app/src/java/org/sakaiproject/tool/syllabus/SyllabusTool.java $
- * $Id: SyllabusTool.java 125925 2013-06-18 19:10:51Z holladay@longsight.com $
+ * $Id: SyllabusTool.java 130450 2013-10-14 21:24:08Z jbush@anisakai.com $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008 The Sakai Foundation
@@ -380,7 +380,9 @@ public class SyllabusTool
   private final String httpPrefix = "http://";
   
   private final String httpsPrefix = "https://";
-  
+
+  private boolean openInNewWindow = false;
+
   private ContentHostingService contentHostingService;
   
   private ResourceLoader rb = new ResourceLoader("org.sakaiproject.tool.syllabus.bundle.Messages");
@@ -664,6 +666,10 @@ public class SyllabusTool
     }
 
     return syllabusItem;
+  }
+
+  public String getOpenInNewWindowAsString () throws PermissionException {
+      return (getSyllabusItem().isOpenInNewWindow()) ? "true" : null;
   }
 
   public void setSyllabusItem(SyllabusItem syllabusItem)
@@ -1119,7 +1125,7 @@ public class SyllabusTool
 									cal.set(java.util.Calendar.SECOND, calStartTime.get(java.util.Calendar.SECOND));
 								}
 								SyllabusData syllabusDataObj = syllabusManager.createSyllabusDataObject(bulkEntry.getTitle() + " - " + i,
-										new Integer(initPosition), null, "no", status, "none", startDate, endDate, bulkEntry.isLinkCalendar(), syllabusItem);
+										new Integer(initPosition), null, "no", status, "none", startDate, endDate, bulkEntry.isLinkCalendar(), null, null, syllabusItem);
 								syllabusManager.addSyllabusToSyllabusItem(syllabusItem, syllabusDataObj, false);
 								i++;
 								initPosition++;
@@ -1130,7 +1136,7 @@ public class SyllabusTool
 						//add by bulk items
 						for(int i = 1; i <= bulkItems; i++){
 							syllabusManager.addSyllabusToSyllabusItem(syllabusItem, syllabusManager.createSyllabusDataObject(bulkEntry.getTitle() + " - " + i,
-									new Integer(initPosition), null, "no", status, "none", null, null, false, syllabusItem), false);
+									new Integer(initPosition), null, "no", status, "none", null, null, false, null, null, syllabusItem), false);
 							initPosition++;
 						}
 					}
@@ -1322,7 +1328,7 @@ public class SyllabusTool
         int initPosition = syllabusManager.findLargestSyllabusPosition(
             syllabusItem).intValue() + 1;
         SyllabusData en = syllabusManager.createSyllabusDataObject(null,
-            new Integer(initPosition), null, null, SyllabusData.ITEM_DRAFT, "none", null, null, Boolean.FALSE);
+            new Integer(initPosition), null, null, SyllabusData.ITEM_DRAFT, "none", null, null, Boolean.FALSE, null, null);
         en.setView("no");
 
         entry = new DecoratedSyllabusEntry(en);
@@ -1855,7 +1861,7 @@ public class SyllabusTool
       else
       {
     	currentRediredUrl = syllabusItem.getRedirectURL();
-    	
+    	openInNewWindow = syllabusItem.isOpenInNewWindow();
         return "edit_redirect";
       }
     }
@@ -1907,6 +1913,7 @@ public class SyllabusTool
       			}
       			String origURL = syllabusItem.getRedirectURL();
     	    	syllabusItem.setRedirectURL(currentRediredUrl.trim());
+                syllabusItem.setOpenInNewWindow(openInNewWindow);
     	        syllabusManager.saveSyllabusItem(syllabusItem);
     	        if(((origURL == null || origURL.isEmpty())
     	    			&& !currentRediredUrl.trim().isEmpty())
@@ -3128,4 +3135,12 @@ public String getOpenDataId() {
 public void setOpenDataId(String openDataId) {
 	this.openDataId = openDataId;
 }
+
+    public boolean isOpenInNewWindow() {
+        return openInNewWindow;
+    }
+
+    public void setOpenInNewWindow(boolean openInNewWindow) {
+        this.openInNewWindow = openInNewWindow;
+    }
 }

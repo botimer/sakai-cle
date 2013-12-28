@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/sam/trunk/samigo-services/src/java/org/sakaiproject/tool/assessment/integration/helper/integrated/AgentHelperImpl.java $
- * $Id: AgentHelperImpl.java 106521 2012-04-04 08:14:42Z david.horwitz@uct.ac.za $
+ * $Id: AgentHelperImpl.java 130512 2013-10-15 23:46:40Z ktsao@stanford.edu $
  ***********************************************************************************
  *
  * Copyright (c) 2004, 2005, 2006, 2008 The Sakai Foundation
@@ -481,4 +481,27 @@ log.debug("getEidById agentString s = " + s);
 
     return !commentOutFileUpload.equalsIgnoreCase("true");
   }
+
+    /**
+     * Get the Agent DisplayId given an Id String.
+     *
+     * @param agentString the Agent Id string.
+     * @return the Agent Eid.
+     */
+    public String getDisplayId(String agentString) {
+        if (AgentHelper.UNASSIGNED_AGENT_STRING.equals(agentString)) {
+            return "";
+        }
+        try {
+            if (!agentString.startsWith("anonymous_"))  {
+                return UserDirectoryService.getUser(agentString).getDisplayId();
+            }
+
+        } catch (Exception e) {
+            log.warn("getDisplayId: " + e.getMessage());
+        }
+        return "";
+    }
+
+
 }

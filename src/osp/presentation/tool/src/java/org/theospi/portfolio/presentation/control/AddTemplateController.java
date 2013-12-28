@@ -361,7 +361,7 @@ public class AddTemplateController extends AbstractWizardFormController {
                id = getContentHosting().resolveUuid(template.getFileRef().getFileId());
             }
             if (id != null && !id.equals("")) {
-               Reference ref = getEntityManager().newReference(getContentHosting().getResource(id).getReference());
+               Reference ref = getEntityManager().newReference(getContentHosting().getReference(id));
                files.add(ref);              
                session.setAttribute(FilePickerHelper.FILE_PICKER_ATTACHMENTS, files);
             }

@@ -1,6 +1,6 @@
 /**********************************************************************************
 * $URL: https://source.sakaiproject.org/svn/osp/trunk/matrix/tool/src/java/org/theospi/portfolio/matrix/control/ManageCellStatusController.java $
-* $Id: ManageCellStatusController.java 105079 2012-02-24 23:08:11Z ottenhoff@longsight.com $
+* $Id: ManageCellStatusController.java 131548 2013-11-14 16:42:13Z dsobiera@indiana.edu $
 ***********************************************************************************
 *
  * Copyright (c) 2005, 2006, 2007, 2008 The Sakai Foundation
@@ -94,8 +94,14 @@ public class ManageCellStatusController implements Controller {
       try {
     	  site = SiteService.getSite(page.getPageDefinition().getSiteId());
     	  
-    	  if (site.hasGroups())
-    		  model.put("groups", getMatrixManager().getGroupList(site, false));
+    	  if (site.hasGroups()) {
+              List<Group> groups = new ArrayList<Group>(site.getGroups());
+              Collections.sort(groups, new Comparator<Group>() {
+                  public int compare(Group arg0, Group arg1) {
+                      return arg0.getTitle().toLowerCase().compareTo(arg1.getTitle().toLowerCase());
+                  }});
+              model.put("groups", groups);
+          }
     	  
       } catch (IdUnusedException e) {
     	  // TODO Auto-generated catch block

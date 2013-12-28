@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/mailarchive/trunk/mailarchive-impl/impl/src/java/org/sakaiproject/mailarchive/impl/DbMailArchiveService.java $
- * $Id: DbMailArchiveService.java 105686 2012-03-12 17:21:03Z matthew.buckett@oucs.ox.ac.uk $
+ * $Id: DbMailArchiveService.java 131324 2013-11-07 20:22:01Z matthew@longsight.com $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2008 The Sakai Foundation
@@ -185,7 +185,7 @@ public class DbMailArchiveService extends BaseMailArchiveService
 	}
 
 	/**********************************************************************************************************************************************************************************************************************************************************
-	 * BaseMessageService extensions
+	 * BaseMessage extensions
 	 *********************************************************************************************************************************************************************************************************************************************************/
      
 	/**

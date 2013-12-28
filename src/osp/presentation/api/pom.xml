@@ -4,7 +4,7 @@
   <parent>
     <artifactId>osp-presentation</artifactId>
     <groupId>org.sakaiproject.osp</groupId>
-    <version>2.10-SNAPSHOT</version>
+    <version>10.0-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
   <artifactId>osp-presentation-api</artifactId>
@@ -65,6 +65,10 @@
       <groupId>cglib</groupId>
       <artifactId>cglib-full</artifactId>
       <version>2.0.2</version>
+    </dependency>
+    <dependency>
+      <groupId>commons-lang</groupId>
+      <artifactId>commons-lang</artifactId>
     </dependency>
     <dependency>
       <groupId>commons-logging</groupId>

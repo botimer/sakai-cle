@@ -3,6 +3,8 @@ package org.sakaiproject.tool.assessment.services.assessment;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -16,6 +18,8 @@ import java.util.Stack;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.sakaiproject.authz.api.SecurityAdvisor;
+import org.sakaiproject.authz.cover.SecurityService;
 import org.sakaiproject.content.api.ContentResource;
 import org.sakaiproject.entity.api.Entity;
 import org.sakaiproject.entity.api.EntityProducer;
@@ -39,6 +43,7 @@ import org.sakaiproject.tool.assessment.shared.api.qti.QTIServiceAPI;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
+
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
@@ -313,6 +318,9 @@ public class AssessmentEntityProducer implements EntityTransferrer,
 								ItemText itemText = (ItemText) itemTextList.get(k);
 								String text = itemText.getText();
 								if(text != null){
+									// Transfer all of the attachments to the new site
+									text = service.copyContentHostingAttachments(text, toContext);
+									
 									text = org.sakaiproject.util.cover.LinkMigrationHelper.migrateAllLinks(entrySet, text);
 									if(!text.equals(itemText.getText())){
 										//need to save since a ref has been updated:
@@ -330,41 +338,8 @@ public class AssessmentEntityProducer implements EntityTransferrer,
 										String answerText = answer.getText();
 										
 										if (answerText != null) {
-											// Parse the answer and find all media elements with a "src"
-											String[] sources = StringUtils.splitByWholeSeparator(answerText, "src=\"");
-											
-											Set<String> attachments = new HashSet<String>();
-											for (String source : sources) {
-												String theHref = StringUtils.substringBefore(source, "\"");
-												if (StringUtils.contains(theHref, "/access/content/attachment")) {
-													attachments.add(theHref);
-												}
-											}
-											
-											if (attachments.size() > 0) {
-												log.info("Found " + attachments.size() + " attachments buried in question answers");
-											}
-																				
-											for (String attachment : attachments) {
-												String resourceId = "/attachment/" + StringUtils.substringAfter(attachment, "/access/content/attachment/");
-												String filename = StringUtils.substringAfterLast(attachment, "/");
-												ContentResource cr = null;
-												
-												try {
-													cr = AssessmentService.getContentHostingService().getResource(resourceId);
-												} catch (IdUnusedException e) {
-													log.warn("Could not find resource (" + resourceId + ") that was embedded in a question answer");
-												} catch (TypeException e) {
-													log.warn("TypeException for resource (" + resourceId + ") that was embedded in a question answer", e);
-												} catch (PermissionException e) {
-													log.warn("No permission for resource (" + resourceId + ") that was embedded in a question answer");
-												}
-												
-												if (cr != null) {
-													ContentResource crCopy = service.createCopyOfContentResource(cr.getId(), filename, toContext);
-													answerText = StringUtils.replace(answerText, cr.getId(), crCopy.getId());
-												}
-											}
+											// Transfer all of the attachments embedded in the answer text
+											answerText = service.copyContentHostingAttachments(answerText, toContext);
 											
 											// Now rewrite the answerText with links to the new site
 											answerText = org.sakaiproject.util.cover.LinkMigrationHelper.migrateAllLinks(entrySet, answerText);

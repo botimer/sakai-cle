@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/sam/trunk/samigo-services/src/java/org/sakaiproject/tool/assessment/services/assessment/AssessmentService.java $
- * $Id: AssessmentService.java 121258 2013-03-15 15:03:36Z ottenhoff@longsight.com $
+ * $Id: AssessmentService.java 132501 2013-12-11 21:18:24Z holladay@longsight.com $
  ***********************************************************************************
  *
  * Copyright (c) 2004, 2005, 2006, 2007, 2008 The Sakai Foundation
@@ -22,16 +22,22 @@
 package org.sakaiproject.tool.assessment.services.assessment;
 
 
+import java.net.URLDecoder;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.sakaiproject.authz.api.SecurityAdvisor;
+import org.sakaiproject.authz.api.SecurityAdvisor.SecurityAdvice;
+import org.sakaiproject.authz.cover.SecurityService;
 import org.sakaiproject.component.cover.ComponentManager;
 import org.sakaiproject.content.api.ContentHostingService;
 import org.sakaiproject.content.api.ContentResource;
@@ -402,6 +408,10 @@ public class AssessmentService {
 	}
 
 	public int updateRandomPoolQuestions(SectionFacade section){
+		return updateRandomPoolQuestions(section, false);
+	}
+	
+	public int updateRandomPoolQuestions(SectionFacade section, boolean publishing){
 		if ((section != null)
 				&& (section.getSectionMetaDataByLabel(SectionDataIfc.AUTHOR_TYPE) != null)
 				&& (section.getSectionMetaDataByLabel(SectionDataIfc.AUTHOR_TYPE).
@@ -460,7 +470,7 @@ public class AssessmentService {
 					item = qpService.copyItemFacade2(item);
 					item.setSection(section);
 					item.setSequence(Integer.valueOf(i + 1));
-					if (hasRandomPartScore || hasRandomPartDiscount) {
+//					if (hasRandomPartScore || hasRandomPartDiscount) {
 						if (hasRandomPartScore)
 							item.setScore(score);
 						long itemTypeId = item.getTypeId().longValue();
@@ -469,19 +479,24 @@ public class AssessmentService {
 										.longValue() || itemTypeId == TypeFacade.TRUE_FALSE
 										.longValue()))
 							item.setDiscount(discount);
-
 						ItemDataIfc data = item.getData();
 						Set itemTextSet = data.getItemTextSet();
 						if (itemTextSet != null) {
 							Iterator iterITS = itemTextSet.iterator();
 							while (iterITS.hasNext()) {
 								ItemTextIfc itemText = (ItemTextIfc) iterITS.next();
+								if(publishing){
+									itemText.setText(copyContentHostingAttachments(itemText.getText(), AgentFacade.getCurrentSiteId()));
+								}
 								Set answerSet = itemText.getAnswerSet();
 								if (answerSet != null) {
 									Iterator iterAS = answerSet.iterator();
 									while (iterAS.hasNext()) {
 										AnswerIfc answer = (AnswerIfc) iterAS
 										.next();
+										if(publishing){
+											answer.setText(copyContentHostingAttachments(answer.getText(), AgentFacade.getCurrentSiteId()));
+										}
 										if (hasRandomPartScore)
 											answer.setScore(score);
 										if (hasRandomPartDiscount && 
@@ -492,7 +507,7 @@ public class AssessmentService {
 								}
 							}
 						}
-					}
+//					}
 					section.addItem(item);
 					i = i + 1;
 				}
@@ -511,7 +526,11 @@ public class AssessmentService {
 		return UPDATE_SUCCESS;		
 	}
 
-	public int updateAllRandomPoolQuestions(AssessmentFacade assessment){		
+	public int updateAllRandomPoolQuestions(AssessmentFacade assessment){
+		return updateAllRandomPoolQuestions(assessment, false);
+	}
+	
+	public int updateAllRandomPoolQuestions(AssessmentFacade assessment, boolean publishing){		
 		//verify that we can update the sections first:
 		for(SectionFacade section : (List<SectionFacade>) assessment.getSectionArray()){			
 			if(!verifyItemsDrawSize(section)){
@@ -521,7 +540,7 @@ public class AssessmentService {
 
 		//passed all tests, so update pool questions:
 		for(SectionFacade section : (List<SectionFacade>) assessment.getSectionArray()){
-			updateRandomPoolQuestions(section);
+			updateRandomPoolQuestions(section, publishing);
 		}
 
 		return UPDATE_SUCCESS;
@@ -997,4 +1016,57 @@ public class AssessmentService {
 		  }
 
 	  }
+	  
+	  public String copyContentHostingAttachments(String text, String toContext) {
+			if(text != null){
+				ContentResource cr = null;
+
+				String[] sources = StringUtils.splitByWholeSeparator(text, "src=\"");
+
+				Set<String> attachments = new HashSet<String>();
+				for (String source : sources) {
+					String theHref = StringUtils.substringBefore(source, "\"");
+					if (StringUtils.contains(theHref, "/access/content/")) {
+						attachments.add(theHref);
+					}
+				}
+				if (attachments.size() > 0) {
+					log.info("Found " + attachments.size() + " attachments buried in question or answer text");
+					SecurityService.pushAdvisor(new SecurityAdvisor(){
+						@Override
+						public SecurityAdvice isAllowed(String arg0, String arg1,
+								String arg2) {
+							if("content.read".equals(arg1)){
+								return SecurityAdvice.ALLOWED;
+							}else{
+								return SecurityAdvice.PASS;
+							}
+						}
+					});
+					for (String attachment : attachments) {
+						String resourceIdOrig = "/" + StringUtils.substringAfter(attachment, "/access/content/");
+						String resourceId = URLDecoder.decode(resourceIdOrig);
+						String filename = StringUtils.substringAfterLast(attachment, "/");
+
+						try {
+							cr = AssessmentService.getContentHostingService().getResource(resourceId);
+						} catch (IdUnusedException e) {
+							log.warn("Could not find resource (" + resourceId + ") that was embedded in a question or answer");
+						} catch (TypeException e) {
+							log.warn("TypeException for resource (" + resourceId + ") that was embedded in a question or answer", e);
+						} catch (PermissionException e) {
+							log.warn("No permission for resource (" + resourceId + ") that was embedded in a question or answer");
+						}
+
+						if (cr != null && StringUtils.isNotEmpty(filename)) {
+							
+							ContentResource crCopy = createCopyOfContentResource(cr.getId(), filename, toContext);
+							text = StringUtils.replace(text, resourceIdOrig, StringUtils.substringAfter(crCopy.getReference(), "/content"));
+						}
+					}
+					SecurityService.popAdvisor();
+				}
+			}
+			return text;
+		}
 }

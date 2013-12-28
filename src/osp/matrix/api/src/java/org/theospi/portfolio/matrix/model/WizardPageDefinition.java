@@ -62,6 +62,7 @@ public class WizardPageDefinition extends ObjectWithWorkflow {
    private boolean defaultReviewers = true;
    private boolean defaultEvaluationForm = true;
    private boolean defaultEvaluators = true;
+   private boolean defaultItemLevelEval = true;
    
    private boolean allowRequestFeedback = true;
    private boolean hideEvaluations = false;
@@ -357,6 +358,20 @@ public boolean isHideEvaluations() {
 
 public void setHideEvaluations(boolean hideEvaluations) {
 	this.hideEvaluations = hideEvaluations;
+}
+
+/**
+ * @param defaultItemLevelEval the defaultItemLevelEval to set
+ */
+public void setDefaultItemLevelEval(boolean defaultItemLevelEval) {
+	this.defaultItemLevelEval = defaultItemLevelEval;
+}
+
+/**
+ * @return the defaultItemLevelEval
+ */
+public boolean isDefaultItemLevelEval() {
+	return defaultItemLevelEval;
 }
 
 

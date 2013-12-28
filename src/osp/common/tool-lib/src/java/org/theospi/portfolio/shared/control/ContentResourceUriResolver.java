@@ -1,6 +1,6 @@
 /**********************************************************************************
 * $URL: https://source.sakaiproject.org/svn/osp/trunk/common/tool-lib/src/java/org/theospi/portfolio/shared/control/ContentResourceUriResolver.java $
-* $Id: ContentResourceUriResolver.java 105079 2012-02-24 23:08:11Z ottenhoff@longsight.com $
+* $Id: ContentResourceUriResolver.java 130910 2013-10-28 18:13:28Z dsobiera@indiana.edu $
 ***********************************************************************************
 *
  * Copyright (c) 2005, 2006, 2008 The Sakai Foundation
@@ -34,6 +34,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.xml.resolver.tools.CatalogResolver;
 import org.sakaiproject.component.api.ServerConfigurationService;
 import org.sakaiproject.content.api.ContentResource;
+import org.sakaiproject.entity.api.Entity;
 import org.sakaiproject.entity.api.EntityManager;
 import org.sakaiproject.entity.api.Reference;
 import org.sakaiproject.exception.ServerOverloadException;
@@ -90,8 +91,22 @@ public class ContentResourceUriResolver implements URIResolver {
          } catch (SAXException e) {
         	 logger.error(e);
          }
-         
-         return ss;
+         if (entity != null) {
+            try {
+           	 resolver.getCatalog().parseCatalog(appUrl + "/osp-common-tool/dtd/catalog.xml");
+           	 XMLReader xread = XMLReaderFactory.createXMLReader();
+           	 xread.setEntityResolver(resolver);
+           	 ss.setXMLReader(xread);
+            } catch (MalformedURLException e) {
+           	 logger.error(e);
+            } catch (IOException e) {
+           	 logger.error(e);
+            } catch (SAXException e) {
+           	 logger.error(e);
+            }
+            
+            return ss;
+         }
       } catch (ServerOverloadException e) {
          logger.error("", e);
       }

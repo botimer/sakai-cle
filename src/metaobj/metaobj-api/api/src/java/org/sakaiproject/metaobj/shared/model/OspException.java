@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/metaobj/trunk/metaobj-api/api/src/java/org/sakaiproject/metaobj/shared/model/OspException.java $
- * $Id: OspException.java 105079 2012-02-24 23:08:11Z ottenhoff@longsight.com $
+ * $Id: OspException.java 130481 2013-10-15 17:36:54Z dsobiera@indiana.edu $
  ***********************************************************************************
  *
  * Copyright (c) 2004, 2005, 2006, 2008 The Sakai Foundation
@@ -29,6 +29,8 @@ public class OspException
    public static final String MOVE_FAILED = "Move failed ";
    public static final String RENAME_FAILED = "Rename failed ";
    public static final String WRITE_STREAM_FAILED = "Create stream failed ";
+   
+   private String sadName;
 
    /**
     *
@@ -57,6 +59,24 @@ public class OspException
     */
    public OspException(String message, Throwable cause) {
       super(message, cause);
+   }
+   
+   /**
+    * @param message
+    * @param sadName
+    * @param cause
+    */
+   public OspException(String message, String sadName, Throwable cause) {
+	   super(message, cause);
+	   setSadName(sadName);
+   }
+
+   public String getSadName() {
+	   return sadName;
+   }
+
+   public void setSadName(String sadName) {
+	   this.sadName = sadName;
    }
 
 }

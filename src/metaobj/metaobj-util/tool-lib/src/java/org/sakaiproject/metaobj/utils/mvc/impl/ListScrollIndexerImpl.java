@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/metaobj/trunk/metaobj-util/tool-lib/src/java/org/sakaiproject/metaobj/utils/mvc/impl/ListScrollIndexerImpl.java $
- * $Id: ListScrollIndexerImpl.java 105079 2012-02-24 23:08:11Z ottenhoff@longsight.com $
+ * $Id: ListScrollIndexerImpl.java 130481 2013-10-15 17:36:54Z dsobiera@indiana.edu $
  ***********************************************************************************
  *
  * Copyright (c) 2004, 2005, 2006, 2008 The Sakai Foundation
@@ -28,13 +28,21 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.sakaiproject.metaobj.utils.mvc.intf.ListScroll;
 import org.sakaiproject.metaobj.utils.mvc.intf.ListScrollIndexer;
+import org.sakaiproject.metaobj.utils.mvc.intf.ListScrollResultsFilter;
+import org.sakaiproject.metaobj.utils.mvc.intf.FilterableListScrollIndexer;
 
-public class ListScrollIndexerImpl implements ListScrollIndexer {
+public class ListScrollIndexerImpl implements ListScrollIndexer, FilterableListScrollIndexer {
    protected final transient Log logger = LogFactory.getLog(getClass());
    private int perPage;
+   
+   //private ListScrollPageProcessor pageProcessor;
 
    public List indexList(Map request, Map model, List sourceList) {
       return indexList( request, model, sourceList, false );
+   }
+   
+   public List indexList(Map request, Map model, List sourceList, boolean hideOnePageScroll) {
+   	return indexList( request, model, sourceList, false, null );
    }
    
    /** 
@@ -45,9 +53,10 @@ public class ListScrollIndexerImpl implements ListScrollIndexer {
     ** @param sourceList list of items
     ** @param hideOnePageScroll if true, do not display scroll buttons if not needed
     **/
-   public List indexList(Map request, Map model, List sourceList, boolean hideOnePageScroll) {
+   public List indexList(Map request, Map model, List sourceList, boolean hideOnePageScroll, ListScrollResultsFilter pageFilter) {
       int startingIndex = 0;
       int total = sourceList.size();
+      boolean hideRecCounts = false;
 
       String ensureVisible = (String) request.get(ListScroll.ENSURE_VISIBLE_TAG);
 
@@ -79,9 +88,47 @@ public class ListScrollIndexerImpl implements ListScrollIndexer {
          endingIndex = sourceList.size();
       }
 
-      model.put("listScroll", new ListScroll(perPage, sourceList.size(), startingIndex, hideOnePageScroll));
+      int virtualPreviousIndex = ListScroll.NO_VIRTUAL_INDEX;
+      int virtualNextIndex = ListScroll.NO_VIRTUAL_INDEX;
+      boolean processPreviousFromEnd = false;
+      boolean processLastFromEnd = false;
+      
+      List subList;
+      if (pageFilter != null){
+      	String reverseList = (String)request.get(ListScroll.REVERSE_PROCESS_LIST_TAG);
+      	boolean startAtFront = true;
+      	if (reverseList != null && "true".equals(reverseList)) {
+      		startAtFront = false;
+      	}
+      	ListScrollResultBean bean = pageFilter.process(request, model, sourceList, startingIndex, perPage, startAtFront);
+      	subList = bean.getItemList();
+      	logger.debug("Processed: " + bean.getRecordsProcessed());
+      	logger.debug("Skipped: " + bean.getRecordsSkipped());
+      	logger.debug("Returned: " + bean.getRecordsReturned());
+      	logger.debug("Alt Starting Index: " + bean.getAltStartIndex());
+      	startingIndex = bean.getAltStartIndex();
+      	virtualNextIndex = startingIndex + bean.getRecordsProcessed();
+      	if (!startAtFront) {
+      		//need to account for switching to the other direction
+      		virtualNextIndex++;
+      		virtualPreviousIndex = startingIndex;
+      	}
+      	else {
+      		virtualPreviousIndex = startingIndex - 1;
+      	}
+      	hideRecCounts = true;
+      	processPreviousFromEnd = true;
+      	processLastFromEnd = true;
+      	logger.debug("Next previous will be: " + virtualPreviousIndex);
+      	logger.debug("Next next will be: " + virtualNextIndex);
+      }
+      else
+      	subList = sourceList.subList(startingIndex, endingIndex);
+      
+      model.put("listScroll", new ListScroll(perPage, sourceList.size(), startingIndex, hideOnePageScroll, hideRecCounts, 
+      		virtualPreviousIndex, virtualNextIndex, processPreviousFromEnd, processLastFromEnd));
 
-      return sourceList.subList(startingIndex, endingIndex);
+      return subList;
    }
 
    public int getPerPage() {
@@ -91,4 +138,12 @@ public class ListScrollIndexerImpl implements ListScrollIndexer {
    public void setPerPage(int perPage) {
       this.perPage = perPage;
    }
+//
+//	public ListScrollPageProcessor getPageProcessor() {
+//	   return pageProcessor;
+//   }
+//
+//	public void setPageProcessor(ListScrollPageProcessor pageProcessor) {
+//	   this.pageProcessor = pageProcessor;
+//   }
 }

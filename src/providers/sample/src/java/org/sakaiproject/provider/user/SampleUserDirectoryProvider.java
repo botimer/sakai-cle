@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/providers/trunk/sample/src/java/org/sakaiproject/provider/user/SampleUserDirectoryProvider.java $
- * $Id: SampleUserDirectoryProvider.java 105079 2012-02-24 23:08:11Z ottenhoff@longsight.com $
+ * $Id: SampleUserDirectoryProvider.java 132202 2013-12-04 16:21:28Z ottenhoff@longsight.com $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008 The Sakai Foundation
@@ -124,6 +124,15 @@ public class SampleUserDirectoryProvider implements UserDirectoryProvider, Users
 			m_info.put("instructor2", new Info("instructor2", "The", "Instructor2", "instructor2@local.host"));
 			m_info.put("da1", new Info("da1", "Dept", "Admin", "da1@local.host"));
 			m_info.put("ta", new Info("ta", "The", "Teaching-Assistant", "ta@local.host"));
+
+			//SAK-25394 more ta's for testing purposes
+			m_info.put("ta1", new Info("ta1", "The", "Teaching-Assistant1", "ta1@local.host"));
+			m_info.put("ta2", new Info("ta2", "The", "Teaching-Assistant2", "ta2@local.host"));
+			m_info.put("ta3", new Info("ta2", "The", "Teaching-Assistant3", "ta3@local.host"));
+
+			//SAK-25267 used for integration with uPortal
+			m_info.put("student", new Info("student", "The", "Student", "student@local.host"));
+			m_info.put("faculty", new Info("faculty", "The", "Faculty", "faculty@local.host"));
 
 			M_log.info("init()");
 		}

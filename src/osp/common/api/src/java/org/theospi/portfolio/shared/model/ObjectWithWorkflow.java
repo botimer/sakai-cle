@@ -1,6 +1,6 @@
 /**********************************************************************************
 * $URL: https://source.sakaiproject.org/svn/osp/trunk/common/api/src/java/org/theospi/portfolio/shared/model/ObjectWithWorkflow.java $
-* $Id: ObjectWithWorkflow.java 105079 2012-02-24 23:08:11Z ottenhoff@longsight.com $
+* $Id: ObjectWithWorkflow.java 130580 2013-10-17 17:43:15Z dsobiera@indiana.edu $
 ***********************************************************************************
 *
  * Copyright (c) 2006, 2008 The Sakai Foundation
@@ -29,112 +29,159 @@ import org.sakaiproject.metaobj.shared.model.IdentifiableObject;
 
 public class ObjectWithWorkflow extends IdentifiableObject {
 
-   private Id reflectionDevice;
-   private String reflectionDeviceType;
-   private Id evaluationDevice;
-   private String evaluationDeviceType;
-   private Id reviewDevice;
-   private String reviewDeviceType;
-   private Set evalWorkflows = new HashSet();
-   
+	private Id reflectionDevice;
+	private String reflectionDeviceType;
+	private Id evaluationDevice;
+	private String evaluationDeviceType;
+	private Id reviewDevice;
+	private String reviewDeviceType;
+	private Set evalWorkflows = new HashSet();
 
-   /**
-    * @return Returns the evalWorkflows.
-    */
-   public Set getEvalWorkflows() {
-      return evalWorkflows;
-   }
+	private boolean itemLevelEvals = false;
+	private Id itemLevelEvaluationDevice;
+	private String itemLevelEvaluationDeviceType;
+	private boolean enableItemLevelEvalsInLinkedTools = false;
+	private boolean hideItemLevelEvals = false;
 
-   /**
-    * @param evalWorkflows The evalWorkflows to set.
-    */
-   public void setEvalWorkflows(Set evalWorkflows) {
-      this.evalWorkflows = evalWorkflows;
-   }
+	/**
+	 * @return Returns the evalWorkflows.
+	 */
+	public Set getEvalWorkflows() {
+		return evalWorkflows;
+	}
 
-   /**
-    * @return Returns the evaluationDevice.
-    */
-   public Id getEvaluationDevice() {
-      return evaluationDevice;
-   }
+	/**
+	 * @param evalWorkflows The evalWorkflows to set.
+	 */
+	public void setEvalWorkflows(Set evalWorkflows) {
+		this.evalWorkflows = evalWorkflows;
+	}
 
-   /**
-    * @param evaluationDevice The evaluationDevice to set.
-    */
-   public void setEvaluationDevice(Id evaluationDevice) {
-      this.evaluationDevice = evaluationDevice;
-   }
+	/**
+	 * @return Returns the evaluationDevice.
+	 */
+	public Id getEvaluationDevice() {
+		return evaluationDevice;
+	}
 
-   /**
-    * @return Returns the evaluationDeviceType.
-    */
-   public String getEvaluationDeviceType() {
-      return evaluationDeviceType;
-   }
+	/**
+	 * @param evaluationDevice The evaluationDevice to set.
+	 */
+	public void setEvaluationDevice(Id evaluationDevice) {
+		this.evaluationDevice = evaluationDevice;
+	}
 
-   /**
-    * @param evaluationDeviceType The evaluationDeviceType to set.
-    */
-   public void setEvaluationDeviceType(String evaluationDeviceType) {
-      this.evaluationDeviceType = evaluationDeviceType;
-   }
+	/**
+	 * @return Returns the evaluationDeviceType.
+	 */
+	public String getEvaluationDeviceType() {
+		return evaluationDeviceType;
+	}
 
-   /**
-    * @return Returns the reflectionDevice.
-    */
-   public Id getReflectionDevice() {
-      return reflectionDevice;
-   }
+	/**
+	 * @param evaluationDeviceType The evaluationDeviceType to set.
+	 */
+	public void setEvaluationDeviceType(String evaluationDeviceType) {
+		this.evaluationDeviceType = evaluationDeviceType;
+	}
 
-   /**
-    * @param reflectionDevice The reflectionDevice to set.
-    */
-   public void setReflectionDevice(Id reflectionDevice) {
-      this.reflectionDevice = reflectionDevice;
-   }
+	/**
+	 * @return Returns the reflectionDevice.
+	 */
+	public Id getReflectionDevice() {
+		return reflectionDevice;
+	}
 
-   /**
-    * @return Returns the reflectionDeviceType.
-    */
-   public String getReflectionDeviceType() {
-      return reflectionDeviceType;
-   }
+	/**
+	 * @param reflectionDevice The reflectionDevice to set.
+	 */
+	public void setReflectionDevice(Id reflectionDevice) {
+		this.reflectionDevice = reflectionDevice;
+	}
 
-   /**
-    * @param reflectionDeviceType The reflectionDeviceType to set.
-    */
-   public void setReflectionDeviceType(String reflectionDeviceType) {
-      this.reflectionDeviceType = reflectionDeviceType;
-   }
+	/**
+	 * @return Returns the reflectionDeviceType.
+	 */
+	public String getReflectionDeviceType() {
+		return reflectionDeviceType;
+	}
 
-   /**
-    * @return Returns the reviewDevice.
-    */
-   public Id getReviewDevice() {
-      return reviewDevice;
-   }
+	/**
+	 * @param reflectionDeviceType The reflectionDeviceType to set.
+	 */
+	public void setReflectionDeviceType(String reflectionDeviceType) {
+		this.reflectionDeviceType = reflectionDeviceType;
+	}
 
-   /**
-    * @param reviewDevice The reviewDevice to set.
-    */
-   public void setReviewDevice(Id reviewDevice) {
-      this.reviewDevice = reviewDevice;
-   }
+	/**
+	 * @return Returns the reviewDevice.
+	 */
+	public Id getReviewDevice() {
+		return reviewDevice;
+	}
 
-   /**
-    * @return Returns the reviewDeviceType.
-    */
-   public String getReviewDeviceType() {
-      return reviewDeviceType;
-   }
+	/**
+	 * @param reviewDevice The reviewDevice to set.
+	 */
+	public void setReviewDevice(Id reviewDevice) {
+		this.reviewDevice = reviewDevice;
+	}
 
-   /**
-    * @param reviewDeviceType The reviewDeviceType to set.
-    */
-   public void setReviewDeviceType(String reviewDeviceType) {
-      this.reviewDeviceType = reviewDeviceType;
-   }
-   
-   
+	/**
+	 * @return Returns the reviewDeviceType.
+	 */
+	public String getReviewDeviceType() {
+		return reviewDeviceType;
+	}
+
+	/**
+	 * @param reviewDeviceType The reviewDeviceType to set.
+	 */
+	public void setReviewDeviceType(String reviewDeviceType) {
+		this.reviewDeviceType = reviewDeviceType;
+	}
+
+	public boolean isItemLevelEvals() {
+		return itemLevelEvals;
+	}
+
+	public void setItemLevelEvals(boolean itemLevelEvals) {
+		this.itemLevelEvals = itemLevelEvals;
+	}
+
+	public Id getItemLevelEvaluationDevice() {
+		return itemLevelEvaluationDevice;
+	}
+
+	public void setItemLevelEvaluationDevice(Id itemLevelEvaluationDevice) {
+		this.itemLevelEvaluationDevice = itemLevelEvaluationDevice;
+	}
+
+	public String getItemLevelEvaluationDeviceType() {
+		return itemLevelEvaluationDeviceType;
+	}
+
+	public void setItemLevelEvaluationDeviceType(
+			String itemLevelEvaluationDeviceType) {
+		this.itemLevelEvaluationDeviceType = itemLevelEvaluationDeviceType;
+	}
+
+	public boolean isEnableItemLevelEvalsInLinkedTools() {
+		return enableItemLevelEvalsInLinkedTools;
+	}
+
+	public void setEnableItemLevelEvalsInLinkedTools(
+			boolean enableItemLevelEvalsInLinkedTools) {
+		this.enableItemLevelEvalsInLinkedTools = enableItemLevelEvalsInLinkedTools;
+	}
+
+	public boolean isHideItemLevelEvals() {
+		return hideItemLevelEvals;
+	}
+
+	public void setHideItemLevelEvals(boolean hideItemLevelEvals) {
+		this.hideItemLevelEvals = hideItemLevelEvals;
+	}
+
+
 }

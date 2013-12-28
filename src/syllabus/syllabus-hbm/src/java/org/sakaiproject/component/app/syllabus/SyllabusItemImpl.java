@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/syllabus/trunk/syllabus-hbm/src/java/org/sakaiproject/component/app/syllabus/SyllabusItemImpl.java $
- * $Id: SyllabusItemImpl.java 105080 2012-02-24 23:10:31Z ottenhoff@longsight.com $
+ * $Id: SyllabusItemImpl.java 130450 2013-10-14 21:24:08Z jbush@anisakai.com $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008 The Sakai Foundation
@@ -43,6 +43,7 @@ public class SyllabusItemImpl implements SyllabusItem
   private String contextId;
   private String redirectURL;
   private Integer lockId; // optimistic lock
+  private Boolean openInNewWindow = Boolean.FALSE;
   
   private Set syllabi = new TreeSet();
   
@@ -207,16 +208,29 @@ public class SyllabusItemImpl implements SyllabusItem
     sb.append("{surrogateKey=");
     sb.append(surrogateKey);
     sb.append(", userId=");
-    sb.append(userId);    
+    sb.append(userId);
     sb.append(", contextId=");
     sb.append(contextId);
     sb.append(", redirectURL=");
-    sb.append(redirectURL);    
+    sb.append(redirectURL);
     sb.append(", lockId=");
     sb.append(lockId);
+    sb.append(", openInNewWindow=");
+    sb.append(openInNewWindow);
     sb.append("}");
     return sb.toString();
-  }   
+  }
+
+    public Boolean isOpenInNewWindow() {
+        if (openInNewWindow == null) {
+            return Boolean.FALSE;
+        }
+        return openInNewWindow;
+    }
+
+    public void setOpenInNewWindow(Boolean openInNewWindow) {
+        this.openInNewWindow = openInNewWindow;
+    }
 }
 
 

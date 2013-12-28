@@ -5,7 +5,7 @@
     <parent>
         <artifactId>master</artifactId>
         <groupId>org.sakaiproject</groupId>
-        <version>2.10-SNAPSHOT</version>
+        <version>10.0-SNAPSHOT</version>
         <relativePath>master/pom.xml</relativePath>
     </parent>
 
@@ -59,6 +59,7 @@
                 <module>entitybroker</module>
                 <module>jsf</module>
                 <module>sakai-mock</module>
+                <module>userauditservice</module>
                 <module>webservices</module>
                 
                 <!-- Indie tools -->
@@ -68,7 +69,6 @@
                 <module>mailsender</module>
                 <module>msgcntr</module>
                 <module>polls</module>
-                <module>profile</module>
                 <module>profile2</module>
                 <module>reset-pass</module>
                 <module>samigo</module>
@@ -96,7 +96,6 @@
                 <module>dav</module>
                 <module>gradebook</module>
                 <module>help</module>
-                <module>linktool</module>
                 <module>login</module>
                 <module>mailarchive</module>
                 <module>memory</module>
@@ -110,7 +109,6 @@
                 <module>providers</module>
                 <module>reference</module>
                 <module>rights</module>
-                <module>roster</module>
                 <module>rwiki</module>
                 <module>sections</module>
                 <module>site</module>
@@ -132,9 +130,6 @@
                 <!-- TEMP -->
                 <module>deploy</module>
             
-                <!-- Indie purepoms -->
-                <module>purepoms</module>
-            
                 <!-- Indie services -->
                 <module>kernel</module>
                 <module>common</module>
@@ -144,6 +139,7 @@
                 <module>entitybroker</module>
                 <module>jsf</module>
                 <module>sakai-mock</module>
+                <module>userauditservice</module>
                 <module>webservices</module>
                 
                 <!-- Indie tools -->
@@ -153,7 +149,6 @@
                 <module>mailsender</module>
                 <module>msgcntr</module>
                 <module>polls</module>
-                <module>profile</module>
                 <module>profile2</module>
                 <module>reset-pass</module>
                 <module>samigo</module>
@@ -181,7 +176,6 @@
                 <module>dav</module>
                 <module>gradebook</module>
                 <module>help</module>
-                <module>linktool</module>
                 <module>login</module>
                 <module>mailarchive</module>
                 <module>memory</module>
@@ -195,7 +189,6 @@
                 <module>providers</module>
                 <module>reference</module>
                 <module>rights</module>
-                <module>roster</module> <!-- replace with roster2 -->
                 <module>rwiki</module>
                 <module>sections</module>
                 <module>site</module>
@@ -211,8 +204,7 @@
                 <module>web</module>
                 
                 <!-- Experimental -->
-                <module>hybrid</module>
-                <!-- <module>roster2</module> -->
+                <module>roster2</module>
             </modules>
         </profile>
         

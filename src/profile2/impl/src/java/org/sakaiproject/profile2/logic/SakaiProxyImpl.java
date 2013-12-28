@@ -1016,6 +1016,15 @@ public class SakaiProxyImpl implements SakaiProxy {
 		return serverConfigurationService.getBoolean("profile2.convert", ProfileConstants.SAKAI_PROP_PROFILE2_CONVERSION_ENABLED);
 	}
 	
+	
+	/**
+ 	* {@inheritDoc}
+ 	*/
+	public boolean isProfileImageImportEnabled() {
+		return serverConfigurationService.getBoolean("profile2.import.images", ProfileConstants.SAKAI_PROP_PROFILE2_IMPORT_IMAGES_ENABLED);
+	}
+	
+	
 	/**
  	* {@inheritDoc}
  	*/
@@ -1050,6 +1059,13 @@ public class SakaiProxyImpl implements SakaiProxy {
  	*/
 	public boolean isProfileGalleryEnabledGlobally() {
 		return serverConfigurationService.getBoolean("profile2.gallery.enabled", ProfileConstants.SAKAI_PROP_PROFILE2_GALLERY_ENABLED);
+	}
+	
+	/**
+ 	* {@inheritDoc}
+ 	*/
+	public boolean isMessagingEnabledGlobally() {
+		return serverConfigurationService.getBoolean("profile2.messaging.enabled", true);
 	}
 	
 	/**

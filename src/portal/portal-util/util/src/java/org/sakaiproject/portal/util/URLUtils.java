@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/portal/trunk/portal-util/util/src/java/org/sakaiproject/portal/util/URLUtils.java $
- * $Id: URLUtils.java 105079 2012-02-24 23:08:11Z ottenhoff@longsight.com $
+ * $Id: URLUtils.java 128674 2013-08-20 15:14:33Z csev@umich.edu $
  ***********************************************************************************
  *
  * Copyright (c) 2006, 2007, 2008 The Sakai Foundation
@@ -24,14 +24,24 @@ package org.sakaiproject.portal.util;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 
+import javax.servlet.http.HttpServletRequest;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 /**
  * @author ieb
  * @since Sakai 2.4
- * @version $Rev: 105079 $
+ * @version $Rev: 128674 $
  */
 
 public class URLUtils
 {
+
+	/**
+	 * Our log (commons).
+	 */
+	private static Log M_log = LogFactory.getLog(URLUtils.class);
 
 	public static String addParameter(String URL, String name, String value)
 	{
@@ -61,6 +71,37 @@ public class URLUtils
 		{
 			throw new IllegalArgumentException(uee);
 		}
+	}
+
+	/**
+	 * The sanitize the req.getPathInfo() information.
+	 * 
+	 * @param req
+	 *        The current servlet request
+	 * @return <code>safePathInfo</code> sanitized pathInfo
+	 */
+
+	// The characters we should never expect to see in a pathInfo
+	public static String BAD_PATH_URL_CHARS = "\"'<>&";
+
+	public static String getSafePathInfo(HttpServletRequest req)
+	{
+		String pathInfo = req.getPathInfo();
+		if ( pathInfo == null ) return null;
+		String newPathInfo = pathInfo;
+		for (int i =0; i < pathInfo.length() - 1; i++) {
+			if (BAD_PATH_URL_CHARS.indexOf(pathInfo.charAt(i)) >= 0) {
+				newPathInfo = pathInfo.substring(0,i);
+				break;
+			}
+		}
+		
+		if (! newPathInfo.equals(pathInfo) ) {
+			String ipAddress = req.getRemoteAddr();
+
+			M_log.warn("Truncated pathInfo IP="+ipAddress+" from "+pathInfo+" to "+newPathInfo);
+		}
+		return newPathInfo;
 	}
 
 }

@@ -1133,7 +1133,7 @@ public class PrivateMessageManagerImpl extends HibernateDaoSupport implements
 
     //build the message body
     List additionalHeaders = new ArrayList(1);
-    additionalHeaders.add("Content-Type: text/html");
+    additionalHeaders.add("Content-Type: text/html; charset=utf-8");
     
 
     /** determines if default in sakai.properties is set, if not will make a reasonable default */
@@ -1527,7 +1527,20 @@ public class PrivateMessageManagerImpl extends HibernateDaoSupport implements
 	  }
 	}
 
+	public void markMessageAsRepliedForUser(final PrivateMessage message) {				
   
+		PrivateMessage pvtMessage = getPrivateMessageWithRecipients(message);
+		List recipientList = pvtMessage.getRecipients();
+
+		if (recipientList != null) {
+			String userId = getCurrentUser();
+			for (Object r : recipientList) {
+				if (((PrivateMessageRecipientImpl) r).getUserId().equals(userId)) {
+					((PrivateMessageRecipientImpl) r).setReplied(true);
+				}
+			}
+		}		
+	} 
 
   private PrivateMessage getPrivateMessageWithRecipients(
       final PrivateMessage message)

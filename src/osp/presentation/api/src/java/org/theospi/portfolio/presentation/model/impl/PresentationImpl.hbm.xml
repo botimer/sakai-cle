@@ -99,6 +99,7 @@
          column="tool_id"
          length="36"
          not-null="false"/>
+      <property name="isSearchable" type="boolean" column="isSearchable" not-null="false"/>
    </class>
 
    <class name="PresentationComment" table="osp_presentation_comment">
@@ -247,6 +248,14 @@
 		from Presentation p where p.isPublic != 0 and p.toolId=:toolId and p.id in (:hiddenId)
    </query>
       
+   <query name="findPublicPortfoliosWithUsersExclusive">
+		from Presentation p where p.isPublic != 0 and p.owner in (:user) and p.id not in (:hiddenId)
+   </query>
+      
+   <query name="findPublicPortfoliosWithUsersInclusive">
+		from Presentation p where p.isPublic != 0 and p.owner in (:user) and p.id in (:hiddenId)
+   </query>
+   
    <query name="findPortfolios">
 		from Presentation
    </query>
@@ -307,23 +316,26 @@
 		from Presentation p where owner=:owner and p.id in ( :hiddenId ) Order by p.name
    </query>
    
-   <query name="findPortfolioByOwnerAndToolInclusive">
-		from Presentation p where owner=:owner and toolId=:toolId and p.id in ( :hiddenId ) Order by p.name
-   </query>
    <query name="findPortfolioByOwnerExclusive">
 		from Presentation p where owner=:owner and p.id not in ( :hiddenId ) Order by p.name
    </query>
+   <query name="findPortfolioByOwnerExclusiveSearchable">
+		from Presentation p where owner=:owner and p.isSearchable=1 
+		and (p.expiresOn is null or p.expiresOn >= current_date)
+		and (p.template.propertyFormType is null or p.propertyForm is not null) 
+		Order by p.name
+   </query>
    
-   <query name="findPortfolioByOwnerAndToolExclusive">
-		from Presentation p where owner=:owner and toolId=:toolId and p.id not in ( :hiddenId ) Order by p.name
+   <query name="findPortfolioByOwnerAndTool">
+		from Presentation p where owner=:owner and toolId in ( :toolId ) Order by p.name
    </query>
 
    <query name="findPortfoliosUnrestrictedInclusive">
-   	from Presentation p where p.toolId=:toolId and p.id in ( :hiddenId )
+   	from Presentation p where p.toolId in ( :toolId ) and p.id in ( :hiddenId )
    </query>
    
    <query name="findPortfoliosUnrestrictedExclusive">
-   	from Presentation p where p.toolId=:toolId and p.id not in ( :hiddenId )
+   	from Presentation p where p.toolId in ( :toolId ) and p.id not in ( :hiddenId )
    </query>
    
    <query name="findPortfoliosByToolInclusive">
@@ -340,6 +352,14 @@
    
    <query name="findPortfoliosExclusive">
    	from Presentation p where p.id in ( :id ) and p.id not in ( :hiddenId )
+   </query>
+   
+   <query name="findByToolsAndNotMine">
+      from Presentation p where p.owner!=:owner and p.toolId in ( :toolIds )
+   </query>
+   
+   <query name="findByOwnerAndTool">
+      from Presentation p where p.owner=:owner and p.toolId in ( :siteIds )
    </query>
    
 </hibernate-mapping>

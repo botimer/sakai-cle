@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/syllabus/trunk/syllabus-api/src/java/org/sakaiproject/api/app/syllabus/SyllabusManager.java $
- * $Id: SyllabusManager.java 125872 2013-06-17 18:36:21Z holladay@longsight.com $
+ * $Id: SyllabusManager.java 129426 2013-09-06 19:58:44Z holladay@longsight.com $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2008 The Sakai Foundation
@@ -43,7 +43,8 @@ public interface SyllabusManager
   public void removeSyllabusFromSyllabusItem(final SyllabusItem syllabusItem, final SyllabusData syllabusData);
   
   public SyllabusData createSyllabusDataObject(String title, Integer position,
-      String assetId, String view, String status, String emailNotification, Date startDate, Date endDate, boolean linkCalendar);
+      String assetId, String view, String status, String emailNotification, Date startDate, Date endDate, boolean linkCalendar, String calendarEventIdStartDate,
+      String calendarEventIdEndDate);
   
   public void removeSyllabusDataObject(SyllabusData o);
   
@@ -86,7 +87,8 @@ public interface SyllabusManager
   
   public void removeCalendarAttachments(String siteId, String calendarEventId, SyllabusAttachment attachment);
 
-  public SyllabusData createSyllabusDataObject(String title, Integer position, String asset, String view, String status, String emailNotification, Date startDate, Date endDate, boolean linkCalendar, SyllabusItem syllabusItem);
+  public SyllabusData createSyllabusDataObject(String title, Integer position, String asset, String view, String status, String emailNotification, Date startDate, Date endDate, 
+		  boolean linkCalendar, String calendarEventIdStartDate, String calendarEventIdEndDate, SyllabusItem syllabusItem);
 
   public void updateSyllabudDataPosition(final SyllabusData d, final Integer position);
 

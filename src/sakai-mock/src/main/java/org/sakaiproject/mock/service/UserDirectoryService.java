@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/sakai-mock/trunk/src/main/java/org/sakaiproject/mock/service/UserDirectoryService.java $
- * $Id: UserDirectoryService.java 105077 2012-02-24 22:54:29Z ottenhoff@longsight.com $
+ * $Id: UserDirectoryService.java 130607 2013-10-18 13:11:06Z azeckoski@unicon.net $
  ***********************************************************************************
  *
  * Copyright (c) 2007, 2008 The Sakai Foundation
@@ -41,6 +41,7 @@ import org.sakaiproject.user.api.UserIdInvalidException;
 import org.sakaiproject.user.api.UserLockedException;
 import org.sakaiproject.user.api.UserNotDefinedException;
 import org.sakaiproject.user.api.UserPermissionException;
+import org.sakaiproject.user.api.PasswordPolicyProvider;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -260,4 +261,9 @@ public class UserDirectoryService implements
 	public List<User> searchExternalUsers(String criteria, int first, int last) {
 		return null;
 	}
+
+    public UserDirectoryService.PasswordRating validatePassword(String password, User user) {
+	return UserDirectoryService.PasswordRating.PASSED_DEFAULT;
+    }
+
 }

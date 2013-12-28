@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/jsf/trunk/jsf-tool/src/java/org/sakaiproject/jsf/util/JsfTool.java $
- * $Id: JsfTool.java 105077 2012-02-24 22:54:29Z ottenhoff@longsight.com $
+ * $Id: JsfTool.java 128959 2013-08-23 00:01:46Z ottenhoff@longsight.com $
  **********************************************************************************
  *
  * Copyright (c) 2005, 2006, 2008 The Sakai Foundation
@@ -43,7 +43,7 @@ import org.sakaiproject.util.Web;
  * </p>
  * 
  * @author University of Michigan, Sakai Software Development Team
- * @version $Revision: 105077 $
+ * @version $Revision: 128959 $
  */
 public class JsfTool extends HttpServlet
 {
@@ -53,6 +53,7 @@ public class JsfTool extends HttpServlet
 	/** The file extension to get to JSF. */
 	protected static final String JSF_EXT = ".jsf";
 
+	protected static final String [] JSF_FACELETS_EXT = new String[] {".jsp",".xhtml",".jspx"};
 	/** Session attribute to hold the last view visited. */
 	public static final String LAST_VIEW_VISITED = "sakai.jsf.tool.last.view.visited";
 
@@ -201,7 +202,7 @@ public class JsfTool extends HttpServlet
 				
 		// set the information that can be removed from return URLs
 		req.setAttribute(URL_PATH, m_path);
-		req.setAttribute(URL_EXT, ".jsp");
+		req.setAttribute(URL_EXT, JSF_FACELETS_EXT);
 
 		// set the sakai request object wrappers to provide the native, not Sakai set up, URL information
 		// - this assures that the FacesServlet can dispatch to the proper view based on the path info

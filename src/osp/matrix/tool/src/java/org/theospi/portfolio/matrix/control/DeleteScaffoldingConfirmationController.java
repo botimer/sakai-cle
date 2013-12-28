@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/osp/trunk/matrix/tool/src/java/org/theospi/portfolio/matrix/control/DeleteScaffoldingConfirmationController.java $
- * $Id: DeleteScaffoldingConfirmationController.java 105079 2012-02-24 23:08:11Z ottenhoff@longsight.com $
+ * $Id: DeleteScaffoldingConfirmationController.java 131548 2013-11-14 16:42:13Z dsobiera@indiana.edu $
  ***********************************************************************************
  *
  * Copyright (c) 2007, 2008 The Sakai Foundation
@@ -89,7 +89,7 @@ public class DeleteScaffoldingConfirmationController implements Controller {
 		Map model = new HashMap();
 		model.put("scaffolding_published", scaffolding.isPublished());
 		
-		int linkedSitesNum = 0, totalLinksNum = 0;
+		int linkedSitesNum = 0, totalLinksNum = 0, linkedCellsNum = 0;
 		try {
 			List<String> uniqueSites = new ArrayList<String>();
 			Set<ScaffoldingCell> sCells = getMatrixManager().getScaffoldingCells(scaffolding.getId());
@@ -97,7 +97,9 @@ public class DeleteScaffoldingConfirmationController implements Controller {
 			for (Iterator iterator = sCells.iterator(); iterator.hasNext();) {
 				ScaffoldingCell sCell = (ScaffoldingCell) iterator.next();
 				List<Link> linksList = getLinkManager().getLinks(sCell.getWizardPageDefinition().getReference(), true);
-				for (Iterator iterator2 = linksList.iterator(); iterator2.hasNext();) {
+                if (linksList.size() > 0) 
+                    linkedCellsNum++;
+                for (Iterator iterator2 = linksList.iterator(); iterator2.hasNext();) {
 					//for each link check to see if the site is a new site and increment counter
 					Link link = (Link) iterator2.next();								
 					if(!uniqueSites.contains(link.getActivityRef())){
@@ -120,7 +122,7 @@ public class DeleteScaffoldingConfirmationController implements Controller {
 		
 		model.put("linkedSitesNum", linkedSitesNum);
 		model.put("totalLinksNum", totalLinksNum);
-		
+        model.put("totalLinkedCells", linkedCellsNum);      		
 		
 
 		String cancel = (String) request.get("cancel");

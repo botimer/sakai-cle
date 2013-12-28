@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/kernel/trunk/api/src/main/java/org/sakaiproject/user/api/UserDirectoryService.java $
- * $Id: UserDirectoryService.java 105687 2012-03-12 17:42:39Z matthew.buckett@oucs.ox.ac.uk $
+ * $Id: UserDirectoryService.java 130606 2013-10-18 13:03:16Z azeckoski@unicon.net $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008 Sakai Foundation
@@ -65,13 +65,71 @@ public interface UserDirectoryService extends EntityProducer
 	/** Name for the ability for updating one's own type. */
 	static final String SECURE_UPDATE_USER_OWN_TYPE = "user.upd.own.type";
 
-	
-	
 	/** User id for the admin user. */
 	static final String ADMIN_ID = "admin";
 
 	/** User eid for the admin user. */
 	static final String ADMIN_EID = "admin";
+
+
+	/**
+	 * Indicates if a password is valid and if it has passed the validation check
+	 * Use the {@link #passed()} method for a boolean check if the password passed or failed
+	 */
+	public static enum PasswordRating {
+	    /**
+	     * Failed the password validation
+	     */
+	    FAILED,
+	    /**
+	     * Passed the validation because it was not checked (default pass)
+	     */
+	    PASSED_DEFAULT,
+	    /**
+	     * Passed the validation (but was not rated)
+	     */
+	    PASSED_UNRATED,
+	    /**
+	     * Passed validation with weak rating
+	     */
+	    WEAK,
+	    /**
+	     * Passed validation with moderate rating (a.k.a. reasonable)
+	     */
+	    MODERATE,
+	    /**
+	     * Passed validation with strong rating (a.k.a. very strong)
+	     */
+	    STRONG;
+
+	    /**
+	     * @return true if the password has passed validation
+	     */
+	    public boolean passed() {
+	        return !this.equals(FAILED);
+	    }
+	    /**
+	     * @return true if the password was checked at all
+	     */
+	    public boolean checked() {
+	        return !this.equals(PASSED_DEFAULT);
+	    }
+	}
+
+	/**
+	 * This function returns a boolean value of true/false, 
+	 * depending on if the given password meets the validation criteria.
+	 * 
+	 * This is controlled by a {@link PasswordPolicyProvider} and 
+	 * enabled via sakai config properties (user.password.policy=true), Default: false
+	 * 
+	 * See default.sakai.properties or KNL-1123 for more details
+	 * 
+	 * @param password the password to be validated
+	 * @param user [OPTIONAL] the user this password check is related to (will use current user if this is null and it can be found)
+	 * @return the password rating enum
+	 */
+	public PasswordRating validatePassword(String password, User user);
 
 	/**
 	 * Add a new user to the directory. Must commitEdit() to make official, or cancelEdit() when done! Id is auto-generated.

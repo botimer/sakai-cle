@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/msgcntr/trunk/messageforums-api/src/java/org/sakaiproject/api/app/messageforums/MessageForumsMessageManager.java $
- * $Id: MessageForumsMessageManager.java 105078 2012-02-24 23:00:38Z ottenhoff@longsight.com $
+ * $Id: MessageForumsMessageManager.java 130286 2013-10-09 19:27:24Z holladay@longsight.com $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008, 2009 The Sakai Foundation
@@ -92,8 +92,11 @@ public interface MessageForumsMessageManager {
      * as DRAFT or DELETED.
      */
     public List<Message> findAuthoredMessagesForStudent(String studentId);
+    public List<UserStatistics> findAuthoredStatsForStudent(String studentId);
     public List<Message> findAuthoredMessagesForStudentByTopicId(String studentId, final Long topicId);
+    public List<UserStatistics> findAuthoredStatsForStudentByTopicId(String studentId, final Long topicId);
     public List<Message> findAuthoredMessagesForStudentByForumId(String studentId, final Long forumId);
+    public List<UserStatistics> findAuthoredStatsForStudentByForumId(String studentId, final Long forumId);
     
     /**
      * @return Each item in the list will be an array consisting of two elements.  The element
@@ -134,9 +137,9 @@ public interface MessageForumsMessageManager {
      * @return A list of all of the messages that the student has read and are not flagged
      * as DRAFT or DELETED.
      */
-    public List<Message> findReadMessagesForStudent(String studentId);
-    public List<Message> findReadMessagesForStudentByTopicId(String studentId, final Long topicId);
-    public List<Message> findReadMessagesForStudentByForumId(String studentId, final Long forumId);
+    public List<UserStatistics> findReadStatsForStudent(String studentId);
+    public List<UserStatistics> findReadStatsForStudentByTopicId(String studentId, final Long topicId);
+    public List<UserStatistics> findReadStatsForStudentByForumId(String studentId, final Long forumId);
     
     public int findReadViewableMessageCountByTopicId(Long topicId);
 
@@ -241,4 +244,8 @@ public interface MessageForumsMessageManager {
 	 * @return a list of messages
 	 */
 	public List<Message> getAllMessagesInSite(String siteId);
+
+	public void saveMessageMoveHistory(Long msgid, Long desttopicId,Long sourceTopicId, boolean checkreminder);
+	  
+	public List findMovedMessagesByTopicId(Long id); 
 }

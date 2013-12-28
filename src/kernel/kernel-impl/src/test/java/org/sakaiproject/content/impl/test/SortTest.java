@@ -1,6 +1,6 @@
 /**********************************************************************************
- * $URL$
- * $Id$
+ * $URL: https://source.sakaiproject.org/svn/kernel/trunk/kernel-impl/src/test/java/org/sakaiproject/content/impl/test/SortTest.java $
+ * $Id: SortTest.java 130227 2013-10-08 11:40:08Z azeckoski@unicon.net $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008 Sakai Foundation

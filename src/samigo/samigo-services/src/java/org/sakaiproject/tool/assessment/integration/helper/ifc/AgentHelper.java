@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/sam/trunk/samigo-services/src/java/org/sakaiproject/tool/assessment/integration/helper/ifc/AgentHelper.java $
- * $Id: AgentHelper.java 106521 2012-04-04 08:14:42Z david.horwitz@uct.ac.za $
+ * $Id: AgentHelper.java 130512 2013-10-15 23:46:40Z ktsao@stanford.edu $
  ***********************************************************************************
  *
  * Copyright (c) 2004, 2005, 2006, 2008 The Sakai Foundation
@@ -95,4 +95,5 @@ public interface AgentHelper extends Serializable
    */
   public boolean isFileUploadAvailable();
 
+  public String getDisplayId(String agentId);
 }

@@ -1,6 +1,6 @@
 /**********************************************************************************
 * $URL: https://source.sakaiproject.org/svn/osp/trunk/matrix/tool/src/java/org/theospi/portfolio/matrix/control/ImportScaffoldingController.java $
-* $Id: ImportScaffoldingController.java 105079 2012-02-24 23:08:11Z ottenhoff@longsight.com $
+* $Id: ImportScaffoldingController.java 131548 2013-11-14 16:42:13Z dsobiera@indiana.edu $
 ***********************************************************************************
 *
  * Copyright (c) 2005, 2006, 2007, 2008 The Sakai Foundation
@@ -21,9 +21,10 @@
 package org.theospi.portfolio.matrix.control;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Iterator;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -39,6 +40,7 @@ import org.sakaiproject.site.api.SiteService;
 import org.sakaiproject.tool.api.SessionManager;
 import org.sakaiproject.tool.api.ToolManager;
 import org.sakaiproject.tool.api.ToolSession;
+import org.sakaiproject.util.ResourceLoader;
 import org.springframework.validation.Errors;
 import org.springframework.web.servlet.ModelAndView;
 import org.theospi.portfolio.matrix.MatrixManager;
@@ -57,6 +59,8 @@ public class ImportScaffoldingController implements Controller, FormController {
    private SessionManager sessionManager;
    private ToolManager toolManager;
    private SiteService siteService;
+   
+   private static ResourceLoader rb = new ResourceLoader("org.theospi.portfolio.matrix.bundle.Messages");
 
    public Map referenceData(Map request, Object command, Errors errors) {
       ScaffoldingUploadForm scaffoldingForm = (ScaffoldingUploadForm)command;
@@ -101,12 +105,27 @@ public class ImportScaffoldingController implements Controller, FormController {
       }
 
       Scaffolding scaffolding = null;
-
+      List<String> formUploadErrors = new ArrayList<String>();
+      
       try {
          scaffolding = getMatrixManager().uploadScaffolding(
-              scaffoldingForm.getUploadedScaffolding(), getToolManager().getCurrentPlacement().getContext());
-              
-         validateScaffolding( scaffolding );
+              scaffoldingForm.getUploadedScaffolding(), getToolManager().getCurrentPlacement().getContext(), formUploadErrors, scaffoldingForm.isIgnoreInvalidForms());
+
+         if(scaffolding != null){
+             validateScaffolding( scaffolding );
+         }else if(formUploadErrors.size() > 0){
+             String invalidFormsList = "";
+             for (Iterator iterator = formUploadErrors.iterator(); iterator
+             .hasNext();) {
+                 String invalidForm = (String) iterator.next();
+                 invalidFormsList += invalidForm;
+                 if(iterator.hasNext())
+                     invalidFormsList += ", ";              
+             }
+             errors.rejectValue("ignoreInvalidForms", "InvalidForm", invalidFormsList);
+             ((ScaffoldingUploadForm) requestModel).setIgnoreInvalidForms(true);
+             return new ModelAndView("failed", "uploadForm", requestModel);
+         }         
       } catch (InvalidUploadException e) {
          logger.warn("Failed uploading scaffolding", e);
          errors.rejectValue(e.getFieldName(), e.getMessage(), e.getMessage());

@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/kernel/trunk/kernel-impl/src/test/java/org/sakaiproject/content/impl/test/MockContentResource.java $
- * $Id: MockContentResource.java 105077 2012-02-24 22:54:29Z ottenhoff@longsight.com $
+ * $Id: MockContentResource.java 130227 2013-10-08 11:40:08Z azeckoski@unicon.net $
  ***********************************************************************************
  *
  * Copyright (c) 2007, 2008 Sakai Foundation

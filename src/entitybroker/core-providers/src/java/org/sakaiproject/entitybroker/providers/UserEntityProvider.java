@@ -1,6 +1,6 @@
 /**
- * $Id: UserEntityProvider.java 51727 2008-09-03 09:00:03Z aaronz@vt.edu $
- * $URL: https://source.sakaiproject.org/svn/entitybroker/trunk/impl/src/java/org/sakaiproject/entitybroker/providers/UserEntityProvider.java $
+ * $Id: UserEntityProvider.java 130611 2013-10-18 14:17:53Z azeckoski@unicon.net $
+ * $URL: https://source.sakaiproject.org/svn/entitybroker/trunk/core-providers/src/java/org/sakaiproject/entitybroker/providers/UserEntityProvider.java $
  * UserEntityProvider.java - entity-broker - Jun 28, 2008 2:59:57 PM - azeckoski
  **************************************************************************
  * Copyright (c) 2008, 2009 The Sakai Foundation
@@ -39,6 +39,7 @@ import org.sakaiproject.entitybroker.entityprovider.CoreEntityProvider;
 import org.sakaiproject.entitybroker.entityprovider.annotations.EntityCustomAction;
 import org.sakaiproject.entitybroker.entityprovider.capabilities.Describeable;
 import org.sakaiproject.entitybroker.entityprovider.capabilities.RESTful;
+import org.sakaiproject.entitybroker.entityprovider.extension.ActionReturn;
 import org.sakaiproject.entitybroker.entityprovider.extension.Formats;
 import org.sakaiproject.entitybroker.entityprovider.search.Restriction;
 import org.sakaiproject.entitybroker.entityprovider.search.Search;
@@ -47,6 +48,7 @@ import org.sakaiproject.entitybroker.util.AbstractEntityProvider;
 import org.sakaiproject.user.api.User;
 import org.sakaiproject.user.api.UserAlreadyDefinedException;
 import org.sakaiproject.user.api.UserDirectoryService;
+import org.sakaiproject.user.api.UserDirectoryService.PasswordRating;
 import org.sakaiproject.user.api.UserEdit;
 import org.sakaiproject.user.api.UserIdInvalidException;
 import org.sakaiproject.user.api.UserLockedException;
@@ -102,6 +104,21 @@ public class UserEntityProvider extends AbstractEntityProvider implements CoreEn
         return exists;
     }
 
+    @EntityCustomAction(action="validatePassword", viewKey=EntityView.VIEW_NEW)
+    public ActionReturn validatePassword(EntityView view, Map<String, Object> params) {
+        PasswordRating rating = PasswordRating.PASSED_DEFAULT;
+        if (!params.containsKey("password")) {
+            throw new IllegalArgumentException("Must include a 'password' to validate");
+        }
+        String password = (String) params.get("password");
+        User user = null;
+        if (params.containsKey("username")) {
+            String username = (String) params.get("username");
+            user = new EntityUser(username, null, null, null, username, password, null);
+        }
+        rating = userDirectoryService.validatePassword(password, user);
+        return new ActionReturn(rating.name());
+    }
 
     public boolean entityExists(String id) {
         if (id == null) {

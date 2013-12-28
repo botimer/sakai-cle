@@ -39,6 +39,7 @@ import org.theospi.portfolio.matrix.model.ScaffoldingCell;
 import org.theospi.portfolio.matrix.model.WizardPage;
 import org.theospi.portfolio.matrix.model.WizardPageDefinition;
 import org.theospi.portfolio.style.model.Style;
+import org.theospi.portfolio.wizard.WizardFunctionConstants;
 import org.theospi.portfolio.wizard.mgt.WizardManager;
 import org.theospi.portfolio.wizard.model.CompletedWizard;
 import org.theospi.portfolio.wizard.model.Wizard;
@@ -99,8 +100,8 @@ public class WizardPageController extends CellController {
 		model.put("wizardOwner", rb.getFormattedMessage("wizard_of", new Object[]{owner.getDisplayName()}) );
 		model.put("pageTitleKey", "view_wizardPage");
 		model.put("helperPage", "true");
-		model.put("isWizard", "true");
-		model.put("isMatrix", "false");
+		model.put("isWizard", isWizard());
+		model.put("isMatrix", isMatrix());
 		model.put("categoryTitle", request.get("categoryTitle"));
 		model.put("wizardTitle", request.get("wizardTitle"));
 		model.put("wizardDescription", request.get("wizardDescription"));
@@ -212,6 +213,18 @@ public class WizardPageController extends CellController {
 
 		return super.handleRequest(requestModel, request, session, application,
 				errors);
+	}
+	
+	protected String isWizard() {
+		return "true";
+	}
+	
+	protected String isMatrix() {
+		return "false";
+	}
+	
+	protected boolean canEval(Id id) {
+		return getAuthzManager().isAuthorized(WizardFunctionConstants.EVALUATE_WIZARD, id);
 	}
 
 	public WizardManager getWizardManager() {

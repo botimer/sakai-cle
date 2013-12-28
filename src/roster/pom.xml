@@ -4,19 +4,15 @@
   <parent>
     <artifactId>base</artifactId>
     <groupId>org.sakaiproject</groupId>
-    <version>2.10-SNAPSHOT</version>
+    <version>10.0-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
   <name>Sakai Roster Project</name>
   <groupId>org.sakaiproject</groupId>
   <artifactId>roster-base</artifactId>
-  <version>2.10-SNAPSHOT</version>
+  <version>10.0-SNAPSHOT</version>
   <packaging>pom</packaging>
-  <scm>
-    <connection>scm:svn:https://source.sakaiproject.org/svn/roster/trunk</connection>
-    <developerConnection>scm:svn:https://source.sakaiproject.org/svn/roster/trunk</developerConnection>
-    <url>https://source.sakaiproject.org/svn/roster/trunk</url>
-  </scm>
+
   <modules>
     <module>components</module>
     <module>roster-api</module>
@@ -24,43 +20,29 @@
     <module>roster-app</module>
     <module>roster-help</module>
   </modules>
+
+  <scm>
+    <connection>scm:svn:https://source.sakaiproject.org/svn/roster/trunk</connection>
+    <developerConnection>scm:svn:https://source.sakaiproject.org/svn/roster/trunk</developerConnection>
+    <url>https://source.sakaiproject.org/svn/roster/trunk</url>
+  </scm>
+
   <dependencyManagement>
     <dependencies>
       <dependency>
         <groupId>org.sakaiproject</groupId>
         <artifactId>sakai-roster-impl</artifactId>
-        <version>2.10-SNAPSHOT</version>
+        <version>${project.version}</version>
       </dependency>
       <dependency>
         <groupId>org.sakaiproject</groupId>
         <artifactId>sakai-roster-model</artifactId>
-        <version>2.10-SNAPSHOT</version>
+        <version>${project.version}</version>
       </dependency>
       <dependency>
         <groupId>org.sakaiproject</groupId>
         <artifactId>sakai-sections-app-util</artifactId>
-        <version>2.10-SNAPSHOT</version>
-      </dependency>
-      <dependency>
-        <groupId>org.sakaiproject.jsf</groupId>
-        <artifactId>jsf-app</artifactId>
-        <version>${sakai.jsf.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.sakaiproject.jsf</groupId>
-        <artifactId>myfaces-widgets-depend</artifactId>
-        <version>${sakai.jsf.version}</version>
-        <type>pom</type>
-      </dependency>
-      <dependency>
-        <groupId>org.sakaiproject.jsf</groupId>
-        <artifactId>jsf-spreadsheet</artifactId>
-        <version>${sakai.jsf.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.sakaiproject.jsf</groupId>
-        <artifactId>jsf-tool</artifactId>
-        <version>${sakai.jsf.version}</version>
+        <version>${project.version}</version>
       </dependency>
     </dependencies>
   </dependencyManagement>

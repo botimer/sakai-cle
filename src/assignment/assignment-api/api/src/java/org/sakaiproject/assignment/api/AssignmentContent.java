@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/assignment/trunk/assignment-api/api/src/java/org/sakaiproject/assignment/api/AssignmentContent.java $
- * $Id: AssignmentContent.java 120144 2013-02-15 19:51:29Z holladay@longsight.com $
+ * $Id: AssignmentContent.java 129976 2013-09-25 20:48:37Z matthew@longsight.com $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008 The Sakai Foundation
@@ -207,6 +207,8 @@ public interface AssignmentContent extends Entity, AttachmentContainer
 	public void setCheckPublications(boolean m_checkPublications);
 
 	public boolean isCheckInstitution();
+
+	public boolean getHideDueDate();
 
 	public void setCheckInstitution(boolean m_checkInstitution);
 	

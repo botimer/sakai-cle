@@ -7,7 +7,7 @@
      PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
      "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <!--
-* $Id: matching.jsp 124679 2013-05-20 17:09:41Z ktsao@stanford.edu $
+* $Id: matching.jsp 130983 2013-10-30 21:21:40Z ottenhoff@longsight.com $
 <%--
 ***********************************************************************************
 *
@@ -35,7 +35,7 @@
       <title><h:outputText value="#{authorMessages.item_display_author}"/></title>
       
       <!-- AUTHORING -->
-      <samigo:script path="/js/jquery-1.3.2.min.js" />
+      <script type="text/javascript" src="/library/js/jquery/jquery-1.9.1.min.js"></script>
       <samigo:script path="/js/authoring.js"/>
 <%--
 <script type="text/JavaScript">

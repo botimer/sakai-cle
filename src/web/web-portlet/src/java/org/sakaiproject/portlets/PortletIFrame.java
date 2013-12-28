@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/web/trunk/web-portlet/src/java/org/sakaiproject/portlets/PortletIFrame.java $
- * $Id: PortletIFrame.java 126917 2013-07-11 16:39:24Z azeckoski@unicon.net $
+ * $Id: PortletIFrame.java 132825 2013-12-19 21:22:20Z csev@umich.edu $
  ***********************************************************************************
  *
  * Copyright (c) 2005-2013 The Sakai Foundation.
@@ -29,6 +29,7 @@ import java.io.InputStream;
 import java.io.File;
 
 import java.net.URL;
+import java.net.URI;
 import java.net.URLEncoder;
 import java.net.HttpURLConnection;
 
@@ -42,9 +43,12 @@ import java.util.ResourceBundle;
 import java.util.Locale;
 import java.util.Date;
 
+import java.util.regex.Pattern;
+import java.util.regex.Matcher;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.commons.validator.UrlValidator;
+import org.apache.commons.httpclient.util.URIUtil;
 
 import javax.portlet.GenericPortlet;
 import javax.portlet.RenderRequest;
@@ -79,6 +83,9 @@ import org.sakaiproject.component.cover.ServerConfigurationService;
 import org.sakaiproject.component.cover.ComponentManager;
 import org.sakaiproject.event.api.EventTrackingService;
 
+import javax.servlet.ServletRequest;
+import org.sakaiproject.thread_local.cover.ThreadLocalManager;
+
 import org.sakaiproject.site.api.Site;
 import org.sakaiproject.site.api.SitePage;
 import org.sakaiproject.site.api.ToolConfiguration;
@@ -98,6 +105,8 @@ import org.sakaiproject.authz.api.AuthzGroup;
 import org.sakaiproject.authz.api.GroupNotDefinedException;
 import org.sakaiproject.authz.api.Role;
 import org.sakaiproject.authz.cover.AuthzGroupService;
+
+import org.apache.commons.validator.routines.UrlValidator;
 
 // Velocity
 import org.apache.velocity.VelocityContext;
@@ -124,10 +133,6 @@ public class PortletIFrame extends GenericPortlet {
 	VelocityEngine vengine = null;
 
 	private PortletContext pContext;
-
-    private static long xframeCache = 3600*1000*2;
-
-    private static long xframeLoad = 8000;
 
 	// TODO: Perhaps these constancts should come from portlet.xml
 
@@ -214,32 +219,44 @@ public class PortletIFrame extends GenericPortlet {
 
     private static final String MACRO_DEFAULT_ALLOWED = "${USER_ID},${USER_EID},${USER_FIRST_NAME},${USER_LAST_NAME},${SITE_ID},${USER_ROLE}";
 
+	// Default is six hours
     private static final String IFRAME_XFRAME_CACHETIME = "iframe.xframe.cachetime";
-    private static final String IFRAME_XFRAME_CACHETIME_DEFAULT = "7200000";
+    private static final int IFRAME_XFRAME_CACHETIME_DEFAULT = 3600*1000*6;
 
     private static final String XFRAME_LAST_TIME = "xframe-last-time";
     private static final String XFRAME_LAST_STATUS = "xframe-last-status";
 
     private static final String IFRAME_XFRAME_LOADTIME = "iframe.xframe.loadtime";
-    private static final String IFRAME_XFRAME_LOADTIME_DEFAULT = "8000";
+    private static final int IFRAME_XFRAME_LOADTIME_DEFAULT = 8000;
+
+    private static long xframeCache = IFRAME_XFRAME_CACHETIME_DEFAULT;
+    private static long xframeLoad = IFRAME_XFRAME_LOADTIME_DEFAULT;
+
+	// Regular expressions
+    private static final String IFRAME_XFRAME_POPUP = "iframe.xframe.popup";
+    private static final String IFRAME_XFRAME_INLINE = "iframe.xframe.inline";
+
+    public final static String CURRENT_HTTP_REQUEST = "org.sakaiproject.util.RequestFilter.http_request";
 
     private static ArrayList allowedMacrosList;
     static
     {
+        xframeCache = IFRAME_XFRAME_CACHETIME_DEFAULT;
         String xframeCacheS = 
-            ServerConfigurationService.getString(IFRAME_XFRAME_CACHETIME, IFRAME_XFRAME_CACHETIME_DEFAULT);
+            ServerConfigurationService.getString(IFRAME_XFRAME_CACHETIME, null);
         try { 
-            xframeCache = Long.parseLong(xframeCacheS);
+            if ( xframeCacheS != null ) xframeCache = Long.parseLong(xframeCacheS);
         } catch (NumberFormatException nfe) {
-            xframeCache = 7200000;
+            xframeCache = IFRAME_XFRAME_CACHETIME_DEFAULT;
         }
 
+        xframeLoad = IFRAME_XFRAME_LOADTIME_DEFAULT;
         String xframeLoadS = 
-            ServerConfigurationService.getString(IFRAME_XFRAME_LOADTIME, IFRAME_XFRAME_LOADTIME_DEFAULT);
+            ServerConfigurationService.getString(IFRAME_XFRAME_LOADTIME, null);
         try { 
-            xframeLoad = Long.parseLong(xframeLoadS);
+            if ( xframeLoadS != null ) xframeLoad = Long.parseLong(xframeLoadS);
         } catch (NumberFormatException nfe) {
-            xframeLoad = 8000;
+            xframeLoad = IFRAME_XFRAME_LOADTIME_DEFAULT;
         }
 
         allowedMacrosList = new ArrayList();
@@ -308,7 +325,12 @@ public class PortletIFrame extends GenericPortlet {
 
 			// System.out.println("==== doView called ====");
 
+			// Grab that underlying request to get a GET parameter
+			ServletRequest req = (ServletRequest) ThreadLocalManager.get(CURRENT_HTTP_REQUEST);
+			String popupDone = req.getParameter("sakai.popup");
+
 			PrintWriter out = response.getWriter();
+			Context context = new VelocityContext();
 			Placement placement = ToolManager.getCurrentPlacement();
             Properties config = getAllProperties(placement);
 
@@ -321,6 +343,32 @@ public class PortletIFrame extends GenericPortlet {
             String hideOptions = config.getProperty(HIDE_OPTIONS);
 
             String special = getSpecial(config);
+
+			// Handle the situation where we are displaying the worksite information
+			if ( SPECIAL_WORKSITE.equals(special) ) {
+				try
+				{
+					// If the site does not have an info url, we show description or title
+					Site s = SiteService.getSite(placement.getContext());
+					String rv = StringUtils.trimToNull(s.getInfoUrlFull());
+					if (rv == null)
+					{
+						String siteInfo = StringUtils.trimToNull(s.getDescription());
+						if ( siteInfo == null ) {
+							siteInfo = StringUtils.trimToNull(s.getTitle());
+						}
+						StringBuilder alertMsg = new StringBuilder();
+						if ( siteInfo != null ) siteInfo = validator.processFormattedText(siteInfo, alertMsg);
+						context.put("siteInfo", siteInfo);
+						vHelper.doTemplate(vengine, "/vm/info.vm", context, out);
+						return;
+					}
+				}
+				catch (Exception any)
+				{
+					any.printStackTrace();
+				}
+			}
 
 			boolean popup = "true".equals(placement.getPlacementConfig().getProperty(POPUP));
 			boolean maximize = "true".equals(placement.getPlacementConfig().getProperty(MAXIMIZE));
@@ -339,18 +387,26 @@ public class PortletIFrame extends GenericPortlet {
             //System.out.println("special="+special+" source="+source+" pgc="+placement.getContext()+" macroExpansion="+macroExpansion+" passPid="+passPid+" PGID="+placement.getId()+" sakaiPropertiesUrlKey="+sakaiPropertiesUrlKey+" url="+url);
 
 			if ( url != null && url.trim().length() > 0 ) {
-                popup = popup || popupXFrame(placement, url);
-				Context context = new VelocityContext();
+				url = sanitizeHrefURL(url);
+				if ( url == null || ! validateURL(url) ) {
+					M_log.warn("invalid URL suppressed placement="+placement.getId()+" site="+placement.getContext()+" url="+url);
+					url = "about:blank";
+				}
+
+				// Check if the site sets X-Frame options
+				popup = popup || popupXFrame(request, placement, url);
 
                 Session session = SessionManager.getCurrentSession();
                 String csrfToken = (String) session.getAttribute(UsageSessionService.SAKAI_CSRF_SESSION_ATTRIBUTE);
                 if ( csrfToken != null ) context.put("sakai_csrf_token", csrfToken);
 				context.put("tlang", rb);
 				context.put("validator", validator);
-				context.put("source",url);
+				// http://stackoverflow.com/questions/573184/java-convert-string-to-valid-uri-object
+				context.put("source",URIUtil.encodeQuery(url));
 				context.put("height",height);
 				sendAlert(request,context);
 				context.put("popup", Boolean.valueOf(popup));
+				context.put("popupdone", Boolean.valueOf(popupDone != null));
 				context.put("maximize", Boolean.valueOf(maximize));
 				context.put("placement", placement.getId().replaceAll("[^a-zA-Z0-9]","_"));
 				context.put("loadTime", new Long(xframeLoad));
@@ -380,11 +436,45 @@ public class PortletIFrame extends GenericPortlet {
 		}
 
     // Determine if we should pop up due to an X-Frame-Options : [SAMEORIGIN]
-    public boolean popupXFrame(Placement placement, String url) 
+    public boolean popupXFrame(RenderRequest request, Placement placement, String url) 
     {
         if ( xframeCache < 1 ) return false;
-        if ( ! ( url.startsWith("http://") || url.startsWith("https://") ) ) return false;
 
+        // Only check http:// and https:// urls
+        if ( ! (url.startsWith("http://") || url.startsWith("https://")) ) return false;
+
+        // Check the "Always POPUP" and "Always INLINE" regular expressions
+        String pattern = null;
+        Pattern p = null;
+        Matcher m = null;
+        pattern = ServerConfigurationService.getString(IFRAME_XFRAME_POPUP, null);
+        if ( pattern != null && pattern.length() > 1 ) {
+            p = Pattern.compile(pattern);
+            m = p.matcher(url.toLowerCase());
+            if ( m.find() ) {
+                return true;
+            }
+        }
+        pattern = ServerConfigurationService.getString(IFRAME_XFRAME_INLINE, null);
+        if ( pattern != null && pattern.length() > 1 ) {
+            p = Pattern.compile(pattern);
+            m = p.matcher(url.toLowerCase());
+            if ( m.find() ) {
+                return false;
+            }
+        }
+
+        // Don't check Local URLs
+        String serverUrl = ServerConfigurationService.getServerUrl();
+        if ( url.startsWith(serverUrl) ) return false;
+        if ( url.startsWith(ServerConfigurationService.getAccessUrl()) ) return false;
+
+        // Force http:// to pop-up if we are https://
+        if ( request.isSecure() || ( serverUrl != null && serverUrl.startsWith("https://") ) ) {
+            if ( url.startsWith("http://") ) return true;
+        }
+
+        // Check to see if time has expired...
         Date date = new Date();
         long nowTime = date.getTime();
         
@@ -432,11 +522,13 @@ public class PortletIFrame extends GenericPortlet {
 
         }
         catch (Exception e) {
-            // Fail pretty silently because this could be pretty chatty with bad urs and all
+            // Fail pretty silently because this could be pretty chatty with bad urls and all
             M_log.debug(e.getMessage());
             retval = false;
         }
         placement.getPlacementConfig().setProperty(XFRAME_LAST_STATUS, String.valueOf(retval));
+        // Permanently set popup to true as we don't expect that a site will go back
+        if ( retval == true ) placement.getPlacementConfig().setProperty(POPUP, "true");
         placement.save();
         M_log.debug("Retrieved="+url+" XFrame="+retval);
         return retval;
@@ -445,7 +537,6 @@ public class PortletIFrame extends GenericPortlet {
 	public void doEdit(RenderRequest request, RenderResponse response)
 		throws PortletException, IOException 
     {
-
 			// System.out.println("==== doEdit called ====");
 			response.setContentType("text/html");
 			PrintWriter out = response.getWriter();
@@ -585,6 +676,7 @@ public class PortletIFrame extends GenericPortlet {
 			    context.put("custom_height", strings[0]);
 			    height = rb.getString("gen.heisomelse");
 		    }
+		    context.put("height", height);
 
 	    	// TODO: tracking event
 		
@@ -665,26 +757,19 @@ public class PortletIFrame extends GenericPortlet {
             // Get and verify the source
 			String source = StringUtils.trimToEmpty(request.getParameter("source"));
 
-            // If this is a normal placement (i.e. not special)
+            // If this is a normal placement we do not allow blank (i.e. not special)
             if ( special == null ) {
                 if (StringUtils.isBlank(source))
                 {
                     addAlert(request, rb.getString("gen.url.empty"));
                     return;
                 }
+            }
 
-                if ((!source.startsWith("/")) && (source.indexOf("://") == -1))
-                {
-                    source = "http://" + source;
-                }
-
-                // Validate the url
-                UrlValidator urlValidator = new UrlValidator();
-                if (!urlValidator.isValid(source))
-                {
-                    addAlert(request, rb.getString("gen.url.invalid"));
-                    return;
-                }
+            // If we have a URL from the user, lets validate it
+            if ((!StringUtils.isBlank(source)) && (!validateURL(source)) ) {
+                addAlert(request, rb.getString("gen.url.invalid"));
+                return;
             }
 
             // update state
@@ -696,6 +781,12 @@ public class PortletIFrame extends GenericPortlet {
             if (infoUrl != null && infoUrl.length() > MAX_SITE_INFO_URL_LENGTH)
             {
                 addAlert(request, rb.getString("gen.info.url.toolong"));
+                return;
+            }
+
+            // If we have an infourl from the user, lets validate it
+            if ((!StringUtils.isBlank(infoUrl)) && (!validateURL(infoUrl)) ) {
+                addAlert(request, rb.getString("gen.url.invalid"));
                 return;
             }
 
@@ -796,7 +887,6 @@ public class PortletIFrame extends GenericPortlet {
                     infoUrl = "http://" + infoUrl;
                 }
                 String description = StringUtils.trimToNull(request.getParameter("description"));
-                description = FormattedText.processEscapedHtml(description);
     
                 // update the site info
                 try
@@ -1255,6 +1345,109 @@ public class PortletIFrame extends GenericPortlet {
         public SessionDataException(String text)
         {
             super(text);
+        }
+    }
+
+	// TODO: When FormattedText KNL-1105 is updated take those methods
+
+    /* (non-Javadoc)
+     * @see org.sakaiproject.util.api.FormattedText#validateURL(java.lang.String)
+     */
+
+    private static final String PROTOCOL_PREFIX = "http:";
+    private static final String HOST_PREFIX = "http://127.0.0.1";
+    private static final String ABOUT_BLANK = "about:blank";
+
+    public boolean validateURL(String urlToValidate) {
+		// return FormattedText.validateURL(urlToValidate); // KNL-1105
+        if (StringUtils.isBlank(urlToValidate)) return false;
+
+		if ( ABOUT_BLANK.equals(urlToValidate) ) return true;
+
+        // Check if the url is "Escapable" - run through the URL-URI-URL gauntlet
+        String escapedURL = sanitizeHrefURL(urlToValidate);
+        if ( escapedURL == null ) return false;
+
+        // For a protocol-relative URL, we validate with protocol attached 
+        // RFC 1808 Section 4
+        if ((urlToValidate.startsWith("//")) && (urlToValidate.indexOf("://") == -1))
+        {
+            urlToValidate = PROTOCOL_PREFIX + urlToValidate;
+        }
+
+        // For a site-relative URL, we validate with host name and protocol attached 
+        // SAK-13787 SAK-23752
+        if ((urlToValidate.startsWith("/")) && (urlToValidate.indexOf("://") == -1))
+        {
+            urlToValidate = HOST_PREFIX + urlToValidate;
+        }
+
+        // Validate the url
+        UrlValidator urlValidator = new UrlValidator(UrlValidator.ALLOW_LOCAL_URLS);
+        return urlValidator.isValid(urlToValidate);
+    }
+
+    /* (non-Javadoc)
+     * @see org.sakaiproject.util.api.FormattedText#sanitizeHrefURL(java.lang.String)
+     */
+    public String sanitizeHrefURL(String urlToEscape) {
+		// return FormattedText.sanitizeHrefURL(urlToEscape); // KNL-1105
+        if ( urlToEscape == null ) return null;
+        if (StringUtils.isBlank(urlToEscape)) return null;
+		if ( ABOUT_BLANK.equals(urlToEscape) ) return ABOUT_BLANK;
+
+        boolean trimProtocol = false;
+        boolean trimHost = false;
+        // For a protocol-relative URL, we validate with protocol attached 
+        // RFC 1808 Section 4
+        if ((urlToEscape.startsWith("//")) && (urlToEscape.indexOf("://") == -1))
+        {
+            urlToEscape = PROTOCOL_PREFIX + urlToEscape;
+            trimProtocol = true;
+        }
+
+        // For a site-relative URL, we validate with host name and protocol attached 
+        // SAK-13787 SAK-23752
+        if ((urlToEscape.startsWith("/")) && (urlToEscape.indexOf("://") == -1))
+        {
+            urlToEscape = HOST_PREFIX + urlToEscape;
+            trimHost = true;
+        }
+
+        // KNL-1105
+        try {
+            URL rawUrl = new URL(urlToEscape);
+            URI uri = new URI(rawUrl.getProtocol(), rawUrl.getUserInfo(), rawUrl.getHost(), 
+                rawUrl.getPort(), rawUrl.getPath(), rawUrl.getQuery(), rawUrl.getRef());
+            URL encoded = uri.toURL();
+            String retval = encoded.toString();
+
+            // Un-trim the added bits
+            if ( trimHost && retval.startsWith(HOST_PREFIX) ) 
+            {
+                retval = retval.substring(HOST_PREFIX.length());
+            }
+
+            if ( trimProtocol && retval.startsWith(PROTOCOL_PREFIX) ) 
+            {
+                retval = retval.substring(PROTOCOL_PREFIX.length());
+            }
+
+            // http://stackoverflow.com/questions/7731919/why-doesnt-uri-escape-escape-single-quotes
+            // We want these to be usable in JavaScript string values so we map single quotes
+            retval = retval.replace("'", "%27");
+            // We want anchors to work
+            retval = retval.replace("%23", "#");
+            // Sorry - these just need to come out - they cause to much trouble
+            // Note that ampersand is not encoded as it is used for parameters.
+            retval = retval.replace("&#", "");
+            return retval;
+        } catch ( java.net.URISyntaxException e ) {
+            M_log.info("Failure during encode of href url: " + e);
+            return null;
+        } catch ( java.net.MalformedURLException e ) {
+            M_log.info("Failure during encode of href url: " + e);
+            return null;
         }
     }
 }

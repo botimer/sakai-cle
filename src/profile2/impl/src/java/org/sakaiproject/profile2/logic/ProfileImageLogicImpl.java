@@ -54,6 +54,15 @@ public class ProfileImageLogicImpl implements ProfileImageLogic {
 
 	private static final Logger log = Logger.getLogger(ProfileImageLogicImpl.class);
 
+	/**
+ 	 * {@inheritDoc}
+ 	 */
+	public ProfileImage getBlankProfileImage() {
+
+		ProfileImage profileImage = new ProfileImage();
+        profileImage.setExternalImageUrl(getUnavailableImageURL());
+        return profileImage;
+    }
 	
 	/**
  	 * {@inheritDoc}
@@ -65,9 +74,24 @@ public class ProfileImageLogicImpl implements ProfileImageLogic {
 	/**
  	 * {@inheritDoc}
  	 */
-	public ProfileImage getOfficialProfileImage(String userUuid) {
+	public ProfileImage getOfficialProfileImage(String userUuid, String siteId) {
 		
-		return getOfficialImage(userUuid, new ProfileImage(), getUnavailableImageURL(), StringUtils.equals(userUuid,sakaiProxy.getCurrentUserId()));
+		ProfileImage profileImage = new ProfileImage();
+		
+		String currentUserId = sakaiProxy.getCurrentUserId();
+		String defaultImageUrl = getUnavailableImageURL();
+		
+		//check permissions. if not allowed, set default and return
+		if(!sakaiProxy.isUserMyWorkspace(siteId)) {
+			log.debug("checking if user: " + currentUserId + " has permissions in site: " + siteId);
+			if(!sakaiProxy.isUserAllowedInSite(currentUserId, ProfileConstants.ROSTER_VIEW_PHOTO, siteId)) {
+				profileImage.setExternalImageUrl(defaultImageUrl);
+				return profileImage;
+			}
+		}
+		
+		//otherwise get official image
+		return getOfficialImage(userUuid, profileImage, defaultImageUrl, StringUtils.equals(userUuid,currentUserId));
 	}
 	
 	/**

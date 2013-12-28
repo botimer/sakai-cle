@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/calendar/trunk/calendar-impl/impl/src/java/org/sakaiproject/calendar/impl/BaseCalendarService.java $
- * $Id: BaseCalendarService.java 122995 2013-04-18 17:44:58Z ottenhoff@longsight.com $
+ * $Id: BaseCalendarService.java 132688 2013-12-17 19:50:28Z enietzel@anisakai.com $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008, 2009 The Sakai Foundation
@@ -2253,6 +2253,7 @@ public abstract class BaseCalendarService implements CalendarService, DoubleStor
 
 							// commit new event
 							m_storage.commitEvent(nCalendar, eEdit);
+							transversalMap.put(oEvent.getId(), eEdit.getId());
 						}
 						catch (InUseException ignore) {}
 					}
@@ -3751,6 +3752,7 @@ public abstract class BaseCalendarService implements CalendarService, DoubleStor
 			// now we have the primary event, if we have a recurring event sequence time range selector, use it
 			if ((e != null) && (timeRange != null))
 			{
+				timeRange.adjust(timeRange, e.getRange());
 				e = new BaseCalendarEventEdit(e, new RecurrenceInstance(timeRange, sequence));
 			}
 
@@ -4482,6 +4484,7 @@ public abstract class BaseCalendarService implements CalendarService, DoubleStor
 		 */
 		public String getField(String name)
 		{
+			name = FormattedText.unEscapeHtml(name);
 			// names are prefixed to form a namespace
 			name = ResourceProperties.PROP_CALENDAR_EVENT_FIELDS + "." + name;
 

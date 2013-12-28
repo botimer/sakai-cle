@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/edu-services/trunk/gradebook-service/api/src/java/org/sakaiproject/service/gradebook/shared/Assignment.java $
- * $Id: Assignment.java 105077 2012-02-24 22:54:29Z ottenhoff@longsight.com $
+ * $Id: Assignment.java 129393 2013-09-06 04:24:35Z matthew@longsight.com $
  ***********************************************************************************
  *
  * Copyright (c) 2006, 2007, 2008 The Sakai Foundation
@@ -43,6 +43,9 @@ public class Assignment implements Serializable {
     private String categoryName;
     private Double weight;
     private boolean ungraded;
+    private boolean extraCredit;
+    //Needed for transfer
+    private boolean categoryExtraCredit;
     
 
     public Assignment() {
@@ -179,5 +182,25 @@ public class Assignment implements Serializable {
 	{
 		this.ungraded = ungraded;
 	}
+	
+	//Extra credit columns
+	public void setExtraCredit(boolean extraCredit) {
+		this.extraCredit = extraCredit;
+	}
 
+	public boolean isExtraCredit() {
+		return extraCredit;
+	}
+
+	public boolean getExtraCredit() {
+		return isExtraCredit();
+	}
+	
+	//Needed for cateogry transfer
+	public void setCategoryExtraCredit(boolean categoryExtraCredit) {
+		this.categoryExtraCredit = categoryExtraCredit;
+	}
+	public boolean isCategoryExtraCredit() {
+		return categoryExtraCredit;
+	}
 }

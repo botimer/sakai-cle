@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/sakai-mock/trunk/src/main/java/org/sakaiproject/mock/service/SiteService.java $
- * $Id: SiteService.java 120413 2013-02-23 01:14:34Z botimer@umich.edu $
+ * $Id: SiteService.java 130211 2013-10-07 16:06:21Z azeckoski@unicon.net $
  ***********************************************************************************
  *
  * Copyright (c) 2007, 2008 The Sakai Foundation
@@ -20,6 +20,7 @@
  **********************************************************************************/
 package org.sakaiproject.mock.service;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -398,4 +399,12 @@ public class SiteService implements org.sakaiproject.site.api.SiteService {
 	{
 		return null;
 	}
+
+	/* (non-Javadoc)
+	 * @see org.sakaiproject.site.api.SiteService#getSiteIds(org.sakaiproject.site.api.SiteService.SelectionType, java.lang.Object, java.lang.String, java.util.Map, org.sakaiproject.site.api.SiteService.SortType, org.sakaiproject.javax.PagingPosition)
+	 */
+	public List<String> getSiteIds(SelectionType arg0, Object arg1, String arg2, Map<String, String> arg3, SortType arg4, PagingPosition arg5) {
+	    return new ArrayList<String>(0);
+	}
+
 }

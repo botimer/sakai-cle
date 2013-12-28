@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/kernel/trunk/api/src/main/java/org/sakaiproject/site/cover/SiteService.java $
- * $Id: SiteService.java 120411 2013-02-23 01:14:26Z botimer@umich.edu $
+ * $Id: SiteService.java 129462 2013-09-09 18:57:24Z holladay@longsight.com $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008 Sakai Foundation
@@ -112,6 +112,10 @@ public class SiteService
 	public static java.lang.String EVENT_SITE_USER_INVALIDATE = org.sakaiproject.site.api.SiteService.EVENT_SITE_USER_INVALIDATE;
 
 	public static java.lang.String EVENT_SITE_VISIT_DENIED = org.sakaiproject.site.api.SiteService.EVENT_SITE_VISIT_DENIED;
+	
+	public static java.lang.String EVENT_SITE_IMPORT_START = org.sakaiproject.site.api.SiteService.EVENT_SITE_IMPORT_START;
+	
+	public static java.lang.String EVENT_SITE_IMPORT_END = org.sakaiproject.site.api.SiteService.EVENT_SITE_IMPORT_END;
 
 	public static boolean allowAccessSite(java.lang.String param0)
 	{

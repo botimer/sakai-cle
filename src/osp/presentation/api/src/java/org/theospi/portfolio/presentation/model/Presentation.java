@@ -69,6 +69,7 @@ public class Presentation extends IdentifiableObject {
    private boolean allowComments = false;
    private Id propertyForm;
    private boolean preview = false;
+   private Boolean isSearchable = true;
 
    public final static String FREEFORM_TYPE = "osp.presentation.type.freeForm";
    public final static String TEMPLATE_TYPE = "osp.presentation.type.template";
@@ -132,6 +133,18 @@ public class Presentation extends IdentifiableObject {
       this.name = name;
    }
 
+   public String getEscapedQuotesName()
+   {
+       String cleansedName = name;
+       
+       if (cleansedName != null) {
+           cleansedName = cleansedName.replace("\'", "\\'");
+           cleansedName = cleansedName.replace("\"", "\\\"");
+       }
+       
+       return cleansedName;
+   }
+   
    public String getDescription() {
       return description;
    }
@@ -368,5 +381,13 @@ public class Presentation extends IdentifiableObject {
       uri += "/osp-presentation-tool/viewPresentation.osp?panel=presentation&id=" + getId().getValue();
       uri += "&" + Tool.PLACEMENT_ID + "=" + getToolId();
       return uri;
+   }
+
+   public Boolean getIsSearchable() {
+	   return isSearchable;
+   }
+
+   public void setIsSearchable(Boolean isSearchable) {
+	   this.isSearchable = isSearchable;
    }
 }

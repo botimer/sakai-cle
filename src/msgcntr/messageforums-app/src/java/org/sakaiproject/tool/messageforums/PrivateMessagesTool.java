@@ -258,7 +258,8 @@ public class PrivateMessagesTool
   private String composeSubject ;
   private String composeBody;
   private String selectedLabel="pvt_priority_normal" ;   //defautl set
-  private List totalComposeToList;
+  private List totalComposeToList = null;
+  private List totalComposeToBccList = null;
   private List totalComposeToListRecipients;
   
   //Delete items - Checkbox display and selection - Multiple delete
@@ -304,6 +305,9 @@ public class PrivateMessagesTool
   // for compose, are we coming from main page?
   private boolean fromMain;
   
+  // Message which will be marked as replied
+  private PrivateMessage replyingMessage;
+  
   //////////////////////
   
   //=====================need to be modified to support internationalization - by huxt
@@ -344,9 +348,15 @@ public class PrivateMessagesTool
   private String selectedNonHiddenGroup = DEFAULT_NON_HIDDEN_GROUP_ID;
   private static final String PARAM_GROUP_ID = "groupId";
   private boolean currentSiteHasGroups = false;
+  private Boolean displayHiddenGroupsMsg = null;
+  
+  private boolean showProfileInfoMsg = false;
+  private boolean showProfileLink = false;
   
   public PrivateMessagesTool()
   {    
+	  showProfileInfoMsg = ServerConfigurationService.getBoolean("msgcntr.messages.showProfileInfo", false);
+	  showProfileLink = showProfileInfoMsg && ServerConfigurationService.getBoolean("profile2.profile.link.enabled", true);
   }
   
   /**
@@ -400,6 +410,11 @@ public class PrivateMessagesTool
     if (! area.getEnabled() && isMessages()) {
     	area.setEnabled(true);
     }
+    
+    // reset these in case the allowed recipients (such as hidden groups) was updated
+    totalComposeToList = null;
+    totalComposeToBccList = null;
+    displayHiddenGroupsMsg = null;
     
     if (getUserId() != null && (getPvtAreaEnabled() || isInstructor() || isEmailPermit())){      
       PrivateForum pf = prtMsgManager.initializePrivateMessageArea(area, aggregateList);
@@ -886,6 +901,14 @@ public class PrivateMessagesTool
 	  this.booleanEmailOut= booleanEmailOut;
   }
   
+  public PrivateMessage getReplyingMessage() {
+	  return replyingMessage;
+  }
+  
+  public void setReplyingMessage(PrivateMessage replyingMessage) {
+	  this.replyingMessage = replyingMessage;
+  }
+  
   /**
    * 
    * @return true if the Messages tool setting in combination with the author-defined
@@ -969,33 +992,68 @@ public class PrivateMessagesTool
   
   public List getTotalComposeToList()
   { 
-      /** just need to refilter */
-      if (totalComposeToList != null) {
-          List<SelectItem> selectItemList = new ArrayList<SelectItem>();
-          for (Iterator i = totalComposeToList.iterator(); i.hasNext();) {
-              MembershipItem item = (MembershipItem) i.next();
-              selectItemList.add(new SelectItem(item.getId(), item.getName()));
-          }
-
-          return selectItemList;       
+      if (totalComposeToList == null) {
+          initializeComposeToLists();
       }
-
-      totalComposeToListRecipients = new ArrayList();
-
-      courseMemberMap = membershipManager.getFilteredCourseMembers(true, getHiddenGroupIds(area.getHiddenGroups()));
-      //    courseMemberMap = membershipManager.getAllCourseMembers(true, true, true);
-      List members = membershipManager.convertMemberMapToList(courseMemberMap);
-
-      totalComposeToList = members;
 
       List<SelectItem> selectItemList = new ArrayList<SelectItem>();
-
-      for (Iterator i = members.iterator(); i.hasNext();) {
+      for (Iterator i = totalComposeToList.iterator(); i.hasNext();) {
           MembershipItem item = (MembershipItem) i.next();
-          selectItemList.add(new SelectItem(item.getId(), item.getName()));//51d20a77----, "Maintain Role"
+          selectItemList.add(new SelectItem(item.getId(), item.getName()));
       }
 
-      return selectItemList;       
+      return selectItemList;              
+  }
+
+  public List getTotalComposeToBccList() {
+      if (totalComposeToBccList == null) {
+          initializeComposeToLists();
+      }
+
+      List<SelectItem> selectItemList = new ArrayList<SelectItem>();
+      for (Iterator i = totalComposeToBccList.iterator(); i.hasNext();) {
+          MembershipItem item = (MembershipItem) i.next();
+          selectItemList.add(new SelectItem(item.getId(), item.getName()));
+      }
+
+      return selectItemList;
+  }
+  
+  /**
+   * Since the courseMemberMap generates new uuids each time it is called, and
+   * these uuids are used to identify the recipients of the message when the user
+   * sends the message, we need to do the logic for the "To" and "Bcc" lists together, 
+   * utilizing the same courseMemberMap. This will set the values for the
+   * totalComposeToList and totalComposeToBccList.
+   */
+  private void initializeComposeToLists() {
+      totalComposeToList = new ArrayList();
+      totalComposeToBccList = new ArrayList();
+      
+      List<String> hiddenGroupIds = getHiddenGroupIds(area.getHiddenGroups());
+      courseMemberMap = membershipManager.getFilteredCourseMembers(true, getHiddenGroupIds(area.getHiddenGroups()));
+      List members = membershipManager.convertMemberMapToList(courseMemberMap);
+      
+      List<SelectItem> selectItemList = new ArrayList<SelectItem>();
+      // we need to filter out the hidden groups since they will only appear as recipients in the bcc list
+      for (Iterator i = members.iterator(); i.hasNext();) {
+          MembershipItem item = (MembershipItem) i.next();
+          if (hiddenGroupIds != null && item.getGroup() != null && hiddenGroupIds.contains(item.getGroup().getTitle())) {
+              // hidden groups only appear in the bcc list
+              totalComposeToBccList.add(item);
+          } else {
+              totalComposeToList.add(item);
+              totalComposeToBccList.add(item);
+          }
+      }  
+  }
+
+  public boolean isDisplayHiddenGroupsMsg() {
+      if (displayHiddenGroupsMsg == null) {
+          displayHiddenGroupsMsg = hiddenGroups != null && !hiddenGroups.isEmpty() && prtMsgManager.isAllowToViewHiddenGroups();
+      }
+      
+      return displayHiddenGroupsMsg;
   }
   
   private List<String> getHiddenGroupIds(Set hiddenGroups){
@@ -1150,6 +1208,14 @@ public boolean isFromMain() {
 public String getServerUrl() {
     return ServerConfigurationService.getServerUrl();
  }
+
+public boolean getShowProfileInfoMsg() {
+    return showProfileInfoMsg;
+}
+
+public boolean getShowProfileLink() {
+	return showProfileLink;
+}
 
 public void processChangeSelectView(ValueChangeEvent eve)
   {
@@ -1546,6 +1612,9 @@ public void processChangeSelectView(ValueChangeEvent eve)
     
     PrivateMessage pm = getDetailMsg().getMsg();
     
+    // To mark as replied when user send the reply
+    this.setReplyingMessage(pm);
+    
     String title = pm.getTitle();
 	if(title != null && !title.startsWith(getResourceBundleString(REPLY_SUBJECT_PREFIX)))
 		replyToSubject = getResourceBundleString(REPLY_SUBJECT_PREFIX) + ' ' + title;
@@ -1713,6 +1782,9 @@ private   int   getNum(char letter,   String   a)
 	    	return null;
 	    
 	    PrivateMessage pm = getDetailMsg().getMsg();
+	    
+	    // To mark as replied when user send the reply
+	    this.setReplyingMessage(pm);
 	    
 	    String title = pm.getTitle();
     	if(title != null && !title.startsWith(getResourceBundleString(ReplyAll_SUBJECT_PREFIX)))
@@ -2008,6 +2080,14 @@ private   int   getNum(char letter,   String   a)
     Map<User, Boolean> recipients = getRecipients();
     
     prtMsgManager.sendPrivateMessage(pMsg, recipients, isSendEmail()); 
+    // if you are sending a reply 
+    Message replying = pMsg.getInReplyTo();
+    if (replying!=null) {
+    	replying = prtMsgManager.getMessageById(replying.getId());
+    	if (replying!=null) {
+    		prtMsgManager.markMessageAsRepliedForUser((PrivateMessage)replying);
+    	}
+    }
     
     //update synopticLite tool information:
     
@@ -2629,6 +2709,7 @@ private   int   getNum(char letter,   String   a)
     	prtMsgManager.sendPrivateMessage(rrepMsg, recipients, isSendEmail());
     	
     	if(!rrepMsg.getDraft()){
+    		prtMsgManager.markMessageAsRepliedForUser(getReplyingMessage());
     		incrementSynopticToolInfo(recipients.keySet(), false);
     	    LearningResourceStoreService lrss = (LearningResourceStoreService) ComponentManager
     	            .get("org.sakaiproject.event.api.LearningResourceStoreService");
@@ -3239,6 +3320,7 @@ private   int   getNum(char letter,   String   a)
 	          prtMsgManager.sendPrivateMessage(rrepMsg, returnSet, isSendEmail());
 
 		  if(!rrepMsg.getDraft()){
+			  prtMsgManager.markMessageAsRepliedForUser(getReplyingMessage());
 			  //update Synoptic tool info
 			  incrementSynopticToolInfo(returnSet.keySet(), false);
 	          LearningResourceStoreService lrss = (LearningResourceStoreService) ComponentManager
@@ -4431,6 +4513,7 @@ private   int   getNum(char letter,   String   a)
         PrivateMessageRecipient el = (PrivateMessageRecipient) iterator.next();
         if (el != null){
           dbean.setHasRead(el.getRead().booleanValue());
+          dbean.setReplied(el.getReplied().booleanValue());
         }
       }
       //Add decorate 'TO' String for sent message

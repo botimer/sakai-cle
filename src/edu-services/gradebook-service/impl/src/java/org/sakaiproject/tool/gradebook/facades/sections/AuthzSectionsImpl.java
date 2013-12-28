@@ -1,6 +1,6 @@
 /**********************************************************************************
 *
-* $Id: AuthzSectionsImpl.java 105077 2012-02-24 22:54:29Z ottenhoff@longsight.com $
+* $Id: AuthzSectionsImpl.java 129684 2013-09-12 21:50:43Z matthew@longsight.com $
 *
 ***********************************************************************************
 *
@@ -23,6 +23,7 @@
 package org.sakaiproject.tool.gradebook.facades.sections;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -280,6 +281,8 @@ public class AuthzSectionsImpl implements Authz {
 				}
 			}
 		}
+		
+    	Collections.sort(viewableSections);
 		
 		return viewableSections;
 

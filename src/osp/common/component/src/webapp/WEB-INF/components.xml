@@ -1365,5 +1365,64 @@
       class="org.theospi.event.impl.EventServiceImpl">
    </bean>
 
+   <bean id="org.theospi.portfolio.worksite.mgt.impl.SiteGroupProviderListener"
+      class="org.theospi.portfolio.worksite.mgt.impl.SiteGroupProviderListener" init-method="init">
+      <property name="enableListener"><value>true</value></property>
+      <property name="entityManager">
+         <ref bean="org.sakaiproject.entity.api.EntityManager"/>
+      </property>
+      <property name="siteAssocManager">
+         <ref bean="org.sakaiproject.siteassociation.api.SiteAssocManager"/>
+      </property>
+      <property name="siteService">
+         <ref bean="org.sakaiproject.site.api.SiteService" />
+      </property>
+      <property name="authzGroupService">
+         <ref bean="org.sakaiproject.authz.api.AuthzGroupService" />
+      </property>
+   </bean>
+   
+   <bean id="org.theospi.portfolio.util.api.CacheUtil" singleton="true"
+      class="org.theospi.portfolio.util.CacheUtilImpl" init-method="init">
+      <property name="siteCache" ref="org.theospi.portfolio.util.api.CacheUtil.siteCache" />
+      <property name="userCache" ref="org.theospi.portfolio.util.api.CacheUtil.userCache" />
+      <property name="userSiteGroupCache" ref="org.theospi.portfolio.util.api.CacheUtil.userSiteGroupCache" />
+      <property name="siteService" ref="org.sakaiproject.site.api.SiteService" />
+      <property name="userDirectoryService" ref="org.sakaiproject.user.api.UserDirectoryService"/>
+   </bean>
+   
+   <bean id="org.theospi.portfolio.util.api.CacheUtil.siteCache" 
+      class="org.springframework.cache.ehcache.EhCacheFactoryBean">
+      <property name="cacheManager"><ref bean="org.sakaiproject.memory.api.MemoryService.cacheManager"/></property>
+      <property name="cacheName"><value>org.theospi.portfolio.util.api.CacheUtil.siteCache</value></property>
+      <property name="maxElementsInMemory" ><value>500</value></property>
+      <property name="diskPersistent" ><value>false</value></property>
+      <property name="eternal" ><value>false</value></property>
+      <property name="timeToLive" ><value>60</value></property>
+      <property name="timeToIdle" ><value>10</value></property>
+   </bean>
+   
+   <bean id="org.theospi.portfolio.util.api.CacheUtil.userCache" 
+      class="org.springframework.cache.ehcache.EhCacheFactoryBean">
+      <property name="cacheManager"><ref bean="org.sakaiproject.memory.api.MemoryService.cacheManager"/></property>
+      <property name="cacheName"><value>org.theospi.portfolio.util.api.CacheUtil.userCache</value></property>
+      <property name="maxElementsInMemory" ><value>500</value></property>
+      <property name="diskPersistent" ><value>false</value></property>
+      <property name="eternal" ><value>false</value></property>
+      <property name="timeToLive" ><value>60</value></property>
+      <property name="timeToIdle" ><value>10</value></property>
+   </bean>
+   
+   <bean id="org.theospi.portfolio.util.api.CacheUtil.userSiteGroupCache" 
+      class="org.springframework.cache.ehcache.EhCacheFactoryBean">
+      <property name="cacheManager"><ref bean="org.sakaiproject.memory.api.MemoryService.cacheManager"/></property>
+      <property name="cacheName"><value>org.theospi.portfolio.util.api.CacheUtil.userSiteGroupCache</value></property>
+      <property name="maxElementsInMemory" ><value>500</value></property>
+      <property name="diskPersistent" ><value>false</value></property>
+      <property name="eternal" ><value>false</value></property>
+      <property name="timeToLive" ><value>60</value></property>
+      <property name="timeToIdle" ><value>10</value></property>
+   </bean>
+   
 </beans>
 

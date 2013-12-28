@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/metaobj/trunk/metaobj-impl/api-impl/src/java/org/sakaiproject/metaobj/security/impl/sakai/SecurityBase.java $
- * $Id: SecurityBase.java 105079 2012-02-24 23:08:11Z ottenhoff@longsight.com $
+ * $Id: SecurityBase.java 130481 2013-10-15 17:36:54Z dsobiera@indiana.edu $
  ***********************************************************************************
  *
  * Copyright (c) 2004, 2005, 2006, 2008 The Sakai Foundation
@@ -70,7 +70,7 @@ public class SecurityBase {
          return null;
       }
       Id roleId = getOspiIdManager().getId(siteRealm.getId() + "/" + sakaiRole.getId());
-
+      
       //TODO using the same value for id and eid
       return new RoleWrapper(roleId, roleId, sakaiRole, siteRealm);
    }

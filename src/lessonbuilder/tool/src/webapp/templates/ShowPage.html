@@ -4,14 +4,16 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 <META HTTP-EQUIV="CACHE-CONTROL" CONTENT="NO-CACHE"/>
+<style rsf:id="iconstyle" type="text/css">
+</style>
 <script rsf:id="scr=portal-matter" type="text/javascript" language="JavaScript" src="/library/js/headscripts.js"></script>
 <script language="JavaScript" src="/lessonbuilder-tool/js/SakaiRSFWidgets.js" type="text/javascript" rsf:id="fckScript"></script>
 <script type="text/javascript" language="JavaScript" src="../js/rsf.js"></script>
+<link type="text/css" href="$context/css/simplepage-theme/jquery-ui-1.10.3.custom.css" rel="stylesheet" />	
 <link rsf:id="scr=portal-matter" href="/library/skin/tool_base.css" type="text/css" rel="stylesheet" media="all" />
 <link rsf:id="scr=portal-matter" href="/library/skin/default/tool.css" type="text/css" rel="stylesheet" media="all" />
 <link rel="stylesheet" rsf:id="scr=rewrite-url" href="../css/Simplepagetool.css" type="text/css" />
 <link rel="stylesheet" rsf:id="customCSS" type="text/css" />
-<link type="text/css" href="$context/css/simplepage-theme/jquery-ui-1.9.2.custom.css" rel="stylesheet" />	
 <title rsf:id="msg=simplepage.showpage"></title>
 
 <style type="text/css">
@@ -42,12 +44,13 @@ function resizeiframe(id) {
 <body rsf:id="scr=sakai-body">
 <!-- <script type="text/javascript" src="$context/js/jquery-1.4.2.min.js"></script> -->
 <script type="text/javascript" src="$context/js/jquery-1.8.3.min.js"></script>
-<script type="text/javascript" src="$context/js/jquery-ui-1.9.2.custom.min.js"></script>
+<script type="text/javascript" src="$context/js/jquery-ui-1.10.3.custom.min.js"></script>
 <script type="text/javascript" src="$context/js/jqBarGraph.1.1.customized.js"></script>
+<script type="text/javascript" src="$context/js/jquery.oembed.js"></script>
+<link rel="stylesheet" href="$context/js/jquery.oembed.css" type="text/css" />
 <script type="text/javascript" src="$context/js/peer-eval.js"></script>
 <script type="text/javascript" src="$context/js/hoverIntent.js"></script>
 <script type="text/javascript" src="$context/js/show-page.js"></script>
-<script type="text/javascript" src="$context/js/peer-eval.js"></script>
 <script type="text/javascript" src="$context/js/gradingAjax.js"></script>
 
 <a href="#" rsf:id="redirect-link" id="redirect-link"></a>
@@ -127,85 +130,115 @@ function resizeiframe(id) {
 		<div rsf:id="tool-bar:" class="navIntraTool" role="toolbar" style="z-index:100000" aria-labelledby="tool-bar::toolbar-label">
 			<h3 id="toolbar-label" rsf:id="msg=simplepage.toolbar" class="offscreen"></h3>
 			<ul id="toolbar" style="padding:2px; margin:0px">
-				<li><a href="#" rsf:id="add-text"><span rsf:id="msg.simplepage.text"></span></a></li>
-				<li><a href="#" rsf:id="add-multimedia" class="add-multimedia"><span rsf:id="msg.simplepage.multimedia"></span></a></li>
-				<li><a href="#" rsf:id="add-resource" class="add-resource"><span rsf:id="msg.simplepage.resource"></span></a></li>
-				<li><a href="#" rsf:id="subpage-link" class="subpage-link"><span rsf:id="msg=simplepage.subpage"></span></a></li>
-				<li><a href="#" rsf:id="question-link" class="question-link"><span rsf:id="msg=simplepage.questionLinkText"></span></a></li>
-				<li><a href="#" rsf:id="add-assignment"><span rsf:id="msg.simplepage.assignment"></span></a></li>
-				<li><a href="#" rsf:id="add-quiz"><span rsf:id="msg.simplepage.quiz"></span></a></li>
-
 				
-				<li class="dropdown" style="z-index:900">
+				<li class="dropdown" id="dropdownc" style="z-index:900">
+					<span>
+					    <a href="#" onclick="return false;">
+					        <span rsf:id="msg=simplepage.add-content" ></span>
+                            &nbsp;&nbsp;<img rsf:id="icondropc" src="/library/image/sakai/icon-dropdn.gif" style="height:15px"/>
+					    </a>				
+					</span>
+				</li>
+				<li class="dropdown" rsf:id="dropdown" id="dropdown" style="z-index:900">
 					<span>
 					    <a href="#" onclick="return false;">
 					        <span rsf:id="msg=simplepage.more-tools" ></span>
                             &nbsp;&nbsp;<img rsf:id="icondrop" src="/library/image/sakai/icon-dropdn.gif" style="height:15px"/>
-                        </a>				
-</span>
-				
+					    </a>				
+					</span>
 				</li>
                 
+		<li rsf:id="remove-student"><a href="#" role="menuitem" rsf:id="remove-page-student" class="remove-page"><span rsf:id="msg=simplepage.remove-page"></span></a></li>
+
                 <li  style="float:right">
                     <span rsf:id="title-descrip">
                     <a href="#" role="menuitem" rsf:id="edit-title" id="edit-title"><span><img src="/library/image/silk/cog.png"/></span><span class="skip" rsf:id="edit-title-text"></span></a>
                     </span>
                 </li>
                 
-                <li style="float:right">
-                    <span rsf:id="permissions-descrip">
-                        <a href="#" role="menuitem" rsf:id="permissions"></a>
-                    </span>
-                </li>
-                <li style="float:right"><a href="#" rsf:id="help" target="_blank"></a></li>
-                <li style="float:right"><a href="#" rsf:id="reorder"><span class="skip" rsf:id="msg.simplepage.reorder"></span></a></li>
+                <li style="float:right"><a href="#" role="menuitem" rsf:id="permissions"></a></li>
+                <li style="float:right"><a href="#" role="menuitem" rsf:id="help" target="_blank"></a></li>
+                <li style="float:right"><a href="#" role="menuitem" rsf:id="reorder"></a></li>
 			</ul>
 		</div>
 		
-		<div id="dropDownDiv" style="display:none" class="specialLink" role="menu" aria-label="More menu options">
-            <ul>
-                <li rsf:id="forum-descrip">
+		<div id="addContentDiv" style="display:none" class="dropDownDiv specialLink" role="menu" aria-label="Add content menu">
+		<ul>
+		  <li>
+		    <a role="menuitem" href="#" rsf:id="add-text" class="add-text-link" ><span rsf:id="msg.simplepage.text"></span></a>
+                    <div rsf:id="msg=simplepage.addtext-descrip"></div>
+		  </li>
+		  <li>
+		    <a role="menuitem" href="#" rsf:id="add-multimedia" class="add-multimedia"><span rsf:id="msg.simplepage.multimedia"></span></a>
+                    <div rsf:id="msg=simplepage.multimedia-descrip"></div>
+		  </li>
+		  <li>
+		    <a role="menuitem" href="#" rsf:id="add-resource" class="add-resource"><span rsf:id="msg.simplepage.resource"></span></a>
+                    <div rsf:id="msg=simplepage.resource-descrip"></div>
+		  </li>
+		  <li rsf:id="assignment-li">
+		    <a role="menuitem" href="#" rsf:id="add-assignment"><span rsf:id="msg.simplepage.assignment"></span></a>
+                    <div rsf:id="msg=simplepage.assignment-descrip"></div>
+		  </li>
+		  <li rsf:id="quiz-li">
+		    <a role="menuitem" href="#" rsf:id="add-quiz"><span rsf:id="msg.simplepage.quiz"></span></a>
+                    <div rsf:id="msg=simplepage.quiz-descrip"></div>
+		  </li>
+                  <li rsf:id="forum-li">
                     <a role="menuitem" class="add-forum-link" href="#" rsf:id="add-forum"><span rsf:id="msg.simplepage.forum"></span></a>
                     <div rsf:id="msg=simplepage.forum-descrip"></div>
-                </li>
-                <li rsf:id="addwebsite-descrip">
+                  </li>
+		  <li rsf:id="question-li">
+		    <a role="menuitem" href="#" rsf:id="question-link" class="question-link"><span rsf:id="msg=simplepage.questionLinkText"></span></a>
+                    <div rsf:id="msg=simplepage.question-descrip"></div>
+		  </li>
+                  <li rsf:id="student-li">
+                    <a href="#" role="menuitem" rsf:id="add-comments"><span rsf:id="msg.simplepage.comments"></span></a>
+                    <div rsf:id="msg=simplepage.comments-descrip"></div>
+                  </li>
+                  <li rsf:id="studentcontent-li">
+                    <a href="#" role="menuitem" rsf:id="add-content"><span rsf:id="msg.simplepage.add-student-content"></span></a>
+                    <div rsf:id="msg=simplepage.student-descrip"></div>
+                  </li>
+		  <li>
+		    <a role="menuitem" href="#" rsf:id="subpage-link" class="subpage-link"><span rsf:id="msg=simplepage.subpage"></span></a>
+                    <div rsf:id="msg=simplepage.subpage-descrip"></div>
+		  </li>
+                  <li rsf:id="addwebsite-li">
                     <a href="#" role="menuitem" rsf:id="add-website" class="add-website"><span rsf:id="msg.simplepage.website"></span></a>
                     <div rsf:id="msg=simplepage.addwebsite-descrip"></div>
-                </li>
-                    <!-- add new page -->
-                <li rsf:id="toppage-descrip">
-                    <a href="#" rsf:id="new-page" id="new-page"><span rsf:id="msg=simplepage.new-page"></span></a>
-                    <div role="menuitem"  rsf:id="msg=simplepage.newpage-descrip"></div>
-                </li>
-                <li>
-                    <a href="#" rsf:id="import-cc" id="import-cc"><span rsf:id="msg=simplepage.import_cc_button"></span></a>
-                    <!-- just a message, so will display when it should not-->
-                    <div role="menuitem" rsf:id="msg=simplepage.importcc-descrip"></div>
-                </li>
-                <li>
-                    <a href="#" rsf:id="export-cc" id="export-cc"><span rsf:id="msg=simplepage.export_cc"></span></a>
-                    <!-- just a message, so will display when it should not-->
-                    <div role="menuitem" rsf:id="msg=simplepage.exportcc-descrip"></div>
-                </li>
-                <li rsf:id="blti-descrip">
+                  </li>
+                  <li rsf:id="blti-li">
                     <a href="#" role="menuitem" rsf:id="add-blti"><span rsf:id="msg.simplepage.blti"></span></a>
                     <div rsf:id="msg=simplepage.blti-descrip"></div>
-                </li>
-                <li rsf:id="student-descrip">
-                    <a href="#" role="menuitem" rsf:id="add-comments"><span rsf:id="msg.simplepage.comments"></span></a>
-                    <!-- just a message, so will display when it should not-->
-                    <div rsf:id="msg=simplepage.comments-descrip"></div>
-                </li>
-                <li>
-                    <a href="#" role="menuitem" rsf:id="add-content"><span rsf:id="msg.simplepage.add-content"></span></a>
-                    <div rsf:id="msg=simplepage.student-descrip"></div>
-                </li>
-                <!-- remove page -->
-                <li rsf:id="remove-descrip">
-                    <a href="#" role="menuitem" rsf:id="remove-page" id="remove-page"><span rsf:id="msg=simplepage.remove-page"></span></a>
-                    <div rsf:id="msg=simplepage.remove-descrip"></div>
-                </li>
-            </ul>
+                  </li>
+
+		</ul>
+		</div>
+
+		<div rsf:id="moreDiv" id="moreDiv" style="display:none" class="dropDownDiv specialLink" role="menu" aria-label="More menu options">
+		  <ul>
+                    <!-- add new page -->
+                    <li>
+                      <a href="#" role="menuitem"  rsf:id="new-page" id="new-page"><span rsf:id="msg=simplepage.new-page"></span></a>
+                      <div rsf:id="msg=simplepage.newpage-descrip"></div>
+                    </li>
+                    <!-- remove page -->
+                    <li rsf:id="remove-li">
+                      <a href="#" role="menuitem" rsf:id="remove-page" id="remove-page" class="remove-page"><span rsf:id="msg=simplepage.remove-page"></span></a>
+                      <div rsf:id="msg=simplepage.remove-descrip"></div>
+                    </li>
+                    <li>
+                      <a href="#" role="menuitem" rsf:id="import-cc" id="import-cc"><span rsf:id="msg=simplepage.import_cc_button"></span></a>
+                      <!-- just a message, so will display when it should not-->
+                      <div rsf:id="msg=simplepage.importcc-descrip"></div>
+                    </li>
+                    <li>
+                      <a href="#" role="menuitem" rsf:id="export-cc" id="export-cc"><span rsf:id="msg=simplepage.export_cc"></span></a>
+                      <!-- just a message, so will display when it should not-->
+                      <div rsf:id="msg=simplepage.exportcc-descrip"></div>
+                    </li>
+		  </ul>
 		</div>
 
 		<div rsf:id="error-div" class="ui-widget" role="alert">
@@ -229,7 +262,7 @@ function resizeiframe(id) {
                                     <ul class="indent mainList" rsf:id="itemTable:" border="0" width="95%" style="z-index: 1;" role="list" aria-labelledby="itemContainer::maintablelabel">
                 <li rsf:id="item:" id="item" role="listitem" class="item">
                     <div rsf:id="edit-td" class="edit-col"><div><a href="#" class="usebutton edit-link" onclick="return false" rsf:id="edit-link"></a></div></div>
-                    <div rsf:id="item-td">
+                    <div rsf:id="item-td" class="right-col">
                         <div class="statusCol">
                             <img class="status-image icon-image" rsf:id="status" />
                         </div>
@@ -284,13 +317,16 @@ function resizeiframe(id) {
                       </div>
                     </div>
                     <div rsf:id="edittext-td" class="edit-col"><div><a href="#" class="usebutton itemLink" rsf:id="edit-link"></a></div></div>
-                    <div rsf:id="itemSpan">
+                    <div rsf:id="itemSpan" class="right-col">
                       <div rsf:id="item-groups-titles-text" class="item-group-titles"></div>
                       <div rsf:id="content" class="textbox"></div>
                     </div>
                     <div rsf:id="editmm-td" class="edit-col"><div><a href="#" class="usebutton multimedia-edit" onclick="return false" rsf:id="iframe-edit"></a></div></div>
-                    <div rsf:id="iframeSpan" class="hideOnDialog"><div>
+                    <div rsf:id="iframeSpan" class="hideOnDialog right-col"><div>
                       <div rsf:id="item-group-titles2" class="item-group-titles"></div>
+		      <div rsf:id="iframe-link-div">
+			<a rsf:id="iframe-link-link" href="#" target="_blank"></a>
+		      </div>
                       <iframe
                          name="SimplePageIFrame"
                          class="portletMainIframe multimedia"
@@ -302,6 +338,10 @@ function resizeiframe(id) {
                          rsf:id="iframe"
                              id="iframe"
                          ></iframe>
+                      <div rsf:id="mm-embed" class="multimedia"></div>
+		      <script rsf:id="mm-embed-script" type="text/javascript"></script>
+                      <a rsf:id="mm-oembed" href="#" class="oembed multimedia">Preview</a>
+
                       <div style="display:none" rsf:id="iframeHeight" class="mm-height"></div>
                       <div style="display:none" rsf:id="iframeWidth" class="mm-width"></div>
                       <div class="description" rsf:id="description5"></div>
@@ -310,7 +350,9 @@ function resizeiframe(id) {
                       <div style="display:none" rsf:id="item-groups2" class="item-groups"></div>
                       <span style="display:none" rsf:id="item-path" class="item-path"></span>
                       </div>
-                    </div>
+                  </div>
+
+                    <div rsf:id="notAvailableText"></div>
     
                     <div rsf:id="imageSpan"><div>
                         <div rsf:id="item-group-titles3" class="item-group-titles"></div>
@@ -326,7 +368,7 @@ function resizeiframe(id) {
                     </div>
 
                     <div rsf:id="youtube-td" class="edit-col"><div><a href="#" class="usebutton edit-youtube" onclick="return false" rsf:id="youtube-edit"></a></div></div>
-                    <div rsf:id="youtubeSpan"  id="youtubeSpan"  class="hideOnDialog"><div>
+                    <div rsf:id="youtubeSpan"  id="youtubeSpan"  class="hideOnDialog right-col"><div>
                         <div rsf:id="item-group-titles4" class="item-group-titles"></div>
                         
                         <iframe rsf:id="youtubeIFrame" frameborder="0"></iframe>
@@ -342,8 +384,11 @@ function resizeiframe(id) {
                     </div>
 
                     <div rsf:id="movie-td" class="edit-col"><div><a href="#" class="usebutton edit-movie" onclick="return false" rsf:id="edit-movie"></a></div></div>
-                    <div rsf:id="movieSpan" class="hideOnDialog"><div>
+                    <div rsf:id="movieSpan" class="hideOnDialog right-col"><div>
                         <div rsf:id="item-group-titles5" class="item-group-titles"></div>
+			<div rsf:id="movie-link-div">
+			  <a rsf:id="movie-link-link" href="#"></a>
+			</div>
 			<video rsf:id="h5video" controls="controls" class="html5video" style="display:none">
 			  <source rsf:id="h5source" />
 			</video>
@@ -364,6 +409,7 @@ function resizeiframe(id) {
                       <div style="display:none" rsf:id="movieHeight" class="mm-height"></div>
                       <div style="display:none" rsf:id="movieWidth" class="mm-width"></div>
                       <div class="description" rsf:id="description3"></div>
+                      <div style="display:none" rsf:id="prerequisite" class="movie-prerequisite"></div>
                       <div style="display:none" rsf:id="mimetype5" class="mm-type"></div>
                       <div style="display:none" rsf:id="current-item-id6" class="mm-itemid"></div>
                       <div style="display:none" rsf:id="item-groups5" class="item-groups"></div>
@@ -373,7 +419,7 @@ function resizeiframe(id) {
 
                     <div rsf:id="comments-td" class="edit-col"><div><a href="#" class="usebutton edit-comments" onclick="return false" rsf:id="edit-comments"></a></div></div>
                     
-                    <div rsf:id="commentsSpan" class="commentsCell">
+                    <div rsf:id="commentsSpan" class="commentsCell right-col">
                             <p rsf:id="missing-prereqs" class="instruction"></p>
                         <div class="commentsDiv" rsf:id="commentsDiv">
                             <div rsf:id="item-group-titles6" class="item-group-titles"></div>
@@ -416,7 +462,7 @@ function resizeiframe(id) {
                     
                     <div rsf:id="student-td" class="edit-col"><div><a href="#" class="usebutton edit-student" onclick="return false" rsf:id="edit-student"></a></div></div>
                     
-                    <div rsf:id="studentSpan">
+                    <div rsf:id="studentSpan" class="right-col">
                             <span rsf:id="student-missing-prereqs"></span>
                         <div class="studentDiv" rsf:id="studentDiv">
                             <div rsf:id="item-group-titles7" class="item-group-titles"></div>
@@ -478,7 +524,7 @@ function resizeiframe(id) {
                     </div>
                     
 		    <div rsf:id="peerReviewRubricStudent-edit" class="edit-col"></div>
-		    <div rsf:id="peerReviewRubricStudent" style="width:100%;" colspan="2">
+		    <div rsf:id="peerReviewRubricStudent" class="right-col"  style="width:100%;" colspan="2">
 		      <div class="add-peereval-button">
 			<a rsf:id="add-peereval-link" class="usebutton switchLink" onclick=""><span style="font-weight:normal; color:#555" rsf:id="add-peereval-text"></span></a>
 		      </div>
@@ -519,7 +565,7 @@ function resizeiframe(id) {
 
                     <div rsf:id="question-td" class="edit-col"><div><a href="#" class="usebutton edit-question" onclick="return false" rsf:id="edit-question"></a></div></div>
                     
-                    <div rsf:id="questionSpan">
+                    <div rsf:id="questionSpan" class="right-col">
                         <div class="questionDiv" rsf:id="questionDiv">
                             <div class="statusCol">
                                 <img class="status-image icon-image" rsf:id="questionStatus" />
@@ -666,6 +712,15 @@ function resizeiframe(id) {
 			  <p rsf:id="msg=simplepage.missing-question-text" id="simplepage.missing-question-text"></p>
 			  <p rsf:id="msg=simplepage.question-need-2" id="simplepage.question-need-2"></p>
 			  <p rsf:id="msg=simplepage.question-need-1" id="simplepage.question-need-1"></p>
+			  <p rsf:id="msg=simplepage.httphttps" id="simplepage.httphttps"></p>
+			  <p rsf:id="msg=simplepage.edit" id="simplepage.edit"></p>
+			  <p rsf:id="msg=simplepage.addLink_label_add" id="simplepage.addLink_label_add"></p>
+			  <p rsf:id="msg=simplepage.addLink_label_add_or" id="simplepage.addLink_label_add_or"></p>
+			  <p rsf:id="msg=simplepage.deletecommentsubmissionexist" id="simplepage.deletecommentsubmissionexist"></p>
+			  <p rsf:id="msg=simplepage.deletestudentsubmissionexist" id="simplepage.deletestudentsubmissionexist"></p>
+			  <p rsf:id="msg=simplepage.delete" id="simplepage.delete"></p>
+			  <p rsf:id="msg=simplepage.cancel_message" id="simplepage.cancel_message"></p>
+
 			</div>
 
 			<div id="subpage-dialog" rsf:id="subpage-dialog">
@@ -840,6 +895,12 @@ function resizeiframe(id) {
 			</div>
 
 			<div id="add-multimedia-dialog" rsf:id="add-multimedia-dialog">
+				<div class="ui-widget" id="mm-error-container">
+					<div class="ui-state-error ui-corner-all" style="padding: 0 .7em;"> 
+						<p><span class="ui-icon ui-icon-alert" style="float: left; margin-right: .3em;"></span> 
+						<strong rsf:id="msg=simplepage.error_colon"></strong> <span id="mm-error"></span></p>
+					</div>
+                </div>
                 <form action="#" rsf:id="add-multimedia-form" method="post" enctype="multipart/form-data">
                     <div class="border instructionPanel">
                         <p class="instruction" rsf:id="msg=simplepage.add_file_instructions"></p>
@@ -862,21 +923,47 @@ function resizeiframe(id) {
                         </p>
 
                         <p class="required mm-url-section">
-                            <label rsf:id="msg=simplepage.addLink_label_add_or" for="mm-url">URL</label>
+                            <label id="addLink_label" rsf:id="msg=simplepage.addLink_label_add_or" for="mm-url">URL</label>
                             <input type="text" name="mm-url" rsf:id="mm-url" id="mm-url" style="width:99%" class="edit-multimedia-input" />
                         </p>
 
+			<div id="mm-test-embed-results" class="mm-test-text">
+			  <div id="mm-test-embed-contents" rsf:id="msg=simplepage.mm-test-embed"></div>
+			</div>
+
+			<div id="mm-test-addedhttps" class="mm-test-text">
+			  <span rsf:id="msg=simplepage.mm-test-addedhttp-1"></span><span id='mm-test-added-url'></span><span rsf:id="simplepage.mm-test-addedhttp-2"></span>
+			</div>
+
+			<div id="mm-test-oembed-results" class="mm-test-text">
+			  <p class="mm-test-text-p" rsf:id="msg=simplepage.mm-test-oembed">
+			  </p>
+			  <a id="mm-test-prototype" href="#"> test image </a>
+			</div>
+
+			<div id="mm-test-iframe-results" class="mm-test-text">
+			  <p class="mm-test-text-p" rsf:id="msg=simplepage.mm-test-iframe">
+			  </p>
+			  <iframe id="mm-test-iframe-iframe"></iframe>
+			</div>
+
+			<input type="button" class="bold" id="mm-test-tryother" value="Try other alternative"/>
+                        <input class="bold" type="submit" id="mm-test" rsf:id="mm-test" />
                         <input class="bold" type="submit" id="mm-add-item" rsf:id="mm-add-item" />
+			<input type="button" class="bold mm-test-reset" value="Start over"/>
                         <input type="submit" rsf:id="mm-cancel" onclick="closeAddMultimediaDialog(); return false" />
                         <input type="hidden" rsf:id="mm-item-id" id="mm-item-id" />
                         <input type="hidden" rsf:id="mm-is-mm" id="mm-is-mm" />
+                        <input type="hidden" rsf:id="mm-display-type" id="mm-display-type" />
+                        <input type="hidden" rsf:id="mm-mime-type" id="mm-mime-type" />
                         <input type="hidden" rsf:id="mm-is-website" id="mm-is-website" />
+		        <p id="checkingwithhost" rsf:id="msg=simplepage.checkingwithhost"></p>
                     </div>
                 </form>			    
 			</div>
 			
 
-			<div id="edit-multimedia-dialog" rsf:id="edit-multimedia-dialog">
+            <div id="edit-multimedia-dialog" rsf:id="edit-multimedia-dialog">
                 <form action="#" rsf:id="edit-multimedia-form" class="controlsPanel">
                     <div class="">
                         <p class="shorttext required">
@@ -896,7 +983,7 @@ function resizeiframe(id) {
                             <input type="text" name="alt" rsf:id="alt" id="alt" class="edit-multimedia-input wideinput" /><br />
                         </p>
                         
-                        <p class="shorttext required">
+                        <p class="shorttext required mm-path">
                             <label rsf:id="msg=simplepage.path" for="path">Path</label>
                             <span id="mm-path" class="instruction"></span><br />
                         </p>
@@ -920,6 +1007,7 @@ function resizeiframe(id) {
                         <input type="submit" class="deleteButton" rsf:id="delete-multimedia-item" />
                     </div>
                         
+<!--
                     <div class="expert" id="expert-multimedia-toggle-div">
                       <p style="margin-top:0px; margin-bottom:0px">
                         <a href="#" id="expert-multimedia-toggle" rsf:id="msg=simplepage.expert_toggle"></a>
@@ -934,6 +1022,7 @@ function resizeiframe(id) {
                       <label rsf:id="msg=simplepage.mimetype_label" for="mimetype"></label><br />
                       <input type="text" name="mimetype" rsf:id="mimetype" id="mimetype" class="edit-multimedia-input wideinput" /><br />
                     </div>
+-->
                 </form>
 			</div>
 			
@@ -1126,9 +1215,11 @@ function resizeiframe(id) {
 
                 </form>
                 
-                <p class="shorttext required" style="margin-top: 1em; margin-bottom:1em">
-                    <a href="#" id="subpage-choose" rsf:id="new-page-choose" ><span rsf:id="msg=simplepage.choose_existing_page"></span></a>
-                </p>
+                <p class="shorttext required" style="margin-top: 1em">
+                    <a href="#" id="subpage-choose" rsf:id="new-page-choose" ><span rsf:id="msg=simplepage.lm_existing_page"></span></a></p>
+		<div style="margin-left:1em; margin-bottom:1em">
+                    <span rsf:id="msg=simplepage.lm-existing_explanation"></span>
+		</div>
             </div>
 
             <div id="remove-page-dialog" rsf:id="remove-page-dialog">
@@ -1180,7 +1271,7 @@ function resizeiframe(id) {
                 </form>
 			</div>
 			
-			<div id="movie-dialog" rsf:id="movie-dialog">
+            <div id="movie-dialog" rsf:id="movie-dialog">
 				<div class="ui-widget" id="movie-error-container">
 					<div class="ui-state-error ui-corner-all" style="padding: 0 .7em;"> 
 						<p><span class="ui-icon ui-icon-alert" style="float: left; margin-right: .3em;"></span> 
@@ -1215,6 +1306,10 @@ function resizeiframe(id) {
 						<p id="editgroups-movie" class="edit-group">
 						  <a href="#"><span rsf:id="msg=simplepage.edit-group"></span></a>
 						</p>
+                        <p class="checkbox">
+                            <input type="checkbox" name="question-prerequisite" id="question-prerequisite" rsf:id="question-prerequisite" />
+                            <label for="question-prerequisite"><span rsf:id="msg=simplepage.prerequisites_label"></span></label>
+                        </p>
                        <p class="act">  
                             <input class="bold" type="submit" onclick="event.returnValue = checkMovieForm($('#movie-width').val().trim(), $('#movie-height').val().trim()); return checkMovieForm($('#movie-width').val().trim(), $('#movie-height').val().trim());" id="update-movie" rsf:id="update-movie" />
                             <input type="submit" rsf:id="movie-cancel" onclick="closeMovieDialog(); return false" />
@@ -1270,7 +1365,7 @@ function resizeiframe(id) {
                     <p class="act">
                         <input class="bold" type="submit" onclick="event.returnValue = checkCommentsForm(); return checkCommentsForm();" id="update-comments" rsf:id="update-comments" />
                         <input type="submit" rsf:id="cancel-comments" onclick="closeCommentsDialog(); return false" />
-                        <input type="submit" class="deleteButton" rsf:id="delete-comments-item" />
+                        <input type="submit" class="deleteButton" id="delete-comments-item"  rsf:id="delete-comments-item" />
                     </p>
                 </form>
 			</div>
@@ -1309,6 +1404,11 @@ function resizeiframe(id) {
 			  </div>
 			</div>
 
+			<div id="delete-confirm" class="controlsPanel">
+			  <p><span class="ui-icon ui-icon-alert" style="float:left; margin:0 7px 0 0;"></span>
+			    <p id="delete-confirm-message">Delete ok?</p></p>
+			</div>
+	
 			<div id="student-dialog" rsf:id="student-dialog">
                 <form action="#" rsf:id="student-form" class="controlsPanel">
 
@@ -1424,7 +1524,7 @@ function resizeiframe(id) {
                     <div class="act">
                         <input class="bold" type="submit" onclick="return true;" id="update-student" rsf:id="update-student" />
                         <input type="submit" rsf:id="cancel-student" onclick="closeStudentDialog(); return false" />
-                        <input type="submit" class="deleteButton" rsf:id="delete-student-item" />
+                        <input type="submit" class="deleteButton" id="delete-student-item" rsf:id="delete-student-item" />
                     </div>
                 </form>
 			</div>

@@ -3,6 +3,10 @@ var lessonBuilderAnimationLocked = false;
 var oldloc;
 var requirementType = 0;
 var importccactive = false;
+var insist = false;
+var delbutton;
+var mm_testing = 0;
+var editrow;
 
 // in case user includes the URL of a site that replaces top,
 // give them a way out. Handler is set up in the html file.
@@ -48,6 +52,12 @@ $(function() {
 //	}else {
 		//$(".evolved-box").hide();
 	//}
+
+        $("a.oembed").each(function(){
+                var width = $(this).attr("maxWidth");
+                var height = $(this).attr("maxHeight");
+                $(this).oembed(null, {maxWidth: width, maxHeight: height});
+            });
 
 	// We don't need to run all of this javascript if the user isn't an admin
 	if($("#subpage-dialog").length > 0) {
@@ -164,6 +174,20 @@ $(function() {
 			draggable: false
 		});
 		
+		$('#delete-confirm').dialog({
+			autoOpen: false,
+			resizable: false,
+			    modal: true,
+			dialogClass: "no-close",
+			    buttons: [{text:msg("simplepage.delete"),
+				          click: function() {
+				          insist = true;
+				          delbutton.click();
+				      }},{text:msg("simplepage.cancel_message"),
+				          click: function() {
+				          $( this ).dialog( "close" );}}
+				]});
+
 		/* RU Rubrics ********************************************* */
 		$("#rubric-title").append($("#peer-eval-title-cloneable input"));
 		blankRubricTemplate=$(".peer-eval-create-form").html();
@@ -189,7 +213,7 @@ $(function() {
 		$("#select-resource-group").hide();
 
 		$('.subpage-link').click(function(){
-			closeDropdown();
+			closeDropdowns();
 			var position =  $(this).position();
 			$("#subpage-dialog").dialog("option", "position", [position.left, position.top]);
 			oldloc = $(this);
@@ -199,7 +223,7 @@ $(function() {
 		});
 
 		$('#edit-title').click(function(){
-			closeDropdown();
+			closeDropdowns();
 			$('#edit-title-error-container').hide();
 			var position =  $(this).position();
 			$("#edit-title-dialog").dialog("option", "position", [position.left, position.top]);
@@ -220,7 +244,7 @@ $(function() {
 		    });
 
 		$('#import-cc').click(function(){
-			closeDropdown();
+			closeDropdowns();
 			var position =  $(this).position();
 			$("#import-cc-dialog").dialog("option", "position", [position.left, position.top]);
 			oldloc = $(".dropdown a");
@@ -231,7 +255,7 @@ $(function() {
 		});
 		
 		$('#export-cc').click(function(){
-			closeDropdown();
+			closeDropdowns();
 			var position =  $(this).position();
 			$("#export-cc-dialog").dialog("option", "position", [position.left, position.top]);
 			oldloc = $(".dropdown a");
@@ -265,7 +289,120 @@ $(function() {
 			$('#loading').show();
 			return true;
 	    	});
+
+	    // This code must be read together with the SimplePageItem.MULTIMEDIA
+	    // display code in ShowPageProducer.java (To find it search for
+	    // multimediaDisplayType) and with the code in SimplePageBean that
+	    // handles the submit from this dialog, addMultimedia.
+
+
+		$('#mm-add-item').click(function() {
+			// mm-display-type is 1 -- embed code, 2 -- av type, 3 -- oembed, 4 -- iframe
+			
+			var url = $('#mm-url').val();
+			if (url != '' && $('#mm-is-mm').val() == 'true') {
+			    if (mm_testing == 0) {
+				// initial submit for URL. see what we've got
+				if (url.indexOf('<') >= 0) {
+				    // < in the field, it's embed. just show it after filtering
+				    $('#mm-test-embed-results').show();
+				    $('#mm-test-embed-contents').html(filterHtml(url));
+				    mm_testing = 3;
+				    $('.mm-test-reset').show();
+				    $('#mm-display-type').val(1);
+				    return false;
+				}				
+				// not embed. Treat as a url
+				// first normalize it
+
+				if (document.URL.indexOf("https:") == 0 && url.trim().match('^http:')) {
+				    // using https: to display and URL starts with http, use warning
+				    alert('Please use URLs starting with https:. URLs starting with http: will not work with some browsers, e.g. Firefox.');
+				}
+				url = url.trim();
+				if (!url.match('^http:') && !url.match('^https:') && !url.match('^/')) {
+				    // assume it's a hostname or hostname/path
+				    url = 'https://' + url;
+				    $('#mm-url').val(url);
+				    $('#mm-test-addedhttps').show();
+				    $('#mm-test-added-url').text(url);
+				}
+
+				// see what we've got
+				mimeType = getMimeType(url);
+				$('#mm-mime-type').val(mimeType);
+
+				// for video or audio MIME types, the normal ShowPage code can handle it.
+
+				// youtube returns application/youtube, so it gets handled here
+				if (!mimeType.match('^text/html') && !mimeType.match('^application/xhtml+xml')) {
+				    $('#mm-display-type').val(2);
+				    // just submit
+				    return true;
+				}
+
+				// not video or audio, try oembed. If that doesn't work, IFRAME
+				
+				// create the test link from prototype, because oembed will remove it
+				var testlink = $('#mm-test-prototype').clone();
+				$('#mm-test-prototype').after(testlink);
+				testlink.attr('href', url);
+				$('#mm-test-oembed-results').show();
+				testlink.show();
+				testlink.oembed(null, {maxWidth:300});
+	   
+				mm_testing = 1;
+				$('#mm-display-type').val(3);
+				$('.mm-test-reset').show();
+				$('#mm-test-tryother').show();
+				return false;
+			    }
+			    // for a URL we always return when mm_testing = 0
+			    // with mm_testing = 3, we handle submit normally
+			    // with mm_testing = 1, we handle submit normally, but
+			    //  there's another button to try the other alterantive
+
+			}
+			// actually do the submit
+			return true;
+	    	});
+
+		// for a normal url, after we show oembed, this
+		// button lets us try an iframe
+		$('#mm-test-tryother').click(function() {
+			var url = $('#mm-url').val();
+			if (mm_testing == 1) {
+			    $('#mm-test-oembed-results').hide();
+			    $('#mm-test-iframe-results').show();
+			    $('#mm-test-iframe-iframe').attr('src', url);
+			    mm_testing = 3;
+			    $('#mm-display-type').val(4);
+			    // try other already shown
+			    // start over already shown
+			} else {
+			    // go back to oembed
+			    var testlink = $('#mm-test-prototype').clone();
+			    $('#mm-test-oembed-results .oembedall-container').remove();
+			    $('#mm-test-iframe-results').hide();
+			    $('#mm-test-prototype').after(testlink);
+			    testlink.attr('href', url);
+			    $('#mm-test-oembed-results').show();
+			    testlink.show();
+			    testlink.oembed(null, {maxWidth:300});
+			    $('#mm-display-type').val(3);
+	   
+			    mm_testing = 1;
+			    // try other and start over already shown
+			}
+			return false;
+		    });
 		
+		$('.mm-test-reset').click(function() {
+			mm_test_reset();
+			return false;
+		    });
+		
+
 		$('#releaseDiv').click(function(){
 			$('#edit-title-dialog').height(550);
 	    	});
@@ -282,7 +419,7 @@ $(function() {
 	    });
 
 		$('#new-page').click(function(){
-			closeDropdown();
+			closeDropdowns();
 			var position =  $(this).position();
 			$("#new-page-dialog").dialog("option", "position", [position.left, position.top]);
 			oldloc = $(".dropdown a");
@@ -291,8 +428,8 @@ $(function() {
 			return false;
 		});
 
-		$('#remove-page').click(function(){
-			closeDropdown();
+		$('.remove-page').click(function(){
+			closeDropdowns();
 			var position =  $(this).position();
 			$("#remove-page-dialog").dialog("option", "position", [position.left, position.top]);
 			// rsf puts the URL on the non-existent src attribute
@@ -330,7 +467,7 @@ $(function() {
 		}
 		
 		$(".edit-youtube").click(function(){
-			closeDropdown();
+			closeDropdowns();
             $('li').removeClass('editInProgress');
 			$("#editgroups-youtube").after($("#grouplist"));
 			$("#grouplist").hide();
@@ -372,8 +509,8 @@ $(function() {
 		    });
 
 		$('.edit-movie').click(function(){
-			closeDropdown();
-            $('li').removeClass('editInProgress');
+			closeDropdowns();
+			$('li').removeClass('editInProgress');
 	                //var object = this.parentNode.parentNode.childNodes[3].childNodes[1];                                                                
 			$("#expert-movie").hide();
 			$("#expert-movie-toggle-div").show();
@@ -403,10 +540,15 @@ $(function() {
 			$("#movie-height").val(row.find(".mm-height").text());
 			$("#movie-width").val(row.find(".mm-width").text());
 			$("#description3").val(row.find(".description").text());
+			if(row.find(".movie-prerequisite").text() === 'true') {
+			    $('#question-prerequisite').attr('checked','checked');
+			} else {
+			    $('#question-prerequisite').removeAttr('checked');
+			}
 			$("#mimetype4").val(row.find(".mm-type").text());
 			var position =  row.position();
-            $('.edit-col').addClass('edit-colHidden');
-            $(this).closest('li').addClass('editInProgress');
+			$('.edit-col').addClass('edit-colHidden');
+			$(this).closest('li').addClass('editInProgress');
 			$("#movie-dialog").dialog("option", "position", [position.left, position.top]);
 			oldloc = $(this);
 			$("#movie-dialog").dialog('open');
@@ -416,13 +558,14 @@ $(function() {
 		});
 		
 		$(".edit-comments").click(function(){
-			closeDropdown();
-            $('li').removeClass('editInProgress');
+			closeDropdowns();
+			$('li').removeClass('editInProgress');
 			$("#editgroups-comments").after($("#grouplist"));
 			$("#grouplist").hide();
 			$("#editgroups-comments").hide();
 
 			var row = $(this).parent().parent().parent();
+			editrow = row;
 
 			var groups = row.find(".item-groups").text();
 			var grouplist = $("#grouplist");
@@ -490,7 +633,7 @@ $(function() {
 		    });
 
 		$(".edit-student").click(function(){
-			closeDropdown();
+			closeDropdowns();
             $('li').removeClass('editInProgress');
 			$("#editgroups-student").after($("#grouplist"));
 			$("#grouplist").hide();
@@ -498,6 +641,7 @@ $(function() {
 			$("#student-group-show").hide();
 
 			var row = $(this).parent().parent().parent();
+			editrow = row;
 
 			var groups = row.find(".item-groups").text();
 			var grouplist = $("#grouplist");
@@ -754,7 +898,7 @@ $(function() {
 		});
 		
 		$('.question-link').click(function(){
-			closeDropdown();
+			closeDropdowns();
 			$('li').removeClass('editInProgress');
 			var position =  $(this).position();
 
@@ -778,6 +922,7 @@ $(function() {
 			
 			$("#question-correct-text").val("");
 			$("#question-incorrect-text").val("");
+			$("#update-question").attr("value", msg("simplepage.save_message"));
 			
 			$("#question-dialog").dialog("option", "position", [position.left, position.top]);
 			oldloc = $(this);
@@ -789,7 +934,7 @@ $(function() {
 		$("#question-graded").click(checkQuestionGradedForm);
 		
 		$(".edit-question").click(function(){
-			closeDropdown();
+			closeDropdowns();
 			
 			var row = $(this).parent().parent().parent();
 			
@@ -911,6 +1056,7 @@ $(function() {
 			$('.edit-col').addClass('edit-colHidden');
 			$(this).closest('li').addClass('editInProgress');
 			$('#question-error-container').hide();
+			$("#update-question").attr("value", msg("simplepage.edit"));
 
 			$("#question-dialog").dialog("option", "position", [position.left, position.top]);
 			oldloc = $(this);
@@ -921,6 +1067,9 @@ $(function() {
 		
 		$('#change-resource-movie').click(function(){
 			closeMovieDialog();
+			mm_test_reset();
+			$("#addLink_label").text(msg("simplepage.addLink_label_add_or"));
+
 			$("#mm-item-id").val($("#movieEditId").val());
 			$("#mm-is-mm").val('true');
 			var href=$("#mm-choose").attr("href");
@@ -933,6 +1082,9 @@ $(function() {
 			$(".mm-additional").show();
 			$(".mm-additional-website").hide();
 			$(".mm-url-section").show();
+			$("#checkingwithhost").hide();
+			$("#mm-error-container").hide();
+			insist = false;
 			$("#add-multimedia-dialog").dialog('open');
 			checksize($("#add-multimedia-dialog"));
 			// originally I thought it was confusing to start with the focus on some
@@ -951,7 +1103,7 @@ $(function() {
 		});
 		
 		$(".edit-link").click(function(){
-			closeDropdown();
+			closeDropdowns();
             $('li').removeClass('editInProgress');
             $('.edit-col').addClass('edit-colHidden');
             $(this).closest('li').addClass('editInProgress');
@@ -1239,6 +1391,9 @@ $(function() {
 
 		$('#change-resource').click(function(){
 			closeEditItemDialog();
+			mm_test_reset();
+			$("#addLink_label").text(msg("simplepage.addLink_label_add"));
+
 			$("#mm-item-id").val($("#item-id").val());
 			$("#mm-is-mm").val('false');
 			var href=$("#mm-choose").attr("href");
@@ -1250,6 +1405,9 @@ $(function() {
 			$(".mm-additional").show();
 			$(".mm-additional-website").hide();
 			$(".mm-url-section").show();
+			$("#checkingwithhost").hide();
+			$("#mm-error-container").hide();
+			insist = false;
 			$("#add-multimedia-dialog").dialog('open');
 			checksize($("#add-multimedia-dialog"));
 			//$('.edit-multimedia-input').blur();
@@ -1258,7 +1416,11 @@ $(function() {
 		});
 
 		$(".add-multimedia").click(function(){
-			closeDropdown();
+			closeDropdowns();
+
+			mm_test_reset();
+			$("#addLink_label").text(msg("simplepage.addLink_label_add_or"));
+
 			$("#mm-item-id").val(-1);
 			$("#mm-is-mm").val('true');
 			$("#mm-is-website").val('false');
@@ -1272,6 +1434,9 @@ $(function() {
 			$(".mm-additional").show();
 			$(".mm-additional-website").hide();
 			$(".mm-url-section").show();
+			$("#checkingwithhost").hide();
+			$("#mm-error-container").hide();
+			insist = false;
 			oldloc = $(this);
 			$("#add-multimedia-dialog").dialog('open');
 			checksize($("#add-multimedia-dialog"));
@@ -1281,7 +1446,10 @@ $(function() {
 		});
 
 		$(".add-resource").click(function(){
-			closeDropdown();
+			closeDropdowns();
+			mm_test_reset();
+			$("#addLink_label").text(msg("simplepage.addLink_label_add"));
+
 			$("#mm-item-id").val(-1);
 			$("#mm-is-mm").val('false');
 			$("#mm-is-website").val('false');
@@ -1294,6 +1462,9 @@ $(function() {
 			$(".mm-additional").hide();
 			$(".mm-additional-website").hide();
 			$(".mm-url-section").show();
+			$("#checkingwithhost").hide();
+			$("#mm-error-container").hide();
+			insist = false;
 			oldloc = $(this);
 			$("#add-multimedia-dialog").dialog('open');
 			checksize($("#add-multimedia-dialog"));
@@ -1302,7 +1473,10 @@ $(function() {
 		});
 
 		$(".add-website").click(function(){
-			closeDropdown();
+			closeDropdowns();
+			mm_test_reset();
+			$("#addLink_label").text(msg("simplepage.addLink_label_add"));
+
 			$("#mm-item-id").val(-1);
 			$("#mm-is-mm").val('false');
 			$("#mm-is-website").val('true');
@@ -1316,6 +1490,9 @@ $(function() {
 			$(".mm-additional-website").show();
 			$(".mm-url-section").hide();
 			oldloc = $(".dropdown a");
+			$("#checkingwithhost").hide();
+			$("#mm-error-container").hide();
+			insist = false;
 			$("#add-multimedia-dialog").dialog('open');
 			checksize($("#add-multimedia-dialog"));
 			//$('.edit-multimedia-input').blur();
@@ -1324,8 +1501,9 @@ $(function() {
 		});
 
 		$(".multimedia-edit").click(function(){
-			closeDropdown();
-            $('li').removeClass('editInProgress');
+			closeDropdowns();
+			mm_test_reset();
+			$('li').removeClass('editInProgress');
 			$("#expert-multimedia").hide();
 			$("#expert-multimedia-toggle-div").show();
 			$("#editgroups-mm").after($("#grouplist"));
@@ -1334,9 +1512,15 @@ $(function() {
 
 			var row = $(this).parent().parent().parent();
 
-			row.find(".path-url").attr("href", row.find(".multimedia").attr("src"));
-			$("#mm-path").html(row.find(".item-path").html());
-			
+			var itemPath = row.find(".item-path");
+			if (itemPath != null && itemPath.size() > 0) {
+			    row.find(".path-url").attr("href", row.find(".multimedia").attr("src"));
+			    $("#mm-path").html(itemPath.html());
+			    $(".mm-path").show();
+			} else {
+			    $(".mm-path").hide();
+			}
+
 			var groups = row.find(".item-groups").text();
 			var grouplist = $("#grouplist");
 			if ($('#grouplist input').size() > 0) {
@@ -1351,16 +1535,26 @@ $(function() {
 			$("#width").val(row.find(".mm-width").text());
 			$("#description2").val(row.find(".description").text());
 			$("#mimetype").val(row.find(".mm-type").text());
-			if (row.find(".multimedia").get(0).nodeName.toLowerCase() == "img") {
+			var tagname = row.find(".multimedia").get(0).nodeName.toLowerCase();
+			if (tagname == "img") {
 			    $("#alt").val(row.find(".multimedia").attr("alt"));
 			    $("#alt").parent().show();
-			    $("#tagnameused").html(msg("simplepage.tag_img"));
+			    // $("#tagnameused").html(msg("simplepage.tag_img"));
 			    $("#iframe-note").hide();
-		        } else {
+			    //		        } else {
+			    //			    $("#alt").parent().hide();
+			    //			    $("#tagnameused").html(msg("simplepage.tag_iframe"));
+			    //			    $("#iframe-note").show();
+			    //}
+			} else if (tagname == "iframe") {
 			    $("#alt").parent().hide();
-			    $("#tagnameused").html(msg("simplepage.tag_iframe"));
+			    // $("#tagnameused").html(msg("simplepage.tag_iframe"));
 			    $("#iframe-note").show();
+			} else {
+			    $("#alt").parent().hide();
+			    $("#iframe-note").hide();
 			}
+
 			$("#change-resource-mm").attr("href", 
 			     $("#change-resource-mm").attr("href").replace("pageItemId=-1", 
 				   "pageItemId=" + row.find(".mm-itemid").text()));
@@ -1391,6 +1585,9 @@ $(function() {
 
 		$('#change-resource-mm').click(function(){
 			closeMultimediaEditDialog();
+			mm_test_reset();
+			$("#addLink_label").text(msg("simplepage.addLink_label_add_or"));
+
 			$("#mm-item-id").val($("#multimedia-item-id").val());
 			$("#mm-is-mm").val('true');
 			var href=$("#mm-choose").attr("href");
@@ -1402,6 +1599,9 @@ $(function() {
 			$(".mm-additional").show();
 			$(".mm-additional-website").hide();
 			$(".mm-url-section").show();
+			$("#checkingwithhost").hide();
+			$("#mm-error-container").hide();
+			insist = false;
 			$("#add-multimedia-dialog").dialog('open');
 			checksize($("#add-multimedia-dialog"));
 			//$('.edit-multimedia-input').blur();
@@ -1417,6 +1617,38 @@ $(function() {
 			setUpRequirements();
 		});
 		
+		function delete_confirm(event, message) {
+			if (insist) {
+			    insist = false;
+			    $("#delete-confirm").dialog('close');
+			    return true;
+			}
+			insist = false;
+			$("#delete-confirm-message").text(message);
+			$("#delete-confirm").dialog("option", "position", [event.pageX, event.pageY-100]);
+			$("#delete-confirm").dialog('open');
+			return false;
+		    };
+
+		$('#delete-comments-item').click(function(event) {
+			// edit row is set by edit-comments. We're current in the dialog. need
+			// to look in the actual page row.
+			if (editrow.find('.commentDiv').size() == 0)
+			    return true;
+			delbutton = $('#delete-comments-item');
+			return delete_confirm(event, msg("simplepage.deletecommentsubmissionexist"));
+		    });
+
+		$('#delete-student-item').click(function(event) {
+			// edit row is set by edit-comments. We're current in the dialog. need
+			// to look in the actual page row.
+			if (editrow.find('.studentLink').size() == 0)
+			    return true;
+			delbutton = $('#delete-student-item');
+			return delete_confirm(event, msg("simplepage.deletestudentsubmissionexist"));
+		    });
+
+
 		$('body').bind('dialogopen', function(event) {
 			hideMultimedia();
 		});
@@ -1517,8 +1749,8 @@ $(function() {
 			
 			$(this).find("span").text($(this).parent().find(".show-poll").text());
 		}
-		
-        resizeFrame('grow')
+
+        resizeFrame('grow');
 	});
 	
 	function submitgrading(item) {
@@ -1592,17 +1824,33 @@ $(function() {
 	var megaConfig = {	
 			interval: 200,
 			sensitivity: 7,
-			over: addHighlight,
+			over: buttonAddHighlight,
 			timeout: 700,
 			out: buttonRemoveHighlight
 	};
 	
+	var megaConfigc = {	
+			interval: 200,
+			sensitivity: 7,
+			over: buttonAddHighlightc,
+			timeout: 700,
+			out: buttonRemoveHighlightc
+	};
+
 	var dropdownConfig = {	
 			interval: 0,
 			sensitivity: 7,
 			over: menuAddHighlight,
 			timeout: 700,
-			out: removeHighlight
+			out: menuRemoveHighlight
+	};
+
+	var dropdowncConfig = {	
+			interval: 0,
+			sensitivity: 7,
+			over: menuAddHighlightc,
+			timeout: 700,
+			out: menuRemoveHighlightc
 	};
 
 	// where html5 might work we have an html5 player followed by the ususal object or embed
@@ -1630,10 +1878,14 @@ $(function() {
 	     }
             });
 
-	$("li.dropdown").hoverIntent(megaConfig);
-	$("#dropDownDiv").hide();
-	$("#dropDownDiv").hoverIntent(dropdownConfig);
-	$("li.dropdown").click(toggleDropdown);
+	$("#dropdown").hoverIntent(megaConfig);
+	$("#dropdownc").hoverIntent(megaConfigc);
+	$("#moreDiv").hide();
+	$("#addContentDiv").hide();
+	$("#moreDiv").hoverIntent(dropdownConfig);
+	$("#addContentDiv").hoverIntent(dropdowncConfig);
+	$("#dropdown").click(buttonToggleDropdown);
+	$("#dropdownc").click(buttonToggleDropdownc);
 	dropDownViaClick = false;
 	return false;
 });
@@ -1957,95 +2209,134 @@ $(function() {
 
 var hasBeenInMenu = false;
 
+function buttonAddHighlight() {
+    if (!$("#addContentDiv").is(":visible"))
+	addHighlight($("#moreDiv"));
+    return false;
+}
+
+function buttonAddHighlightc() {
+    if (!$("#moreDiv").is(":visible"))
+	addHighlight($("#addContentDiv"));
+    return false;
+}
+
 function menuAddHighlight() {
     hasBeenInMenu = true;
-    addHighlight();
-	return false;
+    addHighlight($("#moreDiv"));
+    return false;
+}
+
+function menuAddHighlightc() {
+    hasBeenInMenu = true;
+    addHighlight($("#addContentDiv"));
+    return false;
+}
+
+function menuRemoveHighlight() {
+    removeHighlight($("#moreDiv"), $("#dropdown a"));
+    return false;
+}
+
+function menuRemoveHighlightc() {
+    removeHighlight($("#addContentDiv"), $("#dropdownc a"));
+    return false;
 }
 
 function buttonRemoveHighlight() {
     if (!hasBeenInMenu)
-	removeHighlight();
+	removeHighlight($("#moreDiv"), $("#dropdown a"));
 	return false;
 }
 
-function addHighlight() {
+function buttonRemoveHighlightc() {
+    if (!hasBeenInMenu)
+	removeHighlight($("#addContentDiv"), $("#dropdownc a"));
+	return false;
+}
+
+function addHighlight(dropDiv) {
 	if(!lessonBuilderAnimationLocked) {
-		if(!$("#dropDownDiv").is(":visible")) {
+		if(!dropDiv.is(":visible")) {
 			lessonBuilderAnimationLocked = true;
 			hideMultimedia();
 			reposition();
-			$("#dropDownDiv").show("slide", {direction: "up"}, 300, unlockAnimation);
-			$(".add-forum-link").focus();
+			$(dropDiv).show("slide", {direction: "up"}, 300, unlockAnimation);
+			dropDiv.find(".firstDropItem").focus();
+			checksize(dropDiv);
 		}
 	}
 	//$(this).addClass("hovering");
 	return false;
 }
 
-function removeHighlight() {
+function removeHighlight(dropDiv, button) {
 	if(!lessonBuilderAnimationLocked) {
-		if($("#dropDownDiv").is(":visible") && !dropdownViaClick) {
+		if(dropDiv.is(":visible") && !dropdownViaClick) {
 			hasBeenInMenu = false;
 			lessonBuilderAnimationLocked = true;
+			dropDiv.hide("slide", {direction: "up"}, 300, unlockAnimation);
 			unhideMultimedia();
-			$("#dropDownDiv").hide("slide", {direction: "up"}, 300, unlockAnimation);
-			$(".dropdown a").focus();
+			button.focus();
 		}
 	}
 	//$(this).removeClass("hovering");
 	return false;
 }
 
-function toggleDropdown() {
+function buttonToggleDropdown() {
+    toggleDropdown($("#moreDiv"), ("#dropdown a"));
+}
+
+function buttonToggleDropdownc() {
+    toggleDropdown($("#addContentDiv"), ("#dropdownc a"));
+}
+
+function toggleDropdown(dropDiv, button) {
 	if(!lessonBuilderAnimationLocked) {
-		if($("#dropDownDiv").is(":visible")) {
+		if(dropDiv.is(":visible")) {
 			lessonBuilderAnimationLocked = true;
 			hasBeenInMenu = false;
+			dropDiv.hide("slide", {direction: "up"}, 300, unlockAnimation);
 			unhideMultimedia();
-			$("#dropDownDiv").hide("slide", {direction: "up"}, 300, unlockAnimation);
 			dropdownViaClick = false;
-			$(".dropdown a").focus();
+			button.focus();
 		}else {
 			lessonBuilderAnimationLocked = true;
 			hideMultimedia();
 			reposition();
-			$("#dropDownDiv").show("slide", {direction: "up"}, 300, unlockAnimation);
-			$(".add-forum-link").focus();
+			dropDiv.show("slide", {direction: "up"}, 300, unlockAnimation);
+			dropDiv.find(".firstDropItem").focus();
+			checksize(dropDiv);
 			dropdownViaClick = true;
 		}
 	}
 	return false;
 }
 
-function closeDropdown() {
+function closeDropdowns() {
+    closeDropdown($("#addContentDiv"), $("#dropdownc a"));
+    closeDropdown($("#moreDiv"), $("#dropdown a"));
+}
+
+
+function closeDropdown(dropDiv, button) {
 
 	if(!lessonBuilderAnimationLocked) {
-		if($("#dropDownDiv").is(":visible")) {
+		if(dropDiv.is(":visible")) {
 			hasBeenInMenu = false;
+			dropDiv.hide();
 			unhideMultimedia();
-			$("#dropDownDiv").hide();
 			dropdownViaClick = false;
-			$(".dropdown a").focus();
+			button.focus();
 		}
 	}
 	return false;
 }
 
 function reposition() {
-	var dropX = $(".dropdown a").offset().left;
-	var dropdown = $("#dropDownDiv");
-	//alert("DropX: " + dropX);
-	//alert("Width: " + window.innerWidth);
-	//alert("Width2: " + dropdown.width());
-	if(dropX + dropdown.width() > ($(window).width()-30)) {
-	    dropdown.css("left", Math.max(0,($(window).width() - dropdown.width() - 30)) + "px");
-	} else {
-	    // in case user changes zoom and then tries again, we could end up
-            // with a value from the case above that is now incorrect                        	    
-            dropdown.css("left", dropX);
-	}
-
+    // seems not needed now
+    //    dropdown.css("left", "0x");
 }
 
 // Keeps JQuery from getting confused mid-animation
@@ -2214,6 +2505,47 @@ function resetShortanswers() {
 	$("#extraShortanswers").empty();
 }
 
+
+var mimeMime = "";
+
+function getMimeType(url) {
+     var mime = "";
+     // Access-Control-Allow-Origin: *
+     var base = location.protocol + '//' + location.host;
+     $.ajax({type: "GET",
+	     async: false,
+	      url: base + '/lessonbuilder-tool/ajax?op=getmimetype&url=' + encodeURIComponent(url),
+	     success: function(data, status, hdr) { 
+		 mime = data.trim();
+	    }});
+     return mime;
+ }
+
+function filterHtml(html) {
+     var ret = '';
+     var base = location.protocol + '//' + location.host;
+     $.ajax({type: "GET",
+	     async: false,
+	      url: base + '/lessonbuilder-tool/ajax?op=filterhtml&html=' + encodeURIComponent(html),
+	     success: function(data, status, hdr) { 
+		 ret = data.trim();
+	    }});
+     return ret;
+ }
+
+function mm_test_reset() {
+    mm_testing = 0;
+   $('#mm-test-embed-results').hide();
+   $('#mm-test-addedhttps').hide();
+   $('#mm-test-oembed-results').hide();
+   $('#mm-test-iframe-results').hide();
+   $('#mm-explain-video').hide();
+   $('#mm-test-mime').hide();
+   $('#mm-test-tryother').hide();
+   $('.mm-test-reset').hide();
+   $('#mm-test-prototype').hide();
+   $('#mm-test-oembed-results .oembedall-container').remove();
+}
 
 resizeFrame = function (updown) {
       var frame = parent.document.getElementById( window.name );

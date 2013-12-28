@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/metaobj/trunk/metaobj-util/tool-lib/src/java/org/sakaiproject/metaobj/utils/mvc/intf/ListScroll.java $
- * $Id: ListScroll.java 105079 2012-02-24 23:08:11Z ottenhoff@longsight.com $
+ * $Id: ListScroll.java 130481 2013-10-15 17:36:54Z dsobiera@indiana.edu $
  ***********************************************************************************
  *
  * Copyright (c) 2004, 2005, 2006, 2008 The Sakai Foundation
@@ -29,12 +29,19 @@ public class ListScroll {
 
    public static final String STARTING_INDEX_TAG = "listScroll_startingIndex";
    public static final String ENSURE_VISIBLE_TAG = "listScroll_ensureVisibleIndex";
+   public static final String REVERSE_PROCESS_LIST_TAG = "listScroll_reverseProcessList";
+   public static final int NO_VIRTUAL_INDEX = -99;
 
    private int total;
    private int perPage;
    private int startingIndex;
    private boolean hideOnePageScroll = false;
-
+   private boolean hideRecCounts = false;
+   private int virtualPreviousIndex = NO_VIRTUAL_INDEX;
+   private int virtualNextIndex = NO_VIRTUAL_INDEX;
+   private boolean processPreviousFromEnd = false;
+   private boolean processLastFromEnd = false;
+   
    public ListScroll(int perPage, int total, int startingIndex) {
       this.perPage = perPage;
       this.total = total;
@@ -47,12 +54,30 @@ public class ListScroll {
       this.startingIndex = startingIndex;
       this.hideOnePageScroll = hideOnePageScroll;
    }
+   
+   public ListScroll(int perPage, int total, int startingIndex, boolean hideOnePageScroll, boolean hideRecCounts, int virtualPreviousIndex, int virtualNextIndex, boolean processPreviousFromEnd, boolean processLastFromEnd) {
+      this.perPage = perPage;
+      this.total = total;
+      this.startingIndex = startingIndex;
+      this.hideOnePageScroll = hideOnePageScroll;
+      this.hideRecCounts = hideRecCounts;
+      this.virtualPreviousIndex = virtualPreviousIndex;
+      this.virtualNextIndex = virtualNextIndex;
+      this.processPreviousFromEnd = processPreviousFromEnd;
+      this.processLastFromEnd = processLastFromEnd;
+      
+   }
 
    public int getNextIndex() {
       int nextIndex = startingIndex + perPage;
 
-      if (nextIndex >= total) {
+      if (nextIndex >= total || virtualNextIndex >= total) {
          return -1;
+      }
+      
+      if (virtualNextIndex != NO_VIRTUAL_INDEX) {
+      	logger.debug("Returning VirtualNextIndex of " + virtualNextIndex + " instead of regular NextIndex of " + nextIndex);
+      	return virtualNextIndex;
       }
 
       return nextIndex;
@@ -69,6 +94,11 @@ public class ListScroll {
    public int getPrevIndex() {
       int prevIndex = startingIndex - perPage;
 
+      if (virtualPreviousIndex != NO_VIRTUAL_INDEX) {
+      	logger.debug("Returning VirtualPreviousIndex of " + virtualPreviousIndex + " instead of regular PreviousIndex of " + prevIndex);
+      	return virtualPreviousIndex;
+      }
+      
       if (prevIndex < 0) {
          return -1;
       }
@@ -115,5 +145,29 @@ public class ListScroll {
    public void setHideOnePageScroll(boolean hideOnePageScroll) {
       this.hideOnePageScroll = hideOnePageScroll;
    }
+   
+   public boolean getHideRecCounts() {
+      return hideRecCounts;
+   }
+
+   public void setHideRecCounts(boolean hideRecCounts) {
+      this.hideRecCounts = hideRecCounts;
+   }
+
+	public boolean isProcessPreviousFromEnd() {
+		return processPreviousFromEnd;
+	}
+
+	public void setProcessPreviousFromEnd(boolean processPreviousFromEnd) {
+		this.processPreviousFromEnd = processPreviousFromEnd;
+	}
+
+	public boolean isProcessLastFromEnd() {
+		return processLastFromEnd;
+	}
+
+	public void setProcessLastFromEnd(boolean processLastFromEnd) {
+		this.processLastFromEnd = processLastFromEnd;
+	}
 
 }

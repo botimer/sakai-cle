@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/msgcntr/trunk/messageforums-app/src/java/org/sakaiproject/tool/messageforums/ui/PrivateMessageDecoratedBean.java $
- * $Id: PrivateMessageDecoratedBean.java 105078 2012-02-24 23:00:38Z ottenhoff@longsight.com $
+ * $Id: PrivateMessageDecoratedBean.java 130099 2013-10-02 13:01:07Z holladay@longsight.com $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008 The Sakai Foundation
@@ -57,6 +57,8 @@ public class PrivateMessageDecoratedBean
   private boolean isPreviewReplyAll = false;
   private boolean isPreviewForward = false;
   private PrivateMessageDecoratedBean previewReplyTmpMsg;
+  
+  private boolean isReplied = false;
   
   public PrivateMessage getMsg()
   {
@@ -220,6 +222,15 @@ public class PrivateMessageDecoratedBean
   public void setIsPreviewForward(boolean isPreviewForward) {
 	  this.isPreviewForward = isPreviewForward;
   }
+  
+  public boolean isReplied() {
+	  return isReplied;
+}
+
+  public void setReplied(boolean isReplied) {
+	  this.isReplied = isReplied;
+  }
+
 }
 
 

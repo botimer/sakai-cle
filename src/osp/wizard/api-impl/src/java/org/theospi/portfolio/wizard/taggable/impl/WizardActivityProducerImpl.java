@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/osp/trunk/wizard/api-impl/src/java/org/theospi/portfolio/wizard/taggable/impl/WizardActivityProducerImpl.java $
- * $Id: WizardActivityProducerImpl.java 105079 2012-02-24 23:08:11Z ottenhoff@longsight.com $
+ * $Id: WizardActivityProducerImpl.java 131591 2013-11-15 20:24:05Z dsobiera@indiana.edu $
  ***********************************************************************************
  *
  * Copyright (c) 2007, 2008 The Sakai Foundation
@@ -31,6 +31,7 @@ import org.sakaiproject.taggable.api.TaggableActivity;
 import org.sakaiproject.taggable.api.TaggableItem;
 import org.sakaiproject.taggable.api.TaggingManager;
 import org.sakaiproject.taggable.api.TaggingProvider;
+import org.sakaiproject.component.cover.ServerConfigurationService;
 import org.sakaiproject.metaobj.security.AuthenticationManager;
 import org.sakaiproject.metaobj.shared.mgt.IdManager;
 import org.sakaiproject.tool.api.SessionManager;
@@ -162,7 +163,7 @@ public class WizardActivityProducerImpl implements WizardActivityProducer {
 	}
 
 	public TaggableActivity getActivity(String activityRef,
-			TaggingProvider provider) {
+			TaggingProvider provider, String taggedItem) {
 		// We aren't picky about the provider, so ignore that argument.
 		TaggableActivity activity = null;
 		if (checkReference(activityRef)) {
@@ -327,8 +328,10 @@ public class WizardActivityProducerImpl implements WizardActivityProducer {
 
 	public void init() {
 		logger.info("init()");
-
-		taggingManager.registerProducer(this);
+		if (ServerConfigurationService.getBoolean(PRODUCER_ENABLED_KEY, true)) {
+			logger.info("Enabling WizardActivityProducerImpl");
+			taggingManager.registerProducer(this);
+		}
 	}
 
 	public void setAuthzManager(AuthorizationFacade authzManager) {

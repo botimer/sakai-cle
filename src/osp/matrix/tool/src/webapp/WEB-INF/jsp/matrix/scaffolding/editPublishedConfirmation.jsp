@@ -2,10 +2,14 @@
 <%@ taglib prefix="spring" uri="http://www.springframework.org/tags" %>
 
 <jsp:useBean id="msgs" class="org.sakaiproject.util.ResourceLoader" scope="request"><jsp:setProperty name="msgs" property="baseName" value="org.theospi.portfolio.matrix.bundle.Messages"/></jsp:useBean>
+<fmt:setLocale value="${locale}" />
+<fmt:setBundle basename="org.theospi.portfolio.matrix.bundle.Messages" />
 
 
 <h3>
-  <c:out value="${msgs.title_saveMatrix}"/>
+  <fmt:message key="title_saveMatrix">
+   <fmt:param><c:out value="${label}"/></fmt:param>
+  </fmt:message>
 </h3>
   
 <c:if test="${published}">

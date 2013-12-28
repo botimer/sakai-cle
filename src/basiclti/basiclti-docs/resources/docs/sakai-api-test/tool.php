@@ -46,6 +46,36 @@ if ( $context->valid ) {
 		$found = true;
     }
 
+    if ( isset($_POST['custom_result_url']) ) {
+        print "<p>\n";
+        print '<a href="json/result_json.php?url='.urlencode($_POST['custom_result_url']).'">';
+        print 'Test LTI 2.0 Outcome Service</a>.</p>'."\n";
+		$_SESSION['reg_key'] = $_POST['oauth_consumer_key'];
+		$_SESSION['reg_password'] = "secret";
+		$found = true;
+    }
+
+    if ( isset($_POST['custom_ltilink_custom_url']) || isset($_POST['custom_toolproxy_custom_url']) ||
+		isset($_POST['custom_toolproxybinding_custom_url']) ) {
+        print "<p>\n";
+        print '<a href="json/settings_json.php?';
+		if ( isset($_POST['custom_ltilink_custom_url']) ) { 
+			print 'link='.urlencode($_POST['custom_ltilink_custom_url'])."&";
+		}
+		if ( isset($_POST['custom_toolproxy_custom_url']) ) { 
+			print 'proxy='.urlencode($_POST['custom_toolproxy_custom_url'])."&";
+		}
+		if ( isset($_POST['custom_toolproxybinding_custom_url']) ) { 
+			print 'tool='.urlencode($_POST['custom_toolproxybinding_custom_url'])."&";
+		}
+		print 'x=24">';
+        print 'Test LTI 2.0 Settings Service</a>.</p>'."\n";
+		$_SESSION['reg_key'] = $_POST['oauth_consumer_key'];
+		$_SESSION['reg_password'] = "secret";
+		$found = true;
+    }
+
+
     if ( $_POST['context_id'] && $_POST['ext_lori_api_url_xml'] && $_POST['lis_result_sourcedid'] ) {
         print "<p>\n";
         print '<a href="ext/lori_xml.php?context_id='.htmlent_utf8($_POST['context_id']);
@@ -53,7 +83,7 @@ if ( $context->valid ) {
         print '&user_id='.urlencode($_POST['user_id']);
         print '&key='.urlencode($_POST['oauth_consumer_key']);
         print '&url='.urlencode($_POST['ext_lori_api_url_xml']).'">';
-        print 'Test LORI XML API</a>.</p>'."\n";
+        print 'Test Sakai LORI XML API</a>.</p>'."\n";
         $found = true;
     }
 
@@ -82,6 +112,7 @@ if ( $context->valid ) {
         print 'Test Sakai Settings API</a>.</p>'."\n";
 		$found = true;
     }
+
     if ( ! $found ) {
 		echo("<p>No Services are available for this launch.</p>\n");
 	}

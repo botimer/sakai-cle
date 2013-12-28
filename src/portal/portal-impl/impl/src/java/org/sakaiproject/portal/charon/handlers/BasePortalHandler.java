@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/portal/trunk/portal-impl/impl/src/java/org/sakaiproject/portal/charon/handlers/BasePortalHandler.java $
- * $Id: BasePortalHandler.java 118049 2013-01-02 23:46:38Z a.fish@lancaster.ac.uk $
+ * $Id: BasePortalHandler.java 132396 2013-12-10 01:04:51Z matthew@longsight.com $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008 The Sakai Foundation
@@ -36,6 +36,8 @@ import org.sakaiproject.portal.api.PortalHandlerException;
 import org.sakaiproject.portal.api.PortalRenderContext;
 import org.sakaiproject.portal.api.PortalService;
 import org.sakaiproject.site.api.Site;
+import org.sakaiproject.component.cover.ComponentManager;
+import org.sakaiproject.time.api.TimeService;
 import org.sakaiproject.tool.api.Session;
 import org.sakaiproject.util.ResourceLoader;
 
@@ -44,7 +46,7 @@ import org.sakaiproject.util.ResourceLoader;
  * 
  * @author ieb
  * @since Sakai 2.4
- * @version $Rev: 118049 $
+ * @version $Rev: 132396 $
  * 
  */
 public abstract class BasePortalHandler implements PortalHandler
@@ -54,7 +56,10 @@ public abstract class BasePortalHandler implements PortalHandler
 	public BasePortalHandler()
 	{
 		urlFragment = "none";
+		timeService = (TimeService) ComponentManager.get(TimeService.class);
 	}
+
+	private TimeService timeService;
 
 	protected PortalService portalService;
 
@@ -151,7 +156,7 @@ public abstract class BasePortalHandler implements PortalHandler
 			return Locale.getDefault();
 	}
 	
-	private Locale setSiteLanguage(Site site)
+	protected Locale setSiteLanguage(Site site)
 	{
 		ResourceLoader rl = new ResourceLoader();
 				
@@ -189,10 +194,27 @@ public abstract class BasePortalHandler implements PortalHandler
 	}
 	
 	protected void addLocale(PortalRenderContext rcontext, Site site) {
+		addLocale(rcontext, site, null);
+	}
+
+	protected void addLocale(PortalRenderContext rcontext, Site site, String userId) {
+		Locale prevLocale = null;
+		if (userId != null) {
+			prevLocale = new ResourceLoader().getLocale();
+		}
+
 		Locale locale = setSiteLanguage(site);	
 		if(log.isDebugEnabled()) {
 			log.debug("Locale for site " + site.getId() + " = " + locale.toString());
 		}
-        rcontext.put("locale", locale.toString());
+		String localeString = locale.getLanguage();
+		String country = locale.getCountry();
+		if(country.length() > 0) localeString += "-" + country;
+		rcontext.put("locale", localeString);
+
+		if (prevLocale != null && !prevLocale.equals(locale)) {
+			// if the locale was changed, clear the date/time format which was cached in the previous locale
+			timeService.clearLocalTimeZone(userId);
+		}
 	}
 }

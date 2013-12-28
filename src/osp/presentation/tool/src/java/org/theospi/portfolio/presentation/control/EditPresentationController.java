@@ -66,6 +66,13 @@ public class EditPresentationController extends SimpleFormController {
 		model.put("optionsAreNull", Boolean.valueOf(optionsAreNull));
 		model.put("disableShare", Boolean.valueOf(!isOwner));
 		model.put("disableOptions", Boolean.valueOf(!isOwner));
+		
+		if (presentation.getIsSearchable() == null || ! presentation.getIsSearchable()) {
+			model.put("not_searchable", new Boolean(true));
+		}
+		else {
+			model.put("not_searchable", new Boolean(false));
+		}
       
 		return model;
 	}

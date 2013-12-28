@@ -42,7 +42,7 @@
     <regexp name="onsiteURL" value="([\p{L}\p{N}\\\.\#@\$%\+&amp;;\-_~,\?=/!]+|\#(\w)+)" />
     <regexp name="offsiteURL" value="(\s)*((ht|f)tp(s?)://|mailto:)[\p{L}\p{N}]+[\p{L}\p{N}\p{Zs}\.\#@\$%\+&amp;;:\-_~,\?=/!\(\)]*(\s)*" />
 
-    <regexp name="boolean" value="(true|false)" />
+    <regexp name="boolean" value="^$|(true|false)" />
     <regexp name="singlePrintable" value="[a-zA-Z0-9]{1}" /> <!-- \w allows the '_' character -->
 
     <!-- This is for elements (ex: elemName { ... }) -->
@@ -78,6 +78,8 @@
     <!-- This is for resources referenced from CSS (such as background images and other imported stylesheets) -->
     <regexp name="cssOnsiteUri" value="url\(([\p{L}\p{N}\\/\.\?=\#&amp;;\-_~]+|\#(\w)+)\)" />
     <regexp name="cssOffsiteUri" value="url\((\s)*((ht|f)tp(s?)://)[\p{L}\p{N}]+[~\p{L}\p{N}\p{Zs}\-_\.@#$%&amp;;:,\?=/\+!]*(\s)*\)" />
+
+    <regexp name="imageURI" value="^data:image/.*" />
 
     <!-- This if for CSS Identifiers -->
     <regexp name="cssIdentifier" value="[a-zA-Z0-9\-_]+" />
@@ -483,6 +485,16 @@
                     <regexp name="boolean"/>
                 </regexp-list>
             </attribute>
+            <attribute name="webkitallowfullscreen">
+                <regexp-list>
+                    <regexp name="boolean"/>
+                </regexp-list>
+            </attribute>
+            <attribute name="mozallowfullscreen">
+                <regexp-list>
+                    <regexp name="boolean"/>
+                </regexp-list>
+            </attribute>
         </tag>
         <tag name="frameset" action="remove"/>
         <tag name="frame" action="remove"/>
@@ -773,14 +785,141 @@
             <attribute name="align"/>
         </tag>
 
-    
-        <!-- Image & image related tags -->
         
+        <!-- HTML5 audio video source tags -->
+        <tag name="video" action="validate">
+            <attribute name="height"/>
+            <attribute name="width"/>
+            <attribute name="autoplay">
+                <literal-list>
+                    <literal value="autoplay"/>
+                </literal-list>
+                <regexp-list>
+                    <regexp name="boolean"/>
+                </regexp-list>
+            </attribute>
+            <attribute name="controls">
+                <literal-list>
+                    <literal value="controls"/>
+                </literal-list>
+                <regexp-list>
+                    <regexp name="boolean"/>
+                </regexp-list>
+            </attribute>
+            <attribute name="muted">
+                <literal-list>
+                    <literal value="muted"/>
+                </literal-list>
+                <regexp-list>
+                    <regexp name="boolean"/>
+                </regexp-list>
+            </attribute>
+            <attribute name="loop">
+                <literal-list>
+                    <literal value="loop"/>
+                </literal-list>
+                <regexp-list>
+                    <regexp name="boolean"/>
+                </regexp-list>
+            </attribute>
+            <attribute name="preload">
+                <literal-list>
+                    <literal value="auto"/>
+                    <literal value="metadata"/>
+                    <literal value="none"/>
+                </literal-list>
+                <regexp-list>
+                    <regexp name="boolean"/>
+                </regexp-list>
+            </attribute>
+            <attribute name="src" onInvalid="removeTag">
+                <regexp-list>
+                    <regexp name="onsiteURL"/>
+                    <regexp name="offsiteURL"/>
+                </regexp-list>
+            </attribute>
+            <attribute name="poster" onInvalid="removeTag">
+                <regexp-list>
+                    <regexp name="onsiteURL"/>
+                    <regexp name="offsiteURL"/>
+                </regexp-list>
+            </attribute>
+        </tag>
+
+        <tag name="audio" action="validate">
+            <attribute name="autoplay">
+                <literal-list>
+                    <literal value="autoplay"/>
+                </literal-list>
+                <regexp-list>
+                    <regexp name="boolean"/>
+                </regexp-list>
+            </attribute>
+            <attribute name="controls">
+                <literal-list>
+                    <literal value="controls"/>
+                </literal-list>
+                <regexp-list>
+                    <regexp name="boolean"/>
+                </regexp-list>
+            </attribute>
+            <attribute name="muted">
+                <literal-list>
+                    <literal value="muted"/>
+                </literal-list>
+                <regexp-list>
+                    <regexp name="boolean"/>
+                </regexp-list>
+            </attribute>
+            <attribute name="loop">
+                <literal-list>
+                    <literal value="loop"/>
+                </literal-list>
+                <regexp-list>
+                    <regexp name="boolean"/>
+                </regexp-list>
+            </attribute>
+            <attribute name="preload">
+                <literal-list>
+                    <literal value="auto"/>
+                    <literal value="metadata"/>
+                    <literal value="none"/>
+                </literal-list>
+                <regexp-list>
+                    <regexp name="boolean"/>
+                </regexp-list>
+            </attribute>
+            <attribute name="src" onInvalid="removeTag">
+                <regexp-list>
+                    <regexp name="onsiteURL"/>
+                    <regexp name="offsiteURL"/>
+                </regexp-list>
+            </attribute>
+        </tag>
+        <tag name="source" action="validate">
+            <!-- Not yet supported 
+            <attribute name="media" />
+            -->
+            <attribute name="type" onInvalid="removeTag">
+                <regexp-list>
+                    <regexp name="anything" />
+                </regexp-list>
+            </attribute>
+            <attribute name="src" onInvalid="removeTag">
+                <regexp-list>
+                    <regexp name="onsiteURL"/>
+                    <regexp name="offsiteURL"/>
+                </regexp-list>
+            </attribute>
+        </tag>
+
+        <!-- Image & image related tags -->
         <tag name="img" action="validate">
             <attribute name="src" onInvalid="removeTag">
                 <regexp-list>
                     <regexp name="onsiteURL"/>
                     <regexp name="offsiteURL"/>
+                    <regexp name="imageURI"/>
                 </regexp-list>
             </attribute>
             <attribute name="name"/>
@@ -846,7 +985,30 @@
         <!-- List tags -->
 
         <tag name="ul" action="validate"/>
-        <tag name="ol" action="validate"/>
+
+        <tag name="ol" action="validate">
+            <attribute name="start">
+              <regexp-list>
+                <regexp name="number"/>
+              </regexp-list>
+            </attribute>
+            <attribute name="reversed">
+                <literal-list>
+                    <literal value="reversed" />
+                    <regexp-list>
+                        <regexp name="boolean"/>
+                    </regexp-list>
+                </literal-list>
+            </attribute>
+            <attribute name="type">
+                <literal-list>
+                    <literal value="1" />
+                    <literal value="a" />
+                    <literal value="i" />
+                </literal-list>
+            </attribute>
+        </tag>
+
         <tag name="li" action="validate"/>
         
 

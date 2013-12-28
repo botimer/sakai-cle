@@ -21,17 +21,18 @@
   		}
 	%>
 
-<script type="text/javascript" src="js/jquery-1.9.1.js"></script>
-<script type="text/javascript" src="js/jquery-ui-1.10.1.custom.min.js"></script>
+<script type="text/javascript" src="/library/js/jquery/jquery-1.9.1.min.js"></script>
+<script type="text/javascript" src="/library/js/jquery/ui/1.10.3/jquery-ui.1.10.3.full.min.js"></script>
 <script type="text/javascript" src="js/jqueryui-editable.js"></script>
-<script type="text/javascript" src="js/moment.min.js"></script>
+<script type="text/javascript" src="/library/js/moment/2.4.0/moment.min.js"></script>
 <script type="text/javascript" src="js/syllabus.js"></script>
 <sakai:stylesheet path="/syllabus/css/jqueryui-editable.css" />
 <script type="text/javascript" src="js/jquery-ui-timepicker-addon.js"></script>
-<sakai:stylesheet path="/syllabus/css/ui-lightness/jquery-ui-1.10.1.custom.min.css" />
+<link rel="stylesheet" href="/library/js/jquery/ui/1.10.3/css/ui-lightness/jquery-ui-1.10.3.custom.min.css" type="text/css" />
 <sakai:stylesheet path="/syllabus/css/syllabus.css" />
 
-<script language="JavaScript">
+<script type="text/javascript">
+	var msgs;
 	// if redirected, just open in another window else
 	// open with size approx what actual print out will look like
 	function printFriendly(url) {
@@ -44,20 +45,27 @@
 	}
 	
 	$(function() {
-		var msgs = {
-					syllabus_title: "<h:outputText value="#{msgs.syllabus_title}"/>",
-					clickToAddTitle: "<h:outputText value="#{msgs.clickToAddTitle}"/>",
-					startdatetitle: "<h:outputText value="#{msgs.startdatetitle}"/>",
-					clickToAddStartDate: "<h:outputText value="#{msgs.clickToAddStartDate}"/>",
-					enddatetitle: "<h:outputText value="#{msgs.enddatetitle}"/>",
-					clickToAddEndDate: "<h:outputText value="#{msgs.clickToAddEndDate}"/>",
-					clickToAddBody: "<h:outputText value="#{msgs.clickToAddBody}"/>",
-					saved: "<h:outputText value="#{msgs.saved}"/>",
-					error: "<h:outputText value="#{msgs.error}"/>",
-					required: "<h:outputText value="#{msgs.required}"/>",
-					startBeforeEndDate: "<h:outputText value="#{msgs.startBeforeEndDate}"/>",
-					calendarDatesNeeded: "<h:outputText value="#{msgs.calendarDatesNeeded}"/>"
-				};
+		msgs = {
+				syllabus_title: $("#messages #syllabus_title").html(),
+				clickToAddTitle: $("#messages #clickToAddTitle").html(),
+				startdatetitle: $("#messages #startdatetitle").html(),
+				clickToAddStartDate: $("#messages #clickToAddStartDate").html(),
+				clickToAddEndDate: $("#messages #clickToAddEndDate").html(),
+				clickToAddBody: $("#messages #clickToAddBody").html(),
+				saved: $("#messages #saved").html(),
+				error: $("#messages #error").html(),
+				required: $("#messages #required").html(),
+				startBeforeEndDate: $("#messages #startBeforeEndDate").html(),
+				calendarDatesNeeded: $("#messages #calendarDatesNeeded").html(),
+				clickToExpandAndCollapse: $("#messages #clickToExpandAndCollapse").html(),
+				bar_delete: $("#messages #bar_delete").html(),
+				bar_cancel: $("#messages #bar_cancel").html(),
+				confirmDelete: $("#messages #confirmDelete").html(),
+				deleteItemTitle: $("#messages #deleteItemTitle").html(),
+				deleteAttachmentTitle: $("#messages #deleteAttachmentTitle").html(),
+				bar_new: $("#messages #bar_new").html(),
+				addItemTitle: $("#messages #addItemTitle").html()
+			};
 		setupAccordion('<%= org.sakaiproject.util.Web.escapeJavascript(thisId)%>',<h:outputText value="#{SyllabusTool.editAble == 'true' ? true : false}"/>, msgs, 
 							'<h:outputText value="#{SyllabusTool.openDataId}"/>');
 		if(<h:outputText value="#{SyllabusTool.editAble == 'true'}"/>){
@@ -73,39 +81,14 @@
 	});
 	
 	function showConfirmDeleteHelper(deleteButton, event){
-		var msgs = {
-					saved: "<h:outputText value="#{msgs.saved}"/>",
-					error: "<h:outputText value="#{msgs.error}"/>",
-					bar_delete: "<h:outputText value="#{msgs.bar_delete}"/>",
-					bar_cancel: "<h:outputText value="#{msgs.bar_cancel}"/>",
-					confirmDelete: "<h:outputText value="#{msgs.confirmDelete}"/>",
-					deleteItemTitle: "<h:outputText value="#{msgs.deleteItemTitle}"/>"
-					};
 		showConfirmDelete(deleteButton, msgs, event);
 	}
 	
 	function showConfirmDeleteAttachmentHelper(deleteButton, event){
-		var msgs = {
-					saved: "<h:outputText value="#{msgs.saved}"/>",
-					error: "<h:outputText value="#{msgs.error}"/>",
-					bar_delete: "<h:outputText value="#{msgs.bar_delete}"/>",
-					bar_cancel: "<h:outputText value="#{msgs.bar_cancel}"/>",
-					confirmDelete: "<h:outputText value="#{msgs.confirmDelete}"/>",
-					deleteAttachmentTitle: "<h:outputText value="#{msgs.deleteAttachmentTitle}"/>"
-					};
 		showConfirmDeleteAttachment(deleteButton, msgs, event);
 	}
 	
 	function showConfirmAddHelper(){
-		var msgs = {
-					saved: "<h:outputText value="#{msgs.saved}"/>",
-					error: "<h:outputText value="#{msgs.error}"/>",
-					bar_new: "<h:outputText value="#{msgs.bar_new}"/>",
-					bar_cancel: "<h:outputText value="#{msgs.bar_cancel}"/>",
-					syllabus_title: "<h:outputText value="#{msgs.syllabus_title}"/>",
-					addItemTitle: "<h:outputText value="#{msgs.addItemTitle}"/>",
-					required: "<h:outputText value="#{msgs.required}"/>"
-					};
 		showConfirmAdd(msgs,'<%= org.sakaiproject.util.Web.escapeJavascript(thisId)%>');
 	}
 </script>
@@ -273,10 +256,10 @@
 							<f:subview id="dateInstructor" rendered="#{SyllabusTool.editAble == 'true'}">
 								<f:verbatim><span style="font-weight: normal; color: grey; float: right"></f:verbatim>
 									<h:outputText styleClass="editItem startTimeInput" value="#{eachEntry.entry.startDate}">
-										<f:convertDateTime type="date" pattern="MM/dd/yyyy h:mm a"/>
+										<f:convertDateTime type="date" pattern="yyyy/MM/dd h:mm a"/>
 									</h:outputText>
 									<h:outputText styleClass="editItem endTimeInput" value="#{eachEntry.entry.endDate}">
-								  		<f:convertDateTime type="date" pattern="MM/dd/yyyy h:mm a"/>
+								  		<f:convertDateTime type="date" pattern="yyyy/MM/dd h:mm a"/>
 									</h:outputText>
 								<f:verbatim></span></f:verbatim>
 							</f:subview>
@@ -326,63 +309,17 @@
 									<br/>
 								</f:verbatim>
 							</f:subview>
-							<%/* instructor view attachments */%>
-							<f:subview id="instructorAttachments" rendered="1 == 0">
-								<h:commandLink action="#{SyllabusTool.processAddAttachRedirect}" value="#{msgs.add_attach}">
-										<f:param name="itemId" value="#{eachEntry.entry.syllabusId}"/>
-								</h:commandLink>
-	
-								<syllabus:syllabus_table value="#{eachEntry.attachmentList}" var="eachAttach" summary="#{msgs.edit_att_list_summary}" styleClass="listHier lines nolines">
-									<h:column rendered="#{!empty eachEntry.attachmentList}">
-										<f:facet name="header">
-											<h:outputText value="#{msgs.attachmentTitle}" />
-										</f:facet>
-										<f:verbatim><h5></f:verbatim>
-										<sakai:contentTypeMap fileType="#{eachAttach.type}" mapType="image" var="imagePath" pathPrefix="/library/image/"/>									
-										<h:graphicImage id="exampleFileIcon" value="#{imagePath}" />
-										<h:outputText value="#{eachAttach.name}"/>
-										<f:verbatim></h5></f:verbatim>
-										<f:verbatim><div class="itemAction"></f:verbatim>
-	
-										<h:commandLink action="#{SyllabusTool.processDeleteAttach}" 
-											onfocus="document.forms[0].onsubmit();" title="#{msgs.removeAttachmentLink} #{eachAttach.name}">
-												<h:outputText value="#{msgs.mainEditHeaderRemove}"/>
-												<f:param value="#{eachAttach.syllabusAttachId}" name="syllabus_current_attach"/>
-										</h:commandLink>
-										<f:verbatim></div></f:verbatim>
-									</h:column>
-								  <h:column rendered="#{!empty eachEntry.attachmentList}">
-									<f:facet name="header">
-										<h:outputText value="#{msgs.size}" />
-									</f:facet>
-									<h:outputText value="#{eachAttach.size}"/>
-								</h:column>
-								<h:column rendered="#{!empty eachEntry.attachmentList}">
-									<f:facet name="header">
-										<h:outputText value="#{msgs.type}" />
-									</f:facet>
-									<h:outputText value="#{eachAttach.type}"/>
-								</h:column>
-						  		<h:column rendered="#{!empty eachEntry.attachmentList}">
-									<f:facet name="header">
-										<h:outputText value="#{msgs.created_by}" />
-									</f:facet>
-									<h:outputText value="#{eachAttach.createdBy}"/>
-								</h:column>
-								<h:column rendered="#{!empty eachEntry.attachmentList}">
-									<f:facet name="header">
-										<h:outputText value="#{msgs.last_modified}" />
-									</f:facet>
-									<h:outputText value="#{eachAttach.lastModifiedBy}"/>
-								</h:column>
-							</syllabus:syllabus_table>
-						</f:subview>
 						<f:verbatim></div></div></f:verbatim>
 					</t:dataList>
 				<h:outputText value="#{msgs.syllabus_noEntry}" styleClass="instruction" rendered="#{SyllabusTool.displayNoEntryMsg}"/>
 			</syllabus:syllabus_if>				
 			<syllabus:syllabus_ifnot test="#{SyllabusTool.syllabusItem.redirectURL}">
-  			<syllabus:syllabus_iframe redirectUrl="#{SyllabusTool.syllabusItem.redirectURL}" width="100%" height="500"/>
+               <syllabus:syllabus_if test="#{SyllabusTool.openInNewWindowAsString}">
+  			     <syllabus:syllabus_iframe redirectUrl="#{SyllabusTool.syllabusItem.redirectURL}" width="100%" height="500"/>
+               </syllabus:syllabus_if>
+                <syllabus:syllabus_ifnot test="#{SyllabusTool.openInNewWindowAsString}">
+                    <h:outputText escape="false" value="<script>javascript:printFriendly('#{SyllabusTool.syllabusItem.redirectURL}');</script>" />
+                </syllabus:syllabus_ifnot>
 			</syllabus:syllabus_ifnot>
 			<f:verbatim>
 				<div id="confirmDelete" style="display:none">
@@ -397,7 +334,38 @@
 					</p>
 				</div>
 			</f:verbatim>
+
 		</h:form>
+		
+		<!-- This section is used for internationalization for JS files
+			This method is b/c of SAK-25424.  The original method was to use 
+			saved: "<h:outputText value="#{msgs.saved}"/>"
+			but that doesn't work for accent characters, hence this messages table below
+		 -->
+	
+		<f:verbatim>
+			<span id="messages" style="display:none">
+				<span id="syllabus_title"></f:verbatim><h:outputText value="#{msgs.syllabus_title}"/><f:verbatim></span>
+				<span id="clickToAddTitle"></f:verbatim><h:outputText value="#{msgs.clickToAddTitle}"/><f:verbatim></span>
+				<span id="startdatetitle"></f:verbatim><h:outputText value="#{msgs.startdatetitle}"/><f:verbatim></span>
+				<span id="clickToAddStartDate"></f:verbatim><h:outputText value="#{msgs.clickToAddStartDate}"/><f:verbatim></span>
+				<span id="clickToAddEndDate"></f:verbatim><h:outputText value="#{msgs.clickToAddEndDate}"/><f:verbatim></span>
+				<span id="clickToAddBody"></f:verbatim><h:outputText value="#{msgs.clickToAddBody}"/><f:verbatim></span>
+				<span id="saved"></f:verbatim><h:outputText value="#{msgs.saved}"/><f:verbatim></span>
+				<span id="error"></f:verbatim><h:outputText value="#{msgs.error}"/><f:verbatim></span>
+				<span id="required"></f:verbatim><h:outputText value="#{msgs.required}"/><f:verbatim></span>
+				<span id="startBeforeEndDate"></f:verbatim><h:outputText value="#{msgs.startBeforeEndDate}"/><f:verbatim></span>
+				<span id="calendarDatesNeeded"></f:verbatim><h:outputText value="#{msgs.calendarDatesNeeded}"/><f:verbatim></span>
+				<span id="clickToExpandAndCollapse"></f:verbatim><h:outputText value="#{msgs.clickToExpandAndCollapse}"/><f:verbatim></span>
+				<span id="bar_delete"></f:verbatim><h:outputText value="#{msgs.bar_delete}"/><f:verbatim></span>
+				<span id="bar_cancel"></f:verbatim><h:outputText value="#{msgs.bar_cancel}"/><f:verbatim></span>
+				<span id="confirmDelete"></f:verbatim><h:outputText value="#{msgs.confirmDelete}"/><f:verbatim></span>
+				<span id="deleteItemTitle"></f:verbatim><h:outputText value="#{msgs.deleteItemTitle}"/><f:verbatim></span>
+				<span id="deleteAttachmentTitle"></f:verbatim><h:outputText value="#{msgs.addItemTitle}"/><f:verbatim></span>
+				<span id="bar_new"></f:verbatim><h:outputText value="#{msgs.bar_new}"/><f:verbatim></span>
+				<span id="addItemTitle"></f:verbatim><h:outputText value="#{msgs.addItemTitle}"/><f:verbatim></span>
+			</span>
+		</f:verbatim>
 	</sakai:view_content>
 	</sakai:view_container>
 </f:view>

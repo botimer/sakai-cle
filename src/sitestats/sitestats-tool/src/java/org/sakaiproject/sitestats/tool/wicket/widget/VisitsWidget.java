@@ -1,6 +1,6 @@
 /**
  * $URL: https://source.sakaiproject.org/svn/sitestats/trunk/sitestats-tool/src/java/org/sakaiproject/sitestats/tool/wicket/widget/VisitsWidget.java $
- * $Id: VisitsWidget.java 105078 2012-02-24 23:00:38Z ottenhoff@longsight.com $
+ * $Id: VisitsWidget.java 128561 2013-08-16 01:43:57Z matthew@longsight.com $
  *
  * Copyright (c) 2006-2009 The Sakai Foundation
  *
@@ -486,7 +486,7 @@ public class VisitsWidget extends Panel {
 				rp.setHowSortAscending(true);
 				rp.setHowSortBy(StatsManager.T_DATE);
 				r.setReportParams(rp);
-				PagingPosition paging = new PagingPosition(0, 0);
+				PagingPosition paging = new PagingPosition();
 				Report report = Locator.getFacade().getReportManager().getReport(r, true, paging, false);
 				Date firstDate = new Date();
 				if(report.getReportData().size() > 0) {

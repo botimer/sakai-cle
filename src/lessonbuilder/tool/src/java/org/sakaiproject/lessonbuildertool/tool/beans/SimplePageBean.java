@@ -101,9 +101,11 @@ import org.sakaiproject.lessonbuildertool.service.GroupPermissionsService;
 import org.sakaiproject.lessonbuildertool.service.LessonBuilderEntityProducer;
 import org.sakaiproject.lessonbuildertool.service.LessonEntity;
 import org.sakaiproject.lessonbuildertool.service.LessonSubmission;
+import org.sakaiproject.lessonbuildertool.service.LessonsAccess;
 import org.sakaiproject.lessonbuildertool.tool.producers.ShowItemProducer;
 import org.sakaiproject.lessonbuildertool.tool.producers.ShowPageProducer;
 import org.sakaiproject.lessonbuildertool.tool.view.GeneralViewParameters;
+import org.sakaiproject.lessonbuildertool.service.AjaxServer;
 import org.sakaiproject.memory.api.Cache;
 import org.sakaiproject.memory.api.MemoryService;
 import org.sakaiproject.site.api.Group;
@@ -221,6 +223,8 @@ public class SimplePageBean {
 
 	public Long itemId = null;
 	public boolean isMultimedia = false;
+	public int multimediaDisplayType = 0;
+	public String multimediaMimeType = null;
 
 	public String commentsId;
 	public boolean anonymous;
@@ -407,7 +411,7 @@ public class SimplePageBean {
 
     // Image types
 
-	private static ArrayList<String> imageTypes;
+	public static ArrayList<String> imageTypes;
 
 	static {
 		imageTypes = new ArrayList<String>();
@@ -465,6 +469,7 @@ public class SimplePageBean {
 	private SecurityService securityService;
 	private SiteService siteService;
 	private SimplePageToolDao simplePageToolDao;
+	private LessonsAccess lessonsAccess;
 	
 	private MessageLocator messageLocator;
 	public void setMessageLocator(MessageLocator x) {
@@ -748,6 +753,18 @@ public class SimplePageBean {
 	    isMultimedia = isMm;
 	}
 	
+	public void setMultimediaDisplayType(String type) {
+	    if (type != null && !type.trim().equals("")) {
+		try {
+		    multimediaDisplayType = Integer.valueOf(type);
+		} catch (Exception e) {}
+	    }
+	}
+
+	public void setMultimediaMimeType(String type) {
+	    multimediaMimeType = type;
+	}
+
 	public void setWebsite(boolean isWebsite) {
 	    this.isWebsite = isWebsite;
 	}
@@ -846,6 +863,8 @@ public class SimplePageBean {
 		if (canEditPage()) {
 			Placement placement = toolManager.getCurrentPlacement();
 
+// WARNING: keep in sync with code in AjaxFilter.java
+
 			StringBuilder error = new StringBuilder();
 
 			// there's an issue with HTML security in the Sakai community.
@@ -871,10 +890,10 @@ public class SimplePageBean {
 				filterSpec = filterHtml;
 			    // no, default to LOW. That will allow embedding but not Javascript
 			    if (filterSpec == null) // should never be null. unspeciifed should give ""
-				filter = FILTER_LOW;
+				filter = FILTER_DEFAULT;
 			    // old specifications
 			    else if (filterSpec.equalsIgnoreCase("true"))
-				filter = FILTER_LOW; // old value of true produced the same result as missing
+				filter = FILTER_HIGH; // old value of true produced the same result as missing
 			    else if (filterSpec.equalsIgnoreCase("false"))			    
 				filter = FILTER_NONE;
 			    // new ones
@@ -888,7 +907,7 @@ public class SimplePageBean {
 				filter = FILTER_NONE;
 			    // unspecified
 			    else
-				filter = FILTER_LOW;
+				filter = FILTER_DEFAULT;
 			}			    
 			if (filter.equals(FILTER_NONE)) {
 			    html = FormattedText.processHtmlDocument(contents, error);
@@ -919,6 +938,8 @@ public class SimplePageBean {
 
 			}
 
+// WARNING: keep in sync with code in AjaxFilter.java
+
 			// if (getCurrentPage().getOwner() != null || filterHtml 
 			//		&& !"false".equals(placement.getPlacementConfig().getProperty("filterHtml")) ||
 			//		"true".equals(placement.getPlacementConfig().getProperty("filterHtml"))) {
@@ -938,13 +959,18 @@ public class SimplePageBean {
 				}
 
 				item.setHtml(html);
+				item.setPrerequisite(this.prerequisite);
 				setItemGroups(item, selectedGroups);
 				update(item);
 			} else {
 				rv = "cancel";
 			}
-
 			placement.save();
+
+			String errString = error.toString();
+			if (errString != null && errString.length() > 0)
+			    setErrMessage(errString);
+
 		} else {
 			rv = "cancel";
 		}
@@ -971,17 +997,18 @@ public class SimplePageBean {
     // get mime type for a URL. connect to the server hosting
     // it and ask them. Sorry, but I don't think there's a better way
 	public String getTypeOfUrl(String url) {
-	    String mimeType = null;
+	    String mimeType = "text/html";
 
 	    // try to find the mime type of the remote resource
 	    // this is only likely to be a problem if someone is pointing to
 	    // a url within Sakai. We think in realistic cases those that are
 	    // files will be handled as files, so anything that comes where
 	    // will be HTML. That's the default if this fails.
+	    URLConnection conn = null;
 	    try {
-		URLConnection conn = new URL(url).openConnection();
-		conn.setConnectTimeout(30000);
-		conn.setReadTimeout(30000);
+		conn = new URL(new URL(ServerConfigurationService.getServerUrl()),url).openConnection();
+		conn.setConnectTimeout(10000);
+		conn.setReadTimeout(10000);
 		// generate cookie based on code in  RequestFilter.java
 		//String suffix = System.getProperty("sakai.serverId");
 		//if (suffix == null || suffix.equals(""))
@@ -997,8 +1024,17 @@ public class SimplePageBean {
 		    t = t.trim();
 		    mimeType = t;
 		}
-		conn.getInputStream().close();
-	    } catch (Exception e) {log.error("getTypeOfUrl connection error " + e);};
+	    } catch (Exception e) {
+		log.error("getTypeOfUrl connection error " + e);
+	    } finally {
+		if (conn != null) {
+		    try {
+			conn.getInputStream().close();
+		    } catch (Exception e) {
+			log.error("getTypeOfUrl unable to close " + e);
+		    }
+		}
+	    }
 	    return mimeType;
 	}
 
@@ -1128,6 +1164,7 @@ public class SimplePageBean {
 		
 		i.setDescription(description);
 		i.setSameWindow(false);
+		i.setAttribute("addedby", getCurrentUserId());
 		update(i);
 
 		return "importing";
@@ -1243,11 +1280,18 @@ public class SimplePageBean {
 		String ref = "/site/" + getCurrentSiteId();
 		return securityService.unlock(SimplePage.PERMISSION_LESSONBUILDER_READ, ref);
 	}
+
 	public boolean canEditSite() {
 		String ref = "/site/" + getCurrentSiteId();
 		return securityService.unlock("site.upd", ref);
 	}
 
+	public boolean canSeeAll() {
+	    if (canEditPage())
+		return true;
+	    String ref = "/site/" + getCurrentSiteId();
+	    return securityService.unlock(SimplePage.PERMISSION_LESSONBUILDER_SEE_ALL, ref);
+	}
 
 	public void setToolManager(ToolManager toolManager) {
 		this.toolManager = toolManager;
@@ -1264,6 +1308,11 @@ public class SimplePageBean {
 	public void setSimplePageToolDao(Object dao) {
 		simplePageToolDao = (SimplePageToolDao) dao;
 	}
+
+	public void setLessonsAccess(LessonsAccess a) {
+		lessonsAccess = a;
+	}
+
 
 	public List<SimplePageItem>  getItemsOnPage(long pageid) {
 		List<SimplePageItem>items = itemsCache.get(pageid);
@@ -1553,7 +1602,7 @@ public class SimplePageBean {
 	    				lessonEntity = assignmentEntity.getEntity(nextItem.getSakaiId()); break;
 	    			case SimplePageItem.ASSESSMENT:
 	    				view.setClearAttr("LESSONBUILDER_RETURNURL_SAMIGO");
-	    				lessonEntity = quizEntity.getEntity(nextItem.getSakaiId()); break;
+	    				lessonEntity = quizEntity.getEntity(nextItem.getSakaiId(),this); break;
 	    			case SimplePageItem.FORUM:
 	    				lessonEntity = forumEntity.getEntity(nextItem.getSakaiId()); break;
 	    			case SimplePageItem.BLTI:
@@ -1637,7 +1686,7 @@ public class SimplePageBean {
 				lessonEntity = assignmentEntity.getEntity(prevItem.getSakaiId()); break;
 			case SimplePageItem.ASSESSMENT:
 				view.setClearAttr("LESSONBUILDER_RETURNURL_SAMIGO");
-				lessonEntity = quizEntity.getEntity(prevItem.getSakaiId()); break;
+				lessonEntity = quizEntity.getEntity(prevItem.getSakaiId(),this); break;
 			case SimplePageItem.FORUM:
 				lessonEntity = forumEntity.getEntity(prevItem.getSakaiId()); break;
 			case SimplePageItem.BLTI:
@@ -2324,7 +2373,7 @@ public class SimplePageBean {
     // because we call it when deleting or updating items, before saving them to the database.
     // The caller will update the item in the database, typically after this call
     //    correct is correct value, i.e whether it hsould be there or not
-	private void checkControlGroup(SimplePageItem i, boolean correct) {
+	public void checkControlGroup(SimplePageItem i, boolean correct) {
 		if (i.getType() == SimplePageItem.RESOURCE) {
 		    checkControlResource(i, correct);
 		    return;
@@ -2354,7 +2403,7 @@ public class SimplePageBean {
 					case SimplePageItem.ASSIGNMENT:
 					    lessonEntity = assignmentEntity.getEntity(i.getSakaiId()); break;
 					case SimplePageItem.ASSESSMENT:
-					    lessonEntity = quizEntity.getEntity(i.getSakaiId()); break;
+					    lessonEntity = quizEntity.getEntity(i.getSakaiId(),this); break;
 					case SimplePageItem.FORUM:
 					    lessonEntity = forumEntity.getEntity(i.getSakaiId()); break;
 					}
@@ -2380,7 +2429,7 @@ public class SimplePageBean {
 				case SimplePageItem.ASSIGNMENT:
 				    lessonEntity = assignmentEntity.getEntity(i.getSakaiId()); break;
 				case SimplePageItem.ASSESSMENT:
-				    lessonEntity = quizEntity.getEntity(i.getSakaiId()); break;
+				    lessonEntity = quizEntity.getEntity(i.getSakaiId(),this); break;
 				case SimplePageItem.FORUM:
 				    lessonEntity = forumEntity.getEntity(i.getSakaiId()); break;
 				}
@@ -2679,9 +2728,11 @@ public class SimplePageBean {
     /// ShowPageProducers needs the item ID list anyway. So to avoid calling the underlying
     // code twice, we take that list and translate to titles, rather than calling
     // getItemGroups again
-	public String getItemGroupTitles(String itemGroups) {
+	public String getItemGroupTitles(String itemGroups, SimplePageItem item) {
+	    String ret = "";
 	    if (itemGroups == null || itemGroups.equals(""))
-		return null;
+		ret = "";
+	    else {
 
 	    List<String> groupNames = new ArrayList<String>();
 	    Site site = getCurrentSite();
@@ -2698,13 +2749,24 @@ public class SimplePageBean {
 		    groupNames.add(messageLocator.getMessage("simplepage.deleted-group"));
 	    }
 	    Collections.sort(groupNames);
-	    String ret = "";
 	    for (String name: groupNames) {
 		if (ret.equals(""))
 		    ret = name;
 		else
 		    ret = ret + "," + name;
 	    }
+
+	    }
+
+	    if (item.isPrerequisite()) {
+		if (ret.equals(""))
+		    ret = messageLocator.getMessage("simplepage.prerequisites_tag");
+		else
+		    ret = messageLocator.getMessage("simplepage.prerequisites_tag") + "; " + ret;
+	    }
+
+	    if (ret.equals(""))
+		return null;
 
 	    return ret;
 	}
@@ -2789,14 +2851,18 @@ public class SimplePageBean {
 	       case SimplePageItem.ASSIGNMENT:
 		   entity = assignmentEntity.getEntity(i.getSakaiId()); break;
 	       case SimplePageItem.ASSESSMENT:
-		   entity = quizEntity.getEntity(i.getSakaiId()); break;
+		   entity = quizEntity.getEntity(i.getSakaiId(),this); break;
 	       case SimplePageItem.FORUM:
 		   entity = forumEntity.getEntity(i.getSakaiId()); break;
-	       case SimplePageItem.RESOURCE:
 	       case SimplePageItem.MULTIMEDIA:
+		   String displayType = i.getAttribute("multimediaDisplayType");
+		   if ("1".equals(displayType) || "3".equals(displayType))
+		       return getLBItemGroups(i); // for all native LB objects
+		   else
+		       return getResourceGroups(i, nocache);  // responsible for caching the result
+	       case SimplePageItem.RESOURCE:
 		   return getResourceGroups(i, nocache);  // responsible for caching the result
 		   // throws IdUnusedException if necessary
-
 	       case SimplePageItem.BLTI:
 		   entity = bltiEntity.getEntity(i.getSakaiId());
 		   if (entity == null || !entity.objectExists())
@@ -2965,11 +3031,16 @@ public class SimplePageBean {
 	   case SimplePageItem.ASSIGNMENT:
 	       lessonEntity = assignmentEntity.getEntity(i.getSakaiId()); break;
 	   case SimplePageItem.ASSESSMENT:
-	       lessonEntity = quizEntity.getEntity(i.getSakaiId()); break;
+	       lessonEntity = quizEntity.getEntity(i.getSakaiId(),this); break;
 	   case SimplePageItem.FORUM:
 	       lessonEntity = forumEntity.getEntity(i.getSakaiId()); break;
-	   case SimplePageItem.RESOURCE:
 	   case SimplePageItem.MULTIMEDIA:
+	       String displayType = i.getAttribute("multimediaDisplayType");
+	       if ("1".equals(displayType) || "3".equals(displayType))
+		   return setLBItemGroups(i, groups);
+	       else
+		   return setResourceGroups (i, groups);
+	   case SimplePageItem.RESOURCE:
 	       return setResourceGroups (i, groups);
 	   case SimplePageItem.TEXT:
 	   case SimplePageItem.PAGE:
@@ -3159,7 +3230,7 @@ public class SimplePageBean {
 			return "failure";
 		} else {
 			try {
-			    LessonEntity selectedObject = quizEntity.getEntity(selectedQuiz);
+			    LessonEntity selectedObject = quizEntity.getEntity(selectedQuiz,this);
 			    if (selectedObject == null)
 				return "failure";
 
@@ -3168,7 +3239,7 @@ public class SimplePageBean {
 			    if (itemId != null && itemId != -1) {
 				i = findItem(itemId);
 				// do getEntity/getreference to normalize, in case sakaiid is old format
-				LessonEntity existing = quizEntity.getEntity(i.getSakaiId());
+				LessonEntity existing = quizEntity.getEntity(i.getSakaiId(),this);
 				String ref = existing.getReference();
 				// if same quiz, nothing to do
 				if (!ref.equals(selectedQuiz)) {
@@ -3214,8 +3285,22 @@ public class SimplePageBean {
 		String url = linkUrl;
 		url = url.trim();
 
-		if (!url.startsWith("http://") && !url.startsWith("https://")) {
-			url = "http://" + url;
+		// the intent is to handle something like www.cnn.com or www.cnn.com/foo
+		// Note that the result has no protocol. That means it will use the protocol
+		// of the page it's displayed from, which should be right.
+		if (!url.startsWith("http:") && !url.startsWith("https:") && !url.startsWith("/")) {
+		    String atom = url;
+		    int i = atom.indexOf("/");
+		    if (i >= 0)
+			atom = atom.substring(0, i);
+		    // first atom is hostname
+		    if (atom.indexOf(".") >= 0) {
+			String server= ServerConfigurationService.getServerUrl();
+			if (server.startsWith("https:"))
+			    url = "https://" + url;
+			else
+			    url = "http://" + url;
+		    }
 		}
 
 		appendItem(url, url, SimplePageItem.URL);
@@ -3961,10 +4046,21 @@ public class SimplePageBean {
 		return (getLogEntry(itemId) != null);
 	}
 
+	public boolean isItemVisible(SimplePageItem item) {
+	    return isItemVisible(item, null);
+	}
+
+	public boolean isItemVisible(SimplePageItem item, SimplePage page) {
+	    return isItemVisible(item, page, true);
+	}
+
     // if the item has a group requirement, are we in one of the groups.
     // this is called a lot and is fairly expensive, so results are cached
-	public boolean isItemVisible(SimplePageItem item) {
-		if (canEditPage()) {
+    // for student pages, if it's not the owner, use resources test for resources
+    // for a student page, we don't bypass hidden and release date, so it's safest
+    // just to call contentHosting.
+	public boolean isItemVisible(SimplePageItem item, SimplePage page, boolean testpriv) {
+		if (testpriv && canSeeAll()) {
 		    return true;
 		}
 		Boolean ret = visibleCache.get(item.getId());
@@ -3974,11 +4070,55 @@ public class SimplePageBean {
 
 		// item is page, and it is hidden or not released
 		if (item.getType() == SimplePageItem.PAGE) {
-		    SimplePage page = getPage(Long.valueOf(item.getSakaiId()));
-		    if (page.isHidden())
+		    SimplePage itemPage = getPage(Long.valueOf(item.getSakaiId()));
+		    if (itemPage.isHidden())
 			return false;
-		    if (page.getReleaseDate() != null && page.getReleaseDate().after(new Date()))
+		    if (itemPage.getReleaseDate() != null && itemPage.getReleaseDate().after(new Date()))
 			return false;
+		} else if (page != null && page.getOwner() != null && (item.getType() == SimplePageItem.RESOURCE || item.getType() == SimplePageItem.MULTIMEDIA)) {
+		    // This code is taken from LessonBuilderAccessService, mostly
+
+		    // for student pages, we give people access to files in the owner's worksite
+		    // get data we need to check that
+
+		    String id = item.getSakaiId();
+		    String owner = page.getOwner();  // if student content
+		    String group = page.getGroup();  // if student content
+		    if (group != null)
+			group = "/site/" + page.getSiteId() + "/group/" + group;
+		    String currentSiteId = page.getSiteId();
+
+		    // if group owned, and /user/xxxx is the person who created the resource
+		    // this will be his uesrid. Note that xxxx is eid, so we need to translate
+		    String usersite = null;
+					    
+		    if (owner != null && group != null && id.startsWith("/user/")) {
+			String username = id.substring(6);
+			int slash = username.indexOf("/");
+			if (slash > 0)
+			    usersite = username.substring(0,slash);
+			// normally it is /user/EID, so convert to userid
+			try {
+			    usersite = UserDirectoryService.getUserId(usersite);
+			} catch (Exception e) {};
+			String itemcreator = item.getAttribute("addedby");
+			if (usersite != null && itemcreator != null && !usersite.equals(itemcreator))
+			    usersite = null;
+		    }
+
+		    if (owner != null && usersite != null && AuthzGroupService.getUserRole(usersite, group) != null) {
+			return true;
+		    } else if (owner != null && group == null && id.startsWith("/user/" + owner)) {
+			return true;
+		    } else {
+			try {
+			    contentHostingService.checkResource(id);
+			    return true;
+			} catch (Exception e) {
+			    // I think we should hide the item no matter what the error is
+			    return false;
+			}
+		    }
 		}
 
 		Collection<String>itemGroups = null;
@@ -4105,7 +4245,7 @@ public class SimplePageBean {
 			    completeCache.put(itemId, false);
 			    return false;
 			}
-			LessonEntity quiz = quizEntity.getEntity(item.getSakaiId());
+			LessonEntity quiz = quizEntity.getEntity(item.getSakaiId(),this);
 			if (quiz == null) {
 			    completeCache.put(itemId, false);
 			    return false;
@@ -4341,26 +4481,28 @@ public class SimplePageBean {
 
     // return list of pages needed for current page. This is the primary code
     // used by ShowPageProducer to see whether the user is allowed to the page
-    // (given that they have read permission, of course)
+    // (given that they have read permission, of course). Use LessonsAccess
+    // elsewhere, because there are additional checks in ShowPageProducer that
+    // are not in this code.
     // Note that the same page can occur
     // multiple places, but we're passing the item, so we've got the right one
 	public List<String> pagesNeeded(SimplePageItem item) {
 		String currentPageId = Long.toString(getCurrentPageId());
 		List<String> needed = new ArrayList<String>();
 
-		if (!item.isPrerequisite()){
-			return needed;
-		}
-
 	    // authorized or maybe user is gaming us, or maybe next page code
 	    // sent them to something that isn't available.
 	    // as an optimization check haslogentry first. That will be true if
 	    // they have been here before. Saves us the trouble of doing full
 	    // access checking. Otherwise do a real check. That should only happen
-	    // for next page in odd situations.
+	    // for next page in odd situations. The code in ShowPageProducer checks
+	    // visible and release for this page, so we really need
+	    // available for this item. But to be complete we do need to check
+	    // accessibility of the containing page.
 		if (item.getPageId() > 0) {
 			if (!hasLogEntry(item.getId()) &&
-					!isItemAvailable(item, item.getPageId())) {
+		       	    (!isItemAvailable(item, item.getPageId()) ||
+			     !lessonsAccess.isPageAccessible(item.getPageId(), getCurrentSiteId(), getCurrentUserId(), this))){
 				SimplePage parent = getPage(item.getPageId());
 				if (parent != null)
 					needed.add(parent.getTitle());
@@ -4370,8 +4512,16 @@ public class SimplePageBean {
 			return needed;
 		}
 
-	    // we've got a top level page.
+		// we've got a top level page.
+		// There is no containing page, so this is just available (i.e. prerequesites).
+		// We can't use the normal code because we need a list of prerequisite pages.
+
+		if (!item.isPrerequisite()){
+			return needed;
+		}
+
 	    // get dummy items for top level pages in site
+
 		List<SimplePageItem> items = simplePageToolDao.findItemsInSite(getCurrentSite().getId());
 		// sorted by SQL
 
@@ -4389,19 +4539,33 @@ public class SimplePageBean {
 
     // maybeUpdateLinks checks to see if this page was copied from another
     // site and needs an update
+    // only works if you have lessons write permission. Caller shold check
 	public void maybeUpdateLinks() {
 	    String needsFixup = getCurrentSite().getProperties().getProperty("lessonbuilder-needsfixup");
 	    if (needsFixup == null || !needsFixup.equals("true"))
-		return;
-	    lessonBuilderEntityProducer.updateEntityReferences(getCurrentSiteId());
-	    Site site = getCurrentSite();
-	    ResourcePropertiesEdit rp = site.getPropertiesEdit();
-	    rp.removeProperty("lessonbuilder-needsfixup");
+	    	return;
+
+	    // it's important for only one process to do the update. So instead of depending upon something
+	    // that can be cached and is not synced across sites, do this directly in the DB with somehting
+	    // atomic. Also site save is veyr heavy weight, and not well interlocked. Much better just
+	    // to remove the property. This should only be needed for 10 min (cache lifetime), after which
+	    // the test above will show that it's not needed
+	    //   Permission note: this should work for a student. A full site save won't. However this
+	    // code only gets called for people with lessons.write. Normally lessons.write is also people
+	    // with site.upd, but maybe not always. It should be OK for anyone to clear this flag in this code
+
+	    int updated = 0;
 	    try {
-		siteService.save(site);
+		updated = simplePageToolDao.clearNeedsFixup(getCurrentSiteId());
 	    } catch (Exception e) {
-		log.warn("site save in maybeUpdateLinks " + e);
+		// should get here if the flag has been removed already by another process
+		log.warn("clearneedsfixup " + e);
 	    }
+	    // only do this if there was a flag to delete
+	    if (updated == 0)
+		return;
+
+	    lessonBuilderEntityProducer.updateEntityReferences(getCurrentSiteId());
 	    currentSite = null;  // force refetch next time
 	}
 
@@ -4458,7 +4622,7 @@ public class SimplePageBean {
 				return null;
 			return forum.getTitle();
 		} else if (i.getType() == SimplePageItem.ASSESSMENT) {
-			LessonEntity quiz = quizEntity.getEntity(i.getSakaiId());
+		LessonEntity quiz = quizEntity.getEntity(i.getSakaiId(),this);
 			if (quiz == null)
 				return null;
 			return quiz.getTitle();
@@ -4479,14 +4643,20 @@ public class SimplePageBean {
     // as HTML is an SGML dialect.
     // If you run into trouble with &amp;, you can use ; in the following. Google seems to 
     // process it correctly. ; is a little-known alterantive to & that the RFCs do permit
-       private String normalizeParams(String URL) {
+       private static String normalizeParams(String URL) {
 	   URL = URL.replaceAll("[\\?\\&\\;]", "&");
 	   return URL.replaceFirst("\\&", "?");
        }
 
-       private String getYoutubeKeyFromUrl(String URL) {
+       public static String getYoutubeKeyFromUrl(String URL) {
 	   // 	see if it has a Youtube ID
-	   if (URL.startsWith("http://www.youtube.com/") || URL.startsWith("http://youtube.com/")) {
+	   int offset = 0;
+	   if (URL.startsWith("http:"))
+	       offset = 5;
+	   else if (URL.startsWith("https:"))
+	       offset = 6;
+
+	   if (URL.startsWith("//www.youtube.com/", offset) || URL.startsWith("//youtube.com/", offset)) {
 	       Matcher match = YOUTUBE_PATTERN.matcher(URL);
 	       if (match.find()) {
 		   return normalizeParams(match.group(1));
@@ -4495,7 +4665,7 @@ public class SimplePageBean {
 	       if (match.find()) {
 		   return normalizeParams(match.group(1));
 	       }
-	   }else if(URL.startsWith("http://youtu.be/")) {
+	   }else if(URL.startsWith("//youtu.be/", offset)) {
 	       Matcher match = SHORT_YOUTUBE_PATTERN.matcher(URL);
 	       if(match.find()) {
 		   return normalizeParams(match.group(1));
@@ -4567,6 +4737,12 @@ public class SimplePageBean {
 		
 		// 	no
 		return null;
+	}
+
+    // current recommended best URL for youtube. Put here because the same code is
+    // used a couple of different places
+        public static String getYoutubeUrlFromKey(String key) {
+	    return "https://www.youtube.com/embed/" + key + "?wmode=opaque";
 	}
 
 	public String[] split(String s, String p) {
@@ -4789,6 +4965,29 @@ public class SimplePageBean {
     // of the current user. That's the only consistent approach I could come up with
     // this function uses a security advicor, so that will work.
 	public void addMultimedia() {
+
+	    // This code must be read together with the SimplePageItem.MULTIMEDIA
+	    // display code in ShowPageProducer.java (To find it search for
+	    // multimediaDisplayType) and with the code in show-page.js that
+	    // handles the add multimedia dialog (look for #mm-add-item)
+
+				    // historically this code was to display files ,and urls leading to things
+				    // like MP4. as backup if we couldn't figure out what to do we'd put something
+				    // in an iframe. The one exception is youtube, which we supposed explicitly.
+				    //   However we now support several ways to embed content. We use the
+				    // multimediaDisplayType code to indicate which. The codes are
+				    // 	 1 -- embed code, 2 -- av type, 3 -- oembed, 4 -- iframe
+				    // 2 is the original code: MP4, image, and as a special case youtube urls
+				    // For all practical purposes type 2 is the same as the old items that don't
+	                            // have type codes (although iframes are also handled by the old code)
+				    //    the old code creates ojbects in ContentHosting for both files and URLs.
+				    // The new code saves the embed code or URL itself as an atteibute of the item
+				    // If I were doing it again, I wouldn't create the ContebtHosting item
+				    //   Note that IFRAME is only used for something where the far end claims the MIME
+				    // type is HTML. For weird stuff like MS Word files I use the file display code, which
+	                            //   ShowPageProducer figures out how to display type 2 (or default) items 
+	                            // on the fly, so we don't have to known here what they are.
+
 		SecurityAdvisor advisor = null;
 		try {
 			if(getCurrentPage().getOwner() != null) {
@@ -4871,13 +5070,25 @@ public class SimplePageBean {
 					log.error("addMultimedia error 1 " + e);
 					return;
 				};
-			} else if (mmUrl != null && !mmUrl.trim().equals("")) {
+			} else if (mmUrl != null && !mmUrl.trim().equals("") && multimediaDisplayType != 1 && multimediaDisplayType != 3) {
 				// 	user specified a URL, create the item
 				String url = mmUrl.trim();
-				if (!url.matches("\\w+://.*")) {
-					if (!url.startsWith("//"))
-						url = "//" + url;
-					url = "http:" + url;
+				// if user gives a plain hostname, make it a URL.
+				// ui add https if page is displayed with https. I'm reluctant to use protocol-relative
+				// urls, because I don't know whether all the players understand it.
+				if (!url.startsWith("http:") && !url.startsWith("https:") && !url.startsWith("/")) {
+				    String atom = url;
+				    int i = atom.indexOf("/");
+				    if (i >= 0)
+					atom = atom.substring(0, i);
+				    // first atom is hostname
+				    if (atom.indexOf(".") >= 0) {
+					String server= ServerConfigurationService.getServerUrl();
+					if (server.startsWith("https:"))
+					    url = "https://" + url;
+					else
+					    url = "http://" + url;
+				    }
 				}
 				
 				name = url;
@@ -4914,10 +5125,16 @@ public class SimplePageBean {
 					setErrMessage(messageLocator.getMessage("simplepage.resourceerror").replace("{}", e.toString()));
 					log.error("addMultimedia error 2 " + e);
 					return;
-				};
+				}
 				// 	connect to url and get mime type
-				mimeType = getTypeOfUrl(url);
+				// new dialog passes the mime type
+				if (multimediaMimeType != null && ! "".equals(multimediaMimeType))
+				    mimeType = multimediaMimeType;
+				else
+				    mimeType = getTypeOfUrl(url);
 				
+			} else if (mmUrl != null && !mmUrl.trim().equals("") && (multimediaDisplayType == 1 || multimediaDisplayType == 3)) {
+			    // fall through. we have an embed code, don't need file
 			} else
 				// 	nothing to do
 				return;
@@ -4948,12 +5165,26 @@ public class SimplePageBean {
 				item.setName(name);
 			}
 			
+			// remember who added it, for permission checks
+			item.setAttribute("addedby", getCurrentUserId());
+
 			if (mimeType != null) {
 				item.setHtml(mimeType);
 			} else {
 				item.setHtml(null);
 			}
 			
+			if (mmUrl != null && !mmUrl.trim().equals("") && isMultimedia) {
+			    if (multimediaDisplayType == 1)
+				// the code is filtered by the UI, so the user can see the effect.
+				// This protects against someone handcrafting a post.
+				// The code is similar to that in submit, but currently doesn't
+				// have folder-specific override (because there are no folders involved)
+				item.setAttribute("multimediaEmbedCode", AjaxServer.filterHtml(mmUrl.trim()));
+			    else if (multimediaDisplayType == 3)
+				item.setAttribute("multimediaUrl", mmUrl.trim());
+			    item.setAttribute("multimediaDisplayType", Integer.toString(multimediaDisplayType));
+			}
 			// 	if this is an existing item and a resource, leave it alone
 			// 	otherwise initialize to false
 			if (isMultimedia || itemId == -1)
@@ -4966,6 +5197,7 @@ public class SimplePageBean {
 				else
 					update(item);
 			} catch (Exception e) {
+			    System.out.println("save error " + e);
 				// 	saveItem and update produce the errors
 			}
 		}catch(Exception ex) {
@@ -5196,6 +5428,7 @@ public class SimplePageBean {
 		item.setHeight(height);
 		item.setWidth(width);
 		item.setDescription(description);
+        item.setPrerequisite(prerequisite);
 		item.setHtml(mimetype);
 		update(item);
 
@@ -6082,9 +6315,26 @@ public class SimplePageBean {
 			
 			ContentCollection cc = cce;
 
+			// a directory with just a subdirectory. Use the subdirectory
 			if (children.size() == 1 && children.get(0).endsWith("/")) {
 			    contentCollectionId = children.get(0);
 			    cc = contentHostingService.getCollection(contentCollectionId);
+			}
+
+			// With MacOS we might have __MACOSX and a subdirectory. __MACOSX should be ignored,
+			// so treat it just like the case above
+			if (children.size() == 2 && children.get(0).endsWith("/") && children.get(1).endsWith("/")) {
+			    String dataChild = null;
+			    if (children.get(0).endsWith("__MACOSX/")) {
+				dataChild = children.get(1);
+			    } else if (children.get(1).endsWith("__MACOSX/")) {
+				dataChild = children.get(0);
+			    }
+			    
+			    if (dataChild != null) {
+				contentCollectionId = dataChild;
+				cc = contentHostingService.getCollection(contentCollectionId);
+			    }
 			}
 
 			// Now lets work out what type it is and return the appropriate

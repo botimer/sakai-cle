@@ -1,6 +1,6 @@
 /**********************************************************************************
 * $URL: https://source.sakaiproject.org/svn/osp/trunk/matrix/api/src/java/org/theospi/portfolio/matrix/model/Cell.java $
-* $Id: Cell.java 105079 2012-02-24 23:08:11Z ottenhoff@longsight.com $
+* $Id: Cell.java 131548 2013-11-14 16:42:13Z dsobiera@indiana.edu $
 ***********************************************************************************
 *
  * Copyright (c) 2005, 2006, 2008 The Sakai Foundation
@@ -26,6 +26,7 @@ import java.util.Set;
 
 import org.sakaiproject.metaobj.shared.model.Id;
 import org.sakaiproject.metaobj.shared.model.IdentifiableObject;
+import org.sakaiproject.id.cover.IdManager;
 
 /**
  * @author rpembry
@@ -159,5 +160,9 @@ public class Cell extends IdentifiableObject {
 
    public void setWizardPage(WizardPage wizardPage) {
       this.wizardPage = wizardPage;
+   }
+   
+   public String getUniqueId() {
+       return IdManager.createUuid();
    }
 }

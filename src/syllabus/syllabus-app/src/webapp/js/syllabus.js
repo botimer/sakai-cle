@@ -1,6 +1,7 @@
 var dragStartIndex;
 var editing = false;
 var editorIndex = 1;
+var bodiesLoaded = false;
 
 function setupAccordion(iframId, isInstructor, msgs, openDataId){
 	var activeVar = false;
@@ -58,6 +59,9 @@ function setupAccordion(iframId, isInstructor, msgs, openDataId){
 	}
 	
 	$( "#accordion div.group:first-child h3:first-child").focus();
+	
+	//set hover over text for collapse/expand arrow:
+	$(".ui-accordion-header-icon").attr("title", msgs.clickToExpandAndCollapse);
 }
 
 // if the containing frame is small, then offsetHeight is pretty good for all but ie/xp.
@@ -168,8 +172,8 @@ function setupEditable(msgs, iframId){
 			
 		},
 		format: 'YYYY-MM-DD HH:mm',
-		viewformat: 'MM/DD/YYYY h:mm a',
-		template: 'MM / DD / YYYY hh:mm a',
+		viewformat: 'YYYY/MM/DD h:mm a',
+		template: 'YYYY / MM / DD hh:mm a',
 		placement: "left",
 		url: function(params) {
 			postAjax($(this).parents('div.group').attr("syllabusItem"), params, msgs);
@@ -194,8 +198,8 @@ function setupEditable(msgs, iframId){
 			
 		},
 		format: 'YYYY-MM-DD HH:mm',
-		viewformat: 'MM/DD/YYYY h:mm a',
-		template: 'MM / DD / YYYY hh:mm a',
+		viewformat: 'YYYY/MM/DD h:mm a',
+		template: 'YYYY / MM / DD hh:mm a',
 		placement: "left",
 		url: function(params) {
 			postAjax($(this).parents('div.group').attr("syllabusItem"), params, msgs);
@@ -218,18 +222,48 @@ function setupEditable(msgs, iframId){
 		emptytext: msgs.clickToAddBody,
 		onblur: "ignore",
 		display: function(value, sourceData) {
-			//clear out old html
-			$(this).html("");
-			//set the new html
-			$(this).append(value);
+			//when the display is first displayed (loading the page), the value is plain text (no html),
+			//do so not change anything for the first load (use a boolean set after this jquery: bodiesLoaded)
+			//after it's been loaded and the value changes, we need to update the html with the new value to display the
+			//change properly to the user
+			if(bodiesLoaded){
+				//clear out old html
+				$(this).html("");
+				//set the new html
+				$(this).append(value);
+				//we want the user's to be able to click links in their body text without
+				//having the edit popup
+				$(this).find("a").click(function (event){
+					event.stopPropagation();
+				});
+			}else{
+				//there is a bug in x-editable that, when an element hasn't loaded (i.e. just a youtube video (nothing else))
+				//and has a width of 0, will consider the element empty and put in the default empty text and not
+				//display the real value.  Work around is to set the width/height to a number > 0
+				//https://github.com/vitalets/x-editable/issues/344
+				$(this).width(1);
+				$(this).height(1);
+			}
 		},
 		url: function(params) {
 			postAjax($(this).parents('div.group').attr("syllabusItem"), params, msgs);
 		}
 	}).on( "tooltipopen", function( event, ui ) {
-		
+		var innerHtml = $(this).closest(".bodyInput").html();
 		setTimeout(function(){
+					//scroll user to top of the section so they will see the popup box if the
+					//item is very large:
+					var topOffset = $(".ui-tooltip").offset().top;
+					if($("#" + iframId, window.parent.document).parents('html, body').size() > 0){
+						//we are in the portal, grab parent
+						$("#" + iframId, window.parent.document).parents('html, body').animate({scrollTop: topOffset});
+					}else{
+						//we are in tool view w/o portal, grab html/body
+						$('html, body').animate({scrollTop: topOffset});
+					}
+					
 					$("#textAreaWysiwyg").attr("id","textAreaWysiwyg" + editorIndex).focus();
+					$("#textAreaWysiwyg" + editorIndex).val(innerHtml);
 					$("#loading").hide();
 					$(".editable-submit").click(function(event) {
 						editorClick(event);
@@ -237,14 +271,31 @@ function setupEditable(msgs, iframId){
 					var toolTipLeft = $("#loading").closest(".ui-tooltip").position().left;
 					var accordionLeft = $( "#accordion" ).position().left;
 					var moveLeft = toolTipLeft - accordionLeft - 50;
-					$("#loading").closest(".ui-tooltip").animate({left: "-=" + moveLeft}, 10);
+					$("#loading").closest(".ui-tooltip").animate({left: "-=" + moveLeft, top: (topOffset)}, 10);
 					var width = $( "#accordion" ).width() - 100;
 					sakai.editor.launch("textAreaWysiwyg" + editorIndex, {}, width, 300);
 					editorIndex++;
 					$(".editable-buttons").css({"display":"block", "margin-left":"0px","margin-top":"7px"});
+					//CKEditor needs to run some final functions when the checkbox is clicked:
+					$("button.editable-submit").click(function(event){
+						for ( instance in CKEDITOR.instances ){
+					        CKEDITOR.instances[instance].updateElement();
+						}
+					});
 					mySetMainFrameHeight(iframId, 600);
 			}, 1000);
 	});
+	//since we set the width/height to 1 to work around a bug, we need to set it back to auto:
+	//https://github.com/vitalets/x-editable/issues/344
+	$(".bodyInput").css('width', 'auto');
+	$(".bodyInput").css('height', 'auto');
+	
+	//we want the user's to be able to click links in their body text without
+	//having the edit popup
+	$(".bodyInput a").click(function (event){
+		event.stopPropagation();
+	});
+	bodiesLoaded = true;
 }
 
 function editorClick(event){
@@ -489,4 +540,10 @@ function showConfirmAdd(msgs, mainframeId){
 				}
 			}
 	});
+}
+
+if(typeof String.prototype.trim !== 'function') {
+	String.prototype.trim = function() {
+		return this.replace(/^\s+|\s+$/g, ''); 
+	}
 }

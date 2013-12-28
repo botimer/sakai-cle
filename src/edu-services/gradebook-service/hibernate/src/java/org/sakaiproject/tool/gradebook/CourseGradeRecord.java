@@ -1,6 +1,6 @@
 /**********************************************************************************
 *
-* $Id: CourseGradeRecord.java 105077 2012-02-24 22:54:29Z ottenhoff@longsight.com $
+* $Id: CourseGradeRecord.java 130402 2013-10-11 18:54:57Z matthew@longsight.com $
 *
 ***********************************************************************************
 *
@@ -201,6 +201,11 @@ public class CourseGradeRecord extends AbstractGradeRecord {
 			percentageEarned = Double.valueOf(bdTotalPointsEarned.divide(bdTotalPointsPossible, GradebookService.MATH_CONTEXT).multiply(new BigDecimal("100")).doubleValue());
 		}
 		autoCalculatedGrade = percentageEarned;
+	}
+	
+	//Added by -Qu for totalPoints implementation in GB2 bugid:4371 9/2011
+	public void setCalculatedPointsEarned(double literalTotalPointsEarned){
+		this.calculatedPointsEarned = literalTotalPointsEarned;
 	}
 
 	public void initNonpersistentFields(double totalPointsPossible, double totalPointsEarned, double literalTotalPointsEarned) {

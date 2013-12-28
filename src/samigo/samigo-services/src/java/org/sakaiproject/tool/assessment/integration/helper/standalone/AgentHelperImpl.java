@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/sam/trunk/samigo-services/src/java/org/sakaiproject/tool/assessment/integration/helper/standalone/AgentHelperImpl.java $
- * $Id: AgentHelperImpl.java 106463 2012-04-02 12:20:09Z david.horwitz@uct.ac.za $
+ * $Id: AgentHelperImpl.java 130512 2013-10-15 23:46:40Z ktsao@stanford.edu $
  ***********************************************************************************
  *
  * Copyright (c) 2004, 2005, 2006, 2008 The Sakai Foundation
@@ -361,4 +361,19 @@ public class AgentHelperImpl implements AgentHelper
   {
     return true;//always, in standalone
   }
+
+    public String getDisplayId(String agentId) {
+        if (AgentHelper.UNASSIGNED_AGENT_STRING.equals(agentString)) {
+            return "";
+        }
+        try {
+            if (!agentString.startsWith("anonymous_")) {
+                return UserDirectoryService.getUser(agentString).getDisplayId();
+            }
+
+        } catch (Exception e) {
+            log.warn("getDisplayId: " + e.getMessage());
+        }
+        return "";
+    }
 }

@@ -1,6 +1,6 @@
 /**********************************************************************************
 * $URL: https://source.sakaiproject.org/svn/osp/trunk/common/api/src/java/org/theospi/portfolio/review/mgt/ReviewManager.java $
-* $Id: ReviewManager.java 105079 2012-02-24 23:08:11Z ottenhoff@longsight.com $
+* $Id: ReviewManager.java 130580 2013-10-17 17:43:15Z dsobiera@indiana.edu $
 ***********************************************************************************
 *
  * Copyright (c) 2005, 2006, 2007, 2008 The Sakai Foundation
@@ -83,6 +83,18 @@ public interface ReviewManager {
      * @return List of Review
      */
     public List getReviewsByParentAndTypes(String parentId, int[] types, String siteId, String producer);
+    
+    /**
+     * Returns a list of reviews for the given criteria
+     * 
+     * @param itemRef
+     * @param type
+     * @param parentId
+     * @param siteId
+     * @param producer
+     * @return List of Review items
+     */
+    public List<Review> getReviewsByItemAndType(String itemRef, int type, String parentId, String siteId, String producer);
 
     /**
      * Retrieve all reviews for all cells in a user's matrix. This does not push the

@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/portal/trunk/portal-impl/impl/src/java/org/sakaiproject/portal/charon/handlers/TimeoutDialogHandler.java $
- * $Id: TimeoutDialogHandler.java 105079 2012-02-24 23:08:11Z ottenhoff@longsight.com $
+ * $Id: TimeoutDialogHandler.java 130139 2013-10-03 16:28:33Z gjthomas@iu.edu $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008 The Sakai Foundation
@@ -103,8 +103,8 @@ public class TimeoutDialogHandler extends BasePortalHandler
 				PortalRenderContext rcontext = portal.includePortal(req, res, session,
 						null,
 						/* toolId */null, req.getContextPath() + req.getServletPath(),
-						/* prefix */"site", /* doPages */true, /* resetTools */false,
-						/* includeSummary */false, /* expandSite */true);
+						/* prefix */"site", /* doPages */false, /* resetTools */false,
+						/* includeSummary */false, /* expandSite */false);
 				portal.sendResponse(rcontext, res, parts[1], "text/html; charset=UTF-8");
 			} catch (Exception e) {
 				throw new PortalHandlerException(e);

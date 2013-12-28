@@ -1,6 +1,6 @@
 /**********************************************************************************
  *
- * $Id: GradebookService.java 124813 2013-05-22 09:03:11Z david.horwitz@uct.ac.za $
+ * $Id: GradebookService.java 129384 2013-09-05 14:17:00Z holladay@longsight.com $
  *
  ***********************************************************************************
  *
@@ -547,7 +547,9 @@ public interface GradebookService {
 			String externalId) throws GradebookNotFoundException;
 
 	public Map getImportCourseGrade(String gradebookUid);
-	  
+	public Map getImportCourseGrade(String gradebookUid, boolean useDefault);
+
+
 	/**return Object to avoid circular dependency with sakai-gradebook-tool */
 	public Object getGradebook(String uid) throws GradebookNotFoundException;
 

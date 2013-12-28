@@ -18,8 +18,12 @@
 
 <f:view>
   <sakai:view title="#{msgs.pvt_forward}">
+  	<link rel="stylesheet" href="/library/js/jquery/ui/1.10.3/css/ui-lightness/jquery-ui-1.10.3.custom.min.css" type="text/css" />
+  	<link rel="stylesheet" href="/messageforums-tool/css/select2.css" type="text/css" />
     <h:form id="pvtMsgForward">
-           		<script type="text/javascript" src="/library/js/jquery.js"></script>
+           		<script type="text/javascript" src="/library/js/jquery/jquery-1.9.1.min.js"></script>
+           		<script type="text/javascript" src="/library/js/jquery/ui/1.10.3/jquery-ui.1.10.3.full.min.js"></script>
+           		<sakai:script contextBase="/messageforums-tool" path="/js/select2.min.js"/>
        		<sakai:script contextBase="/messageforums-tool" path="/js/sak-10625.js"/>
        		<sakai:script contextBase="/messageforums-tool" path="/js/messages.js"/>
        		<script type="text/javascript">
@@ -29,6 +33,7 @@
 					{
 						selectObject.options[i].selected=false;
 					}
+					changeSelect(selectObject);
 				}
 				
 				function fadeInBcc(){
@@ -53,6 +58,9 @@
 				  		//BCC has selected items, so show it
 				  		fadeInBcc();
 				  	}
+				  	addTagSelector(document.getElementById('pvtMsgForward:list1'));
+				  	addTagSelector(document.getElementById('pvtMsgForward:list2'));
+				  	resize();
 				});
 			</script>
     <h:panelGroup>
@@ -79,6 +87,8 @@
 		  </h:outputLink>
 		  
 		  <h:messages styleClass="alertMessage" id="errorMessages" rendered="#{! empty facesContext.maximumSeverity}" />
+
+		 <h:outputText style="display:block;" styleClass="messageConfirmation" value="#{msgs.pvt_hiddenGroupsBccMsg}" rendered="#{PrivateMessagesTool.displayHiddenGroupsMsg}" />
 		  
 		   <h:panelGrid styleClass="jsfFormTable" columns="2">
 			  <h:panelGroup styleClass="shorttext required">
@@ -146,7 +156,7 @@
 		  	</h:panelGroup>
 		  	<h:panelGroup styleClass="shorttext bcc" style="display:none">
 				<h:selectManyListbox id="list2" value="#{PrivateMessagesTool.selectedComposeBccList}" size="5" style="width: 20em;">
-	         		<f:selectItems value="#{PrivateMessagesTool.totalComposeToList}"/>
+	         		<f:selectItems value="#{PrivateMessagesTool.totalComposeToBccList}"/>
 	       		</h:selectManyListbox>
 	       		<f:verbatim>
 	       			&nbsp;	     

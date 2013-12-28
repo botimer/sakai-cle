@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/sam/trunk/samigo-app/src/java/org/sakaiproject/tool/assessment/ui/listener/evaluation/SubmissionStatusListener.java $
- * $Id: SubmissionStatusListener.java 106463 2012-04-02 12:20:09Z david.horwitz@uct.ac.za $
+ * $Id: SubmissionStatusListener.java 130512 2013-10-15 23:46:40Z ktsao@stanford.edu $
  ***********************************************************************************
  *
  * Copyright (c) 2004, 2005, 2006, 2007, 2008 The Sakai Foundation
@@ -62,7 +62,7 @@ import org.sakaiproject.tool.assessment.integration.context.IntegrationContextFa
 
 /**
  * <p>Description: Action Listener for displaying Submission Status for anonymnous grading</p>
- * @version $Id: SubmissionStatusListener.java 106463 2012-04-02 12:20:09Z david.horwitz@uct.ac.za $
+ * @version $Id: SubmissionStatusListener.java 130512 2013-10-15 23:46:40Z ktsao@stanford.edu $
  */
 
 public class SubmissionStatusListener
@@ -240,6 +240,7 @@ public class SubmissionStatusListener
           results.setLastInitial("A");
         results.setIdString(agent.getIdString());
         results.setAgentEid(agent.getEidString());
+        results.setAgentDisplayId(agent.getDisplayIdString());
         results.setRole((String)userRoles.get(agentid));
         results.setRetakeAllowed(getRetakeAllowed(agent.getIdString(), studentGradingSummaryDataMap, retakeAssessment));
         if (useridMap.containsKey(agentid) ) {
@@ -324,6 +325,7 @@ public class SubmissionStatusListener
       }
       results.setIdString(agent.getIdString());
       results.setAgentEid(agent.getEidString());
+      results.setAgentDisplayId(agent.getDisplayIdString());
       results.setRole((String)userRoles.get(studentid));
       results.setRetakeAllowed(getRetakeAllowed(agent.getIdString(), studentGradingSummaryDataMap, retakeAssessment));
       retakeAssessment.setStudentGradingSummaryDataMap(studentGradingSummaryDataMap);

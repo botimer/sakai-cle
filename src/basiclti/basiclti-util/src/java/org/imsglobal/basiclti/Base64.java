@@ -1,7 +1,7 @@
 /*
  * $Header: /home/cvs/jakarta-commons/httpclient/src/java/org/apache/commons/httpclient/util/Attic/Base64.java,v 1.6.2.1 2004/02/22 18:21:16 olegk Exp $
- * $Revision: 98512 $
- * $Date: 2011-09-22 13:59:08 -0400 (Thu, 22 Sep 2011) $
+ * $Revision: 131989 $
+ * $Date: 2013-11-26 20:36:00 -0500 (Tue, 26 Nov 2013) $
  *
  *  Copyright 1999-2004 The Apache Software Foundation
  *
@@ -38,7 +38,7 @@ package org.imsglobal.basiclti;
  * 
  * @author Jeffrey Rodriguez
  * @author Mike Bowler
- * @version $Revision: 98512 $ $Date: 2011-09-22 13:59:08 -0400 (Thu, 22 Sep 2011) $
+ * @version $Revision: 131989 $ $Date: 2013-11-26 20:36:00 -0500 (Tue, 26 Nov 2013) $
  * 
  */
 public final class Base64 {
@@ -59,6 +59,7 @@ public final class Base64 {
 	private static final int  SIXTEENBIT = 16;
 
 	/** */
+	@SuppressWarnings("unused")
 	private static final int  SIXBIT = 6;
 
 	/** */

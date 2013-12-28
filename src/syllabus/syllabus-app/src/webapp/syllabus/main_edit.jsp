@@ -3,12 +3,20 @@
 <%@ taglib uri="http://sakaiproject.org/jsf/sakai" prefix="sakai" %>
 <%@ taglib uri="http://sakaiproject.org/jsf/syllabus" prefix="syllabus" %>
 <% response.setContentType("text/html; charset=UTF-8"); %>
-<script type="text/javascript" src="/library/js/jquery/jquery-ui/js/jquery.js"></script>
-<script type="text/javascript" src="/library/js/jquery/jquery-ui/js/jquery-ui.js"></script>
-<link type="text/css" href="/library/js/jquery/jquery-ui/css/smoothness/jquery-ui.css" rel="stylesheet" media="screen" />
+<f:view>
+<jsp:useBean id="msgs" class="org.sakaiproject.util.ResourceLoader" scope="session">
+   <jsp:setProperty name="msgs" property="baseName" value="org.sakaiproject.tool.syllabus.bundle.Messages"/>
+</jsp:useBean>
+	<sakai:view_container title="#{msgs.title_list}">
+	<sakai:view_content>
+
+<script type="text/javascript" src="/library/js/jquery/jquery-1.9.1.min.js"></script>
+<script type="text/javascript" src="/library/js/jquery/ui/1.10.3/jquery-ui.1.10.3.full.min.js"></script>
+<link rel="stylesheet" href="/library/js/jquery/ui/1.10.3/css/ui-lightness/jquery-ui-1.10.3.custom.min.css" type="text/css" />
 <script type="text/javascript" src="js/jquery-ui-timepicker-addon.js"></script>
- <f:view>
-<script>
+<script type="text/javascript" src="js/syllabus.js"></script>
+<link type="text/css" href="syllabus/css/syllabus.css" rel="stylesheet" media="screen" />
+<script type="text/javascript">
   var startDateValues = new Array();
   var dateFormat = '<h:outputText value="#{msgs.jqueryDatePickerDateFormat}"/>';
   var timeFormat = '<h:outputText value="#{msgs.jqueryDatePickerTimeFormat}"/>';
@@ -96,6 +104,19 @@
 		});
 	}
 	
+	function checkStartEndDates(calendarCheckbox){
+		if(calendarCheckbox.checked){
+			//check that this rows has either start or end dates set
+			var startTime = $(calendarCheckbox).parent().parent().find(".dateInputStart").val();
+			var endTime = $(calendarCheckbox).parent().parent().find(".dateInputEnd").val();
+			if((startTime == null || "" == $.trim(startTime))
+					&& (endTime == null || "" == $.trim(endTime))){
+				showMessage("<h:outputText value="#{msgs.calendarDatesNeeded}"/>", false);
+				calendarCheckbox.checked = false;
+			}
+		}
+	}
+	
 	var deleteClick;
             
 	function assignWarningClick(link) {
@@ -119,12 +140,23 @@
 		}
 	}
  </script>
-<jsp:useBean id="msgs" class="org.sakaiproject.util.ResourceLoader" scope="session">
-   <jsp:setProperty name="msgs" property="baseName" value="org.sakaiproject.tool.syllabus.bundle.Messages"/>
-</jsp:useBean>
+<div>
+	<span id="successInfo" class="success popupMessage" style="display:none; float: left;"></span>
+	<span id="warningInfo" class="alertMessage popupMessage" style="display:none; float: left;"></span>
+</div>
+        <script type="text/javascript">
+        	// if redirected, just open in another window else
+        	// open with size approx what actual print out will look like
+        	function printFriendly(url) {
+        		if (url.indexOf("printFriendly") == -1) {
+        			window.open(url,"mywindow");
+        		}
+        		else {
+        			window.open(url,"mywindow","width=960,height=1100,scrollbars=yes");
+        		}
+        	}
+        </script>
 
-	<sakai:view_container title="#{msgs.title_list}">
-	<sakai:view_content>
 		<h:form>
 		  <sakai:tool_bar>
 		  <%-- (gsilver) cannot pass a needed title attribute to these next items --%>
@@ -213,7 +245,7 @@
 									</f:verbatim>
 								</h:panelGroup>
 							</f:facet>
-							<h:selectBooleanCheckbox styleClass="calendarBox" value="#{eachEntry.entry.linkCalendar}" title="#{msgs.selectThisCheckBoxCal}" disabled="#{!eachEntry.posted}"/>
+							<h:selectBooleanCheckbox styleClass="calendarBox" value="#{eachEntry.entry.linkCalendar}" title="#{msgs.selectThisCheckBoxCal}" disabled="#{!eachEntry.posted}" onchange="checkStartEndDates(this)"/>
 						</h:column>
 						<h:column rendered="#{! SyllabusTool.displayNoEntryMsg}">
 							<f:facet name="header">
@@ -255,11 +287,21 @@
 					 accesskey="r" 	/>
 			<f:verbatim></p></f:verbatim>		  
 		  </syllabus:syllabus_if>
-	      <syllabus:syllabus_ifnot test="#{SyllabusTool.syllabusItem.redirectURL}">
-		    <sakai:tool_bar_message value="#{msgs.redirect_sylla}" />
-		    <syllabus:syllabus_iframe redirectUrl="#{SyllabusTool.syllabusItem.redirectURL}" width="100%" height="500" />
-		  </syllabus:syllabus_ifnot>
-		</h:form>
+
+          <syllabus:syllabus_ifnot test="#{SyllabusTool.syllabusItem.redirectURL}">
+            <sakai:tool_bar_message value="#{msgs.redirect_sylla}" />
+
+            <syllabus:syllabus_if test="#{SyllabusTool.openInNewWindowAsString}">
+                <syllabus:syllabus_iframe redirectUrl="#{SyllabusTool.syllabusItem.redirectURL}" width="100%"
+                                          height="500"/>
+            </syllabus:syllabus_if>
+            <syllabus:syllabus_ifnot test="#{SyllabusTool.openInNewWindowAsString}">
+                <h:outputText escape="false"
+                              value="<script>javascript:printFriendly('#{SyllabusTool.syllabusItem.redirectURL}');</script>"/>
+            </syllabus:syllabus_ifnot>
+          </syllabus:syllabus_ifnot>
+
+        </h:form>
 	</sakai:view_content>
 	</sakai:view_container>
 </f:view>

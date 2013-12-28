@@ -8,10 +8,10 @@ require_once 'OAuth.php';
 // Returns true if this is a Basic LTI message
 // with minimum values to meet the protocol
 function is_lti_request() {
-   $good_message_type = $_REQUEST["lti_message_type"] == "basic-lti-launch-request";
+   $good_message_type = $_REQUEST["lti_message_type"] == "basic-lti-launch-request" ||
+        $_REQUEST["lti_message_type"] == "ToolProxyReregistrationRequest";
    $good_lti_version = $_REQUEST["lti_version"] == "LTI-1p0" || $_REQUEST["lti_version"] == "LTI-2p0";
-   $resource_link_id = $_REQUEST["resource_link_id"];
-   if ($good_message_type and $good_lti_version and isset($resource_link_id) ) return(true);
+   if ($good_message_type and $good_lti_version ) return(true);
    return false;
 }
 
@@ -21,6 +21,35 @@ function htmlspec_utf8($string) {
 
 function htmlent_utf8($string) {
 	return htmlentities($string,ENT_QUOTES,$encoding = 'UTF-8');
+}
+
+$ltiUtilTogglePre_div_id = 1;
+// Useful for debugging
+function ltiUtilTogglePre($title, $content) {
+	global $ltiUtilTogglePre_div_id;
+    echo('<b>'.$title);
+    echo(' (<a href="#" onclick="dataToggle('.
+		"'ltiUtilTogglePre_".$ltiUtilTogglePre_div_id."'".');return false;">Toggle</a>)</b><br/>'."\n");
+    echo('<pre id="ltiUtilTogglePre_'.$ltiUtilTogglePre_div_id.'" style="display:none; border: solid 1px">'."\n");
+    echo(htmlent_utf8($content));
+    echo("</pre>\n");
+    $ltiUtilTogglePre_div_id = $ltiUtilTogglePre_div_id + 1;
+}
+
+function ltiUtilToggleHead() {
+   return '<script language="javascript"> 
+function dataToggle(divName) {
+    var ele = document.getElementById(divName);
+    if(ele.style.display == "block") {
+        ele.style.display = "none";
+    }
+    else {
+        ele.style.display = "block";
+    }
+} 
+  //]]> 
+</script>
+';
 }
 
 // Basic LTI Class that does the setup and provides utility
@@ -460,7 +489,9 @@ function signParameters($oldparms, $endpoint, $method, $oauth_consumer_key, $oau
   function postLaunchHTML($newparms, $endpoint, $debug=false, $iframeattr=false) {
     global $LastOAuthBodyBaseString;
     $r = "<div id=\"ltiLaunchFormSubmitArea\">\n";
-    if ( $iframeattr ) {
+    if ( $iframeattr =="_blank" ) {
+        $r = "<form action=\"".$endpoint."\" name=\"ltiLaunchForm\" id=\"ltiLaunchForm\" method=\"post\" target=\"_blank\" encType=\"application/x-www-form-urlencoded\">\n" ;
+    } else if ( $iframeattr ) {
         $r = "<form action=\"".$endpoint."\" name=\"ltiLaunchForm\" id=\"ltiLaunchForm\" method=\"post\" target=\"basicltiLaunchFrame\" encType=\"application/x-www-form-urlencoded\">\n" ;
     } else {
         $r = "<form action=\"".$endpoint."\" name=\"ltiLaunchForm\" id=\"ltiLaunchForm\" method=\"post\" encType=\"application/x-www-form-urlencoded\">\n" ;
@@ -537,14 +568,14 @@ function get_string($key,$bundle) {
     return $key;
 }
 
-function do_post_request($url, $data, $optional_headers = null)
+function do_body_request($url, $method, $data, $optional_headers = null)
 {
   if ($optional_headers !== null) {
      $header = $optional_headers . "\r\n";
   }
   $header = $header . "Content-Type: application/x-www-form-urlencoded\r\n";
 
-  return do_post($url,$data,$header);
+  return do_body($url,$method,$data,$header);
 }
 
 
@@ -687,18 +718,58 @@ function handleOAuthBodyPOST($oauth_consumer_key, $oauth_consumer_secret)
     return $postdata;
 }
 
+function sendOAuthGET($endpoint, $oauth_consumer_key, $oauth_consumer_secret, $accept_type)
+{
+    $test_token = '';
+    $hmac_method = new OAuthSignatureMethod_HMAC_SHA1();
+    $test_consumer = new OAuthConsumer($oauth_consumer_key, $oauth_consumer_secret, NULL);
+    $parms = array();
+
+    $acc_req = OAuthRequest::from_consumer_and_token($test_consumer, $test_token, "GET", $endpoint, $parms);
+    $acc_req->sign_request($hmac_method, $test_consumer, $test_token);
+
+    // Pass this back up "out of band" for debugging
+    global $LastOAuthBodyBaseString;
+    $LastOAuthBodyBaseString = $acc_req->get_signature_base_string();
+
+    $header = $acc_req->to_header();
+    $header = $header . "\r\nAccept: " . $accept_type . "\r\n";
+
+    global $LastGETHeader;
+    $LastGETHeader = $header;
+
+    return do_get($endpoint,$header);
+}
+
 function do_get($url, $header = false) {
-    $response = get_stream($url, $header);
-    if ( $response !== false ) return $response;
+    global $LastGETURL;
+    global $LastGETMethod;
+    global $LastHeadersSent;
+    global $last_http_response;
+    global $LastHeadersReceived;
+
+	$LastGETURL = $url;
+    $LastGETMethod = false;
+    $LastHeadersSent = false;
+    $last_http_response = false;
+    $LastHeadersReceived = false;
+    $lastGETResponse = false;
+
+    $LastGETMethod = "CURL";
+    $lastGETResponse = get_curl($url, $header);
+    if ( $lastGETResponse !== false ) return $lastGETResponse;
+    $LastGETMethod = "Stream";
+    $lastGETResponse = get_stream($url, $header);
+    if ( $lastGETResponse !== false ) return $lastGETResponse;
 /*
-    $response = get_socket($url, $header);
-    if ( $response !== false ) return $response;
-    $response = get_curl($url, $header);
-    if ( $response !== false ) return $response;
+    $LastGETMethod = "Socket";
+    $lastGETResponse = get_socket($url, $header);
+    if ( $lastGETResponse !== false ) return $response;
 */
+    $LastGETMethod = "Error";
     echo("Unable to GET<br/>\n");
     echo("Url=$url <br/>\n");
-    echo("Headers:<br/>\n$headers<br/>\n");
+    echo("Header:<br/>\n$header<br/>\n");
     throw new Exception("Unable to get");
 }
 
@@ -710,15 +781,47 @@ function get_stream($url, $header) {
 
     $ctx = stream_context_create($params);
     try {
-        $fp = @fopen($url, 'r', false, $ctx);
-        $response = @stream_get_contents($fp);
+        $response = file_get_contents($url, false, $ctx);
     } catch (Exception $e) {
         return false;
     }
     return $response;
 }
 
-function sendOAuthBodyPOST($method, $endpoint, $oauth_consumer_key, $oauth_consumer_secret, $content_type, $body)
+function get_curl($url, $header) {
+  if ( ! function_exists('curl_init') ) return false;
+  global $last_http_response;
+  global $LastHeadersSent;
+  global $LastHeadersReceived;
+
+  $ch = curl_init();
+  curl_setopt($ch, CURLOPT_URL, $url);
+
+  // Make sure that the header is an array and pitch white space
+  $LastHeadersSent = trim($header);
+  $header = explode("\n", trim($header));
+  $htrim = Array();
+  foreach ( $header as $h ) {
+    $htrim[] = trim($h);
+  }
+  curl_setopt ($ch, CURLOPT_HTTPHEADER, $htrim);
+
+  curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1); // ask for results to be returned
+  curl_setopt($ch, CURLOPT_HEADER, 1);
+
+  // Send to remote and return data to caller.
+  $result = curl_exec($ch);
+  $info = curl_getinfo($ch);
+  $last_http_response = $info['http_code'];
+  $header_size = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
+  $LastHeadersReceived = substr($result, 0, $header_size);
+  $body = substr($result, $header_size);
+  if ( $body === false ) $body = "";
+  curl_close($ch);
+  return $body;
+}
+
+function sendOAuthBody($method, $endpoint, $oauth_consumer_key, $oauth_consumer_secret, $content_type, $body)
 {
     $hash = base64_encode(sha1($body, TRUE));
 
@@ -738,32 +841,92 @@ function sendOAuthBodyPOST($method, $endpoint, $oauth_consumer_key, $oauth_consu
     $header = $acc_req->to_header();
     $header = $header . "\r\nContent-Type: " . $content_type . "\r\n";
 
-    global $LastPOSTHeader;
-    $LastPOSTHeader = $header;
+    return do_body($endpoint, $method, $body,$header);
+}
 
-    return do_post($endpoint,$body,$header);
+
+function get_body_sent_debug() {
+    global $LastBODYURL;
+    global $LastBODYMethod;
+    global $LastBODYImpl;
+    global $LastHeadersSent;
+
+    $ret = $LastBODYMethod . " Used: " . $LastBODYImpl . "\n" . 
+	     $LastBODYURL . "\n\n" .
+		 $LastHeadersSent . "\n";
+	return $ret;
+}
+
+function get_body_received_debug() {
+    global $LastBODYURL;
+    global $LastBODYMethod;
+    global $LastBODYImpl;
+    global $LastHeadersReceived;
+    global $last_http_response;
+
+    $ret = $LastBODYMethod . " Used: " . $LastBODYImpl . "\n" . 
+		 "HTTP Response Code: " . $last_http_response . "\n" .
+	     $LastBODYURL . "\n" .
+		 $LastHeadersReceived . "\n";
+	return $ret;
+}
+
+function get_get_sent_debug() {
+    global $LastGETMethod;
+    global $LastGETURL;
+    global $LastHeadersSent;
+
+    $ret = "GET Used: " . $LastGETMethod . "\n" . 
+	     $LastGETURL . "\n\n" .
+		 $LastHeadersSent . "\n";
+	return $ret;
+}
+
+function get_get_received_debug() {
+    global $LastGETURL;
+    global $last_http_response;
+    global $LastGETMethod;
+    global $LastHeadersReceived;
+
+    $ret = "GET Used: " . $LastGETMethod . "\n" .
+		 "HTTP Response: " . $last_http_response . "\n" .
+	     $LastGETURL . "\n" .
+		 $LastHeadersReceived . "\n";
+	return $ret;
 }
 
 // Sadly this tries several approaches depending on 
 // the PHP version and configuration.  You can use only one
 // if you know what version of PHP is working and how it will be 
 // configured...
-function do_post($url, $body, $header) {
+function do_body($url, $method, $body, $header) {
+    global $LastBODYURL;
+    global $LastBODYMethod;
+    global $LastBODYImpl;
+    global $LastHeadersSent;
     global $last_http_response;
-    global $LastPOSTMethod;
+    global $LastHeadersReceived;
+    global $LastBODYResponse;
+
+	$LastBODYURL = $url;
+    $LastBODYMethod = $method;
+    $LastBODYImpl = false;
+    $LastHeadersSent = false;
     $last_http_response = false;
-    $response = false;
+    $LastHeadersReceived = false;
+    $LastBODYResponse = false;
+
     // Prefer curl because it checks if it works before trying
-    $response = post_curl($url, $body, $header);
-    $LastPOSTMethod = "CURL";
-    if ( $response !== false ) return $response;
-    $response = post_socket($url, $body, $header);
-    $LastPOSTMethod = "Socket";
-    if ( $response !== false ) return $response;
-    $response = post_stream($url, $body, $header);
-    $LastPOSTMethod = "Stream";
-    if ( $response !== false ) return $response;
-    $LastPOSTMethod = "Error";
+    $LastBODYResponse = body_curl($url, $method, $body, $header);
+    $LastBODYImpl = "CURL";
+    if ( $LastBODYResponse !== false ) return $LastBODYResponse;
+    $LastBODYResponse = body_socket($url, $method, $body, $header);
+    $LastBODYImpl = "Socket";
+    if ( $LastBODYResponse !== false ) return $LastBODYResponse;
+    $LastBODYResponse = body_stream($url, $method, $body, $header);
+    $LastBODYImpl = "Stream";
+    if ( $LastBODYResponse !== false ) return $LastBODYResponse;
+    $LastBODYImpl = "Error";
     echo("Unable to post<br/>\n");
     echo("Url=$url <br/>\n");
     echo("Headers:<br/>\n$header<br/>\n");
@@ -772,7 +935,7 @@ function do_post($url, $body, $header) {
 }
 
 // From: http://php.net/manual/en/function.file-get-contents.php
-function post_socket($endpoint, $data, $moreheaders=false) {
+function body_socket($endpoint, $method, $data, $moreheaders=false) {
   if ( ! function_exists('fsockopen') ) return false;
   if ( ! function_exists('stream_get_transports') ) return false;
     $url = parse_url($endpoint);
@@ -796,7 +959,7 @@ function post_socket($endpoint, $data, $moreheaders=false) {
     if ( strlen($url['query']) > 0 ) $uri .= '?'.$url['query'];
     if ( strlen($url['fragment']) > 0 ) $uri .= '#'.$url['fragment'];
 
-    $headers =  "POST ".$uri." HTTP/1.0".$eol.
+    $headers =  $method." ".$uri." HTTP/1.0".$eol.
                 "Host: ".$url['host'].$hostport.$eol.
                 "Referer: ".$url['protocol'].$url['host'].$url['path'].$eol.
                 "Content-Length: ".strlen($data).$eol;
@@ -828,9 +991,9 @@ function post_socket($endpoint, $data, $moreheaders=false) {
     return false;
 }
 
-function post_stream($url, $body, $header) {
+function body_stream($url, $method, $body, $header) {
     $params = array('http' => array(
-        'method' => 'POST',
+        'method' => $method,
         'content' => $body,
         'header' => $header
         ));
@@ -845,7 +1008,7 @@ function post_stream($url, $body, $header) {
     return $response;
 }
 
-function post_curl($url, $body, $header) {
+function body_curl($url, $method, $body, $header) {
   if ( ! function_exists('curl_init') ) return false;
   global $last_http_response;
   global $LastHeadersSent;
@@ -863,10 +1026,16 @@ function post_curl($url, $body, $header) {
   }
   curl_setopt ($ch, CURLOPT_HTTPHEADER, $htrim);
 
-  curl_setopt($ch, CURLOPT_POST, 1);
+  if ( $method == "POST" ) {
+    curl_setopt($ch, CURLOPT_POST, 1);
+  } else { 
+    curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $method);
+  }
+
   curl_setopt($ch, CURLOPT_POSTFIELDS, $body);
 
   curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1); // ask for results to be returned
+  curl_setopt($ch, CURLOPT_HEADER, 1);
 /*
   if(CurlHelper::checkHttpsURL($url)) {
     curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
@@ -878,8 +1047,12 @@ function post_curl($url, $body, $header) {
   $result = curl_exec($ch);
   $info = curl_getinfo($ch);
   $last_http_response = $info['http_code'];
+  $header_size = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
+  $LastHeadersReceived = substr($result, 0, $header_size);
+  $body = substr($result, $header_size);
+  if ( $body === false ) $body = ''; // Handle empty body
   curl_close($ch);
-  return $result;
+  return $body;
 }
 
 /*  $postBody = str_replace(
@@ -974,7 +1147,7 @@ function replaceResultRequest($grade, $sourcedid, $endpoint, $oauth_consumer_key
         array($sourcedid, $grade, $operation, uniqid()),
         getPOXGradeRequest());
 
-    $response = sendOAuthBodyPOST($method, $endpoint, $oauth_consumer_key, $oauth_consumer_secret, $content_type, $postBody);
+    $response = sendOAuthBody($method, $endpoint, $oauth_consumer_key, $oauth_consumer_secret, $content_type, $postBody);
     return parseResponse($response);
 }
 
@@ -1006,5 +1179,58 @@ function parseResponse($response) {
        }
     }
     return $retval;
+}
+
+// Compares base strings, start of the mis-match
+// Returns true if the strings are identical
+// This is setup to be displayed in <pre> tags as newlines are added
+function compare_base_strings($string1, $string2)
+{
+	if ( $string1 == $string2 ) return true;
+
+	$out2 = "";
+	$out1 = "";
+    $chars = 0;
+	$oops = false;
+    for($i=0; $i<strlen($string1)&&$i<strlen($string2); $i++) {
+		if ( $oops || $string1[$i] == $string2[$i] ) {
+			$out1 = $out1 . $string1[$i];
+			$out2 = $out2 . $string2[$i];
+		} else { 
+			$out1 = $out1 . ' ->' . $string1[$i] .'<- ';
+			$out2 = $out2 . ' ->' . $string2[$i] .'<- ';
+			$oops = true;
+		}
+		$chars = $chars + 1;
+		if ( $chars > 79 ) {
+			$out1 .= "\n";
+			$out2 .= "\n";
+			$chars = 0;
+		}
+	}
+	if ( $i < strlen($string1) ) {
+		$out2 = $out2 . ' -> truncated ';
+		for($i=0; $i<strlen($string1); $i++) {
+			$out1 = $out1 . $string1[$i];
+			$chars = $chars + 1;
+			if ( $chars > 79 ) {
+				$out1 .= "\n";
+				$chars = 0;
+			}
+		}
+	}
+
+	if ( $i < strlen($string2) ) {
+		$out1 = $out1 . ' -> truncated ';
+		for($i=0; $i<strlen($string2); $i++) {
+			$out2 = $out2 . $string2[$i];
+			$chars = $chars + 2;
+			if ( $chars > 79 ) {
+				$out2 .= "\n";
+				$chars = 0;
+			}
+		}
+	}
+	return $out1 . "\n-------------\n" . $out2 . "\n";
 }
 ?>

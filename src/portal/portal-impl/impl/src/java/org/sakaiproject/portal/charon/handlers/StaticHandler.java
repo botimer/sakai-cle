@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/portal/trunk/portal-impl/impl/src/java/org/sakaiproject/portal/charon/handlers/StaticHandler.java $
- * $Id: StaticHandler.java 105079 2012-02-24 23:08:11Z ottenhoff@longsight.com $
+ * $Id: StaticHandler.java 128674 2013-08-20 15:14:33Z csev@umich.edu $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008 The Sakai Foundation
@@ -33,6 +33,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.sakaiproject.portal.util.URLUtils;
 
 /**
  * Handler to process static content with an internal, in memory cache.
@@ -42,7 +43,7 @@ import org.apache.commons.logging.LogFactory;
  * 
  * @author ieb
  * @since Sakai 2.4
- * @version $Rev: 105079 $
+ * @version $Rev: 128674 $
  * 
  */
 public abstract class StaticHandler extends BasePortalHandler
@@ -102,7 +103,7 @@ public abstract class StaticHandler extends BasePortalHandler
 				staticCache = new StaticCache[100];
 				staticCacheHolder.set(staticCache);
 			}
-			String path = req.getPathInfo();
+			String path = URLUtils.getSafePathInfo(req);
 			if (path.indexOf("..") >= 0)
 			{
 				res.sendError(404);

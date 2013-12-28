@@ -88,6 +88,9 @@ function mySetMainFrameHeight(id)
    <jsp:setProperty name="msgs" property="baseName" value="org.theospi.portfolio.matrix.bundle.Messages"/>
 </jsp:useBean>
 
+<fmt:setLocale value="${locale}"/>
+<fmt:setBundle basename = "org.theospi.portfolio.matrix.bundle.Messages"/>
+
 <c:set var="date_format">
 	<osp:message key="dateFormat_list" />
 </c:set>
@@ -156,7 +159,10 @@ function mySetMainFrameHeight(id)
         
         
              <a href="<osp:url value="osp.permissions.helper/editPermissions">
-               <osp:param name="message"><c:out value='${msgs.action_message_setPermission}'/></osp:param>
+               <osp:param name="message"><fmt:message key="action_message_setPermission">
+                 <fmt:param><c:out value="${tool.title}"/></fmt:param>
+                 <fmt:param><c:out value="${worksite.title}"/></fmt:param></fmt:message>
+               </osp:param>
                <osp:param name="name" value="scaffolding"/>
                <osp:param name="qualifier" value="${worksite.id}"/>
                <osp:param name="returnView" value="listScaffoldingRedirect"/>
@@ -173,13 +179,13 @@ function mySetMainFrameHeight(id)
          	onclick="dialogutil.openDialog('#dialogDiv', '#dialogFrame', '<osp:url value="osp.prefs.helper/prefs">
          		<osp:param name="dialogDivId" value="#dialogDiv" />
          		<osp:param name="typeKey" value="${typeKey}" />
-         		<osp:param name="qualifier_text"><fmt:message key="prefs_qualifier"/></osp:param>
+         		<osp:param name="qualifier_text"><c:out value="${msgs.prefs_qualifier}"/></osp:param>
          		<osp:param name="prefsSiteSavedDiv" value="#prefsSiteSavedDiv" />
          		<osp:param name="prefsAllSavedDiv" value="#prefsAllSavedDiv" />
          		<osp:param name="toolId" value="osp.matrix" />
          		<osp:param name="frameId" value="#dialogFrame" />
          		</osp:url>')"
-               title="<fmt:message key="action_prefs"/>"><fmt:message key="action_prefs"/></a>
+               title="<c:out value="${msgs.action_prefs}"/>"><c:out value="${msgs.action_prefs}"/></a>
          
     </div>
 
@@ -187,8 +193,8 @@ function mySetMainFrameHeight(id)
 	<div class="success"><c:out value="${msgs.changesSaved}"/></div>	
 </c:if>
 
-	<div class="success" id="prefsSiteSavedDiv" style="display:none"><fmt:message key="prefs_saved_site"/></div>	
-	<div class="success" id="prefsAllSavedDiv" style="display:none"><fmt:message key="prefs_saved_all"/></div>	
+	<div class="success" id="prefsSiteSavedDiv" style="display:none"><c:out value="${msgs.prefs_saved_site}"/></div>	
+	<div class="success" id="prefsAllSavedDiv" style="display:none"><c:out value="${msgs.prefs_saved_all}"/></div>	
 
 
 <div class="navPanel">
@@ -277,6 +283,7 @@ function mySetMainFrameHeight(id)
 			 		</c:if>	
 			 	</th>
 			 </c:if>
+			 <c:if test="${!studentView}">
 			 <!-- matrix status (publish/preview) -->
 				<th scope="col">
 					<c:if test="${sortBy == 'published' && sortAscending == true }">
@@ -306,6 +313,7 @@ function mySetMainFrameHeight(id)
 	               		</a>
 			 		</c:if>	
 				</th>
+			 </c:if>
 			 <!-- matrix last modified date -->
 			 <c:if test="${!studentView}">
 				 <th scope="col">
@@ -392,7 +400,9 @@ function mySetMainFrameHeight(id)
 							<img  src="/library/image/sakai/s.gif" style="width:13px" />					
 					</c:if>	
 					<c:if test="${(dScaffold.scaffolding.published || dScaffold.scaffolding.preview)}">
-						<a href="<osp:url value="viewMatrix.osp"/>&scaffolding_id=<c:out value="${dScaffold.scaffolding.id.value}" />" title='<c:out value="${msgs.scaffolding_link_title}"/>' >
+				        <a href="<osp:url value="viewMatrix.osp"/>&scaffolding_id=<c:out value="${dScaffold.scaffolding.id.value}" />" title="<fmt:message key="scaffolding_link_title">
+							<fmt:param><c:out value="${dScaffold.scaffolding.title}"/></fmt:param>
+							</fmt:message>">					
 					</c:if>
 					<c:out value="${dScaffold.scaffolding.title}" />
 					<c:if test="${(dScaffold.scaffolding.published || dScaffold.scaffolding.preview)}">
@@ -403,9 +413,11 @@ function mySetMainFrameHeight(id)
 				<c:if test="${myworkspace}">
 					<td>
 						<div class="itemAction">
-							<a href="<c:out value="${dScaffold.scaffoldingToolUrl}" />" title='<c:out value="${msgs.scaffolding_goToTool}"/>' target="_top" >
-							       	<c:out value="${msgs.scaffolding_goToTool}"/>
-						    </a>
+					      <a href="<c:out value="${dScaffold.scaffoldingToolUrl}" />" title="<fmt:message key="scaffolding_goToTool"><fmt:param><c:out value="${dScaffold.scaffolding.worksiteName}"/></fmt:param></fmt:message>" target="_top" >
+							       	<fmt:message key="scaffolding_goToTool">
+							       		<fmt:param><c:out value="${dScaffold.scaffolding.worksiteName}"/></fmt:param>
+							       	</fmt:message>
+				          </a>
 						</div>
 					</td>
 				</c:if>
@@ -449,7 +461,10 @@ function mySetMainFrameHeight(id)
 							<c:set var="hasFirstAction" value="true" />
 							<a
 								href="<osp:url value="osp.permissions.helper/editPermissions_new">
-				               <osp:param name="message"><c:out value='${msgs.action_message_setMatrixPermission}'/></osp:param>
+		                       <osp:param name="message"><fmt:message key="action_message_setMatrixPermission">
+				                 <fmt:param><c:out value="${dScaffold.scaffolding.title}"/></fmt:param>
+				                 <fmt:param><c:out value="${worksite.title}"/></fmt:param></fmt:message>
+				               </osp:param>				               
 				               <osp:param name="name" value="scaffoldingSpecific"/>
 				               <osp:param name="qualifier" value="${dScaffold.scaffolding.reference}"/>
 				               <osp:param name="returnView" value="listScaffoldingRedirect"/>
@@ -482,6 +497,7 @@ function mySetMainFrameHeight(id)
 						<c:out value="${dScaffold.scaffolding.owner.displayName}" />
 				</td>
 				</c:if>
+				<c:if test="${!studentView}">
 				  <td>
 					 <c:if test="${dScaffold.scaffolding.published}">
 						<c:out value="${msgs.scaffolding_published_true}"/>
@@ -493,7 +509,8 @@ function mySetMainFrameHeight(id)
 						<c:out value="${msgs.scaffolding_published_false}"/>
 					 </c:if>
 				 </td>
-				 <c:if test="${!studentView}">
+				</c:if>
+				<c:if test="${!studentView}">
 					 <td>
 					 	<fmt:formatDate
 							value="${dScaffold.scaffolding.modifiedDate}"

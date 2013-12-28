@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/sam/trunk/samigo-app/src/java/org/sakaiproject/tool/assessment/ui/listener/delivery/LinearAccessDeliveryActionListener.java $
- * $Id: LinearAccessDeliveryActionListener.java 123680 2013-05-07 00:45:06Z azeckoski@unicon.net $
+ * $Id: LinearAccessDeliveryActionListener.java 130878 2013-10-25 22:48:06Z ktsao@stanford.edu $
  ***********************************************************************************
  *
  * Copyright (c) 2004, 2005, 2006, 2007, 2008, 2009 The Sakai Foundation
@@ -32,6 +32,7 @@ import javax.faces.context.FacesContext;
 import javax.faces.event.AbortProcessingException;
 import javax.faces.event.ActionEvent;
 import javax.faces.event.ActionListener;
+import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -41,6 +42,7 @@ import org.sakaiproject.event.api.Event;
 import org.sakaiproject.event.api.LearningResourceStoreService;
 import org.sakaiproject.event.cover.EventTrackingService;
 import org.sakaiproject.event.cover.NotificationService;
+import org.sakaiproject.tool.assessment.api.SamigoApiFactory;
 import org.sakaiproject.tool.assessment.data.dao.assessment.EventLogData;
 import org.sakaiproject.tool.assessment.data.dao.grading.AssessmentGradingData;
 import org.sakaiproject.tool.assessment.facade.AgentFacade;
@@ -49,6 +51,9 @@ import org.sakaiproject.tool.assessment.facade.PublishedAssessmentFacade;
 import org.sakaiproject.tool.assessment.services.GradingService;
 import org.sakaiproject.tool.assessment.services.assessment.EventLogService;
 import org.sakaiproject.tool.assessment.services.assessment.PublishedAssessmentService;
+import org.sakaiproject.tool.assessment.shared.api.assessment.SecureDeliveryServiceAPI;
+import org.sakaiproject.tool.assessment.shared.api.assessment.SecureDeliveryServiceAPI.Phase;
+import org.sakaiproject.tool.assessment.shared.api.assessment.SecureDeliveryServiceAPI.PhaseStatus;
 import org.sakaiproject.tool.assessment.ui.bean.delivery.DeliveryBean;
 import org.sakaiproject.tool.assessment.ui.listener.util.ContextUtil;
 import org.sakaiproject.tool.assessment.ui.web.session.SessionUtil;
@@ -103,6 +108,19 @@ public class LinearAccessDeliveryActionListener extends DeliveryActionListener
     			  return;
     		  }
     	  }
+          
+          // #3. secure delivery START phase
+          SecureDeliveryServiceAPI secureDelivery = SamigoApiFactory.getInstance().getSecureDeliveryServiceAPI();
+          if ( secureDelivery.isSecureDeliveryAvaliable() ) {
+              String moduleId = publishedAssessment.getAssessmentMetaDataByLabel( SecureDeliveryServiceAPI.MODULE_KEY );
+              if ( moduleId != null && ! SecureDeliveryServiceAPI.NONE_ID.equals( moduleId ) ) {
+                  HttpServletRequest request = (HttpServletRequest) FacesContext.getCurrentInstance().getExternalContext().getRequest();
+                  PhaseStatus status = secureDelivery.validatePhase(moduleId, Phase.ASSESSMENT_START, publishedAssessment, request );
+                  if ( PhaseStatus.FAILURE == status ) {
+                      return;
+                  }
+              }    	  
+          }
       }
       
       // itemGradingHash will end up with 
@@ -177,12 +195,7 @@ public class LinearAccessDeliveryActionListener extends DeliveryActionListener
               
           eventLogFacade.setData(eventLogData);
           eventService.saveOrUpdateEventLog(eventLogFacade);           	  
-    	// ONC event log end  
-          LearningResourceStoreService lrss = (LearningResourceStoreService) ComponentManager
-                  .get("org.sakaiproject.event.api.LearningResourceStoreService");
-          StringBuffer lrssMetaInfo = new StringBuffer("Assesment: " + delivery.getAssessmentTitle());
-          lrssMetaInfo.append(", Past Due?: " + delivery.getPastDue());
-    	  int action = delivery.getActionMode();
+          int action = delivery.getActionMode();
     	  if (action == DeliveryBean.TAKE_ASSESSMENT) {
     		  StringBuffer eventRef = new StringBuffer("publishedAssessmentId");
     		  eventRef.append(delivery.getAssessmentId());
@@ -197,9 +210,7 @@ public class LinearAccessDeliveryActionListener extends DeliveryActionListener
     		  }
     		  Event event = EventTrackingService.newEvent("sam.assessment.take", eventRef.toString(), true);
     		  EventTrackingService.post(event);
-    		  if (null != lrss) {
-                  lrss.registerStatement(getStatementForTakeAssessment(lrss.getEventActor(event), event, lrssMetaInfo.toString()), "samigo");
-    		  }
+    		  registerIrss(delivery, event, false);
     	  }
     	  else if (action == DeliveryBean.TAKE_ASSESSMENT_VIA_URL) {
     		  StringBuffer eventRef = new StringBuffer("publishedAssessmentId");
@@ -217,10 +228,7 @@ public class LinearAccessDeliveryActionListener extends DeliveryActionListener
     		  String siteId = publishedAssessmentService.getPublishedAssessmentOwner(Long.valueOf(delivery.getAssessmentId()));
     		  Event event = EventTrackingService.newEvent("sam.assessment.take", eventRef.toString(), siteId, true, NotificationService.NOTI_REQUIRED);
     		  EventTrackingService.post(event);
-    		  lrssMetaInfo.append(", Assesment taken via URL.");
-    		  if (null != lrss) {
-                  lrss.registerStatement(getStatementForTakeAssessment(lrss.getEventActor(event), event, lrssMetaInfo.toString()), "samigo");
-    		  }
+    		  registerIrss(delivery, event, true);
     	  }    	  
       }
       else {

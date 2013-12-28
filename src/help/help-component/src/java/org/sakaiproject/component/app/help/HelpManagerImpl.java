@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/help/trunk/help-component/src/java/org/sakaiproject/component/app/help/HelpManagerImpl.java $
- * $Id: HelpManagerImpl.java 125281 2013-05-31 03:42:46Z nbotimer@unicon.net $
+ * $Id: HelpManagerImpl.java 128310 2013-08-08 18:23:41Z matthew@longsight.com $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008, 2009 The Sakai Foundation
@@ -111,7 +111,7 @@ import org.xml.sax.SAXException;
 /**
  * HelpManager provides database and search capabilitites for the Sakai help tool.
  * @author <a href="mailto:jlannan.iupui.edu">Jarrod Lannan</a>
- * @version $Id: HelpManagerImpl.java 125281 2013-05-31 03:42:46Z nbotimer@unicon.net $
+ * @version $Id: HelpManagerImpl.java 128310 2013-08-08 18:23:41Z matthew@longsight.com $
  *
  */
 public class HelpManagerImpl extends HibernateDaoSupport implements HelpManager
@@ -1263,6 +1263,9 @@ public class HelpManagerImpl extends HibernateDaoSupport implements HelpManager
 
 		// find out what we want to ignore
 		List<String> hideHelp = Arrays.asList(StringUtils.split(serverConfigurationService.getString("help.hide"), ","));
+		if (hideHelp == null) {
+		    hideHelp = new ArrayList<String> ();
+		}
 
 		for (Tool tool : toolSet) {
 			if (tool != null && tool.getId() != null && !hideHelp.contains(tool.getId()))

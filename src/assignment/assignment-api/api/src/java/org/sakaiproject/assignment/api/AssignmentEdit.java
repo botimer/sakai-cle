@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/assignment/trunk/assignment-api/api/src/java/org/sakaiproject/assignment/api/AssignmentEdit.java $
- * $Id: AssignmentEdit.java 110665 2012-07-24 14:18:50Z azeckoski@unicon.net $
+ * $Id: AssignmentEdit.java 128106 2013-08-02 14:34:11Z holladay@longsight.com $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008 The Sakai Foundation
@@ -182,4 +182,23 @@ public interface AssignmentEdit extends Assignment, Edit
 	 *        The Assignment's order.
 	 */
 	public void setPosition_order(int position_order);
+	
+	/**
+	 * Does this Assignment allow using the peer assessment?
+	 * 
+	 * @param allow -
+	 *        true if the Assignment allows peer assessment, false otherwise?
+	 */
+	public void setAllowPeerAssessment(boolean allow);
+
+	public void setPeerAssessmentPeriod(Time time);
+
+	public void setPeerAssessmentAnonEval(boolean anonEval);
+
+	public void setPeerAssessmentStudentViewReviews(boolean studentViewReviews);
+
+	public void setPeerAssessmentNumReviews(int numReviews);
+
+	public void setPeerAssessmentInstructions(String instructions);
+
 }

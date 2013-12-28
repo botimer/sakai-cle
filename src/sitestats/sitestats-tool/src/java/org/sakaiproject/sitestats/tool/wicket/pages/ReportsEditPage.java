@@ -1,6 +1,6 @@
 /**
  * $URL: https://source.sakaiproject.org/svn/sitestats/trunk/sitestats-tool/src/java/org/sakaiproject/sitestats/tool/wicket/pages/ReportsEditPage.java $
- * $Id: ReportsEditPage.java 105078 2012-02-24 23:00:38Z ottenhoff@longsight.com $
+ * $Id: ReportsEditPage.java 131093 2013-11-04 14:59:26Z ottenhoff@longsight.com $
  *
  * Copyright (c) 2006-2009 The Sakai Foundation
  *
@@ -185,7 +185,6 @@ public class ReportsEditPage extends BasePage {
 		super.renderHead(response);
 		response.renderJavascriptReference(JQUERYSCRIPT);
 		response.renderJavascriptReference(StatsManager.SITESTATS_WEBAPP + "/script/reports.js");
-		response.renderJavascriptReference(StatsManager.SITESTATS_WEBAPP + "/script/jquery.ifixpng2.js");
 		StringBuilder onDomReady = new StringBuilder();
 		onDomReady.append("checkWhatSelection();");
 		onDomReady.append("checkWhenSelection();");
@@ -193,8 +192,6 @@ public class ReportsEditPage extends BasePage {
         onDomReady.append("checkHowSelection();");
         onDomReady.append("checkReportDetails();");
         onDomReady.append("checkHowChartSelection();");
-		onDomReady.append("jQuery.ifixpng('"+StatsManager.SITESTATS_WEBAPP+"images/transparent.gif'); ");
-		onDomReady.append("jQuery('img').ifixpng();");
 		response.renderOnDomReadyJavascript(onDomReady.toString());
 	}
 	

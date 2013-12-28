@@ -3,6 +3,8 @@
 <%@ include file="matrixStyle.jspf" %>
 
 <jsp:useBean id="msgs" class="org.sakaiproject.util.ResourceLoader" scope="request"><jsp:setProperty name="msgs" property="baseName" value="org.theospi.portfolio.matrix.bundle.Messages"/></jsp:useBean>
+<fmt:setLocale value="${locale}" />
+<fmt:setBundle basename="org.theospi.portfolio.matrix.bundle.Messages" />
 
 
 <c:forEach var="style" items="${styles}">
@@ -57,6 +59,8 @@
 	<c:choose>
 		<%-- if size is greater than 0 than that means you can review or evaluate at least one cell --%>
 		<c:when test="${scaffoldingCan.accessUserList}">
+		 <fmt:message key="matrix_viewing_title_eval"> 	 
+	      <fmt:param>
 					<c:if test="${matrixContents.scaffolding.preview}">
 						<span class="highlight">
 							<c:out value="${msgs.matrix_viewing_title_preview}"/>
@@ -65,10 +69,11 @@
 					<c:if test="${!matrixContents.scaffolding.preview}">
 						<c:out value="${msgs.matrix_viewing_title_view}"/>
 					</c:if>
-               
-				"<c:out value="${matrixContents.scaffolding.title}" />"
-				<c:if test="${readOnlyMatrix}">(<c:out value="${readOnly_label}"/>)</c:if>:
-				<c:out value="${matrixOwner.displayName}" />
+          </fmt:param>
+		  <fmt:param><c:out value="${matrixContents.scaffolding.title}" /></fmt:param>
+		  <fmt:param><c:if test="${readOnlyMatrix}">(<c:out value="${readOnly_label}"/>)</c:if></fmt:param>
+		  <fmt:param><c:out value="${matrixOwner.displayName}" /></fmt:param>
+		 </fmt:message>
 		</c:when>
 		<c:otherwise>
 			<c:if test="${matrixContents.scaffolding.preview}">

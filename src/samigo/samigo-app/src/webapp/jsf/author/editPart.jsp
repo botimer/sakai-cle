@@ -8,7 +8,7 @@
      PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
      "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <!--
-* $Id: editPart.jsp 115704 2012-11-05 12:37:08Z steve.swinsburg@gmail.com $
+* $Id: editPart.jsp 128687 2013-08-20 18:46:26Z ktsao@stanford.edu $
 <%--
 ***********************************************************************************
 *
@@ -134,14 +134,14 @@
   <h:outputText value="#{authorMessages.point_value_of_questons}"  />
   <h:panelGrid>
     <h:inputText id="numPointsRandom" disabled="#{sectionBean.type == '1' || !author.isEditPendingAssessmentFlow}" value="#{sectionBean.randomPartScore}" onchange="toPoint(this.id);"/>
-    <h:outputText value="#{authorMessages.note_point_value_for_question}" rendered="#{!sectionBean.pointValueHasOverrided}"/>
+    <h:outputText value="#{authorMessages.note_point_value_for_question}" />
   </h:panelGrid>
    
   <h:outputText value="#{authorMessages.negative_point_value}"  />
   
   <h:panelGrid>
     <h:inputText id="numDiscountRandom" disabled="#{sectionBean.type == '1' || !author.isEditPendingAssessmentFlow}" value="#{sectionBean.randomPartDiscount}" onchange="toPoint(this.id);"/>
-    <h:outputText value="#{authorMessages.note_negative_point_value_part}" rendered="#{!sectionBean.discountValueHasOverrided}"/>
+    <h:outputText value="#{authorMessages.note_negative_point_value_part}" />
   </h:panelGrid>
 
   <h:outputText value="#{authorMessages.type_of_randomization}" />
@@ -202,6 +202,8 @@
           type="org.sakaiproject.tool.assessment.ui.listener.author.EditAssessmentListener" />
      </h:commandButton>
   </p>
+  
+<h:outputText value="#{authorMessages.required}" />
 
 </h:form>
 <!-- end content -->

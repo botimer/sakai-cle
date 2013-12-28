@@ -83,14 +83,17 @@ public class ListPageActivities extends AbstractMatrixController
 		{
 			List<Link> links = getLinkManager().getLinks(criteriaRef, true);
 			for (Link link : links) {
-				TaggableActivity activity = getTaggingManager().getActivity(link.getActivityRef(), getMatrixTaggingProvider());
+				TaggableActivity activity = getTaggingManager().getActivity(link.getActivityRef(), getMatrixTaggingProvider(), criteriaRef);
 				if (activity != null) {
 					activities.add(new WrappedActivity(activity, lookupSiteName(activity.getContext(), siteNames)));
 				}
-				else {
-					logger.warn("Link with ref " + link.getActivityRef() + " no longer exists.  Removing link.");
-					getLinkManager().removeLink(link);
-				}
+//				CWM - 4/22/2013
+//				Commenting this out in case the provider has just been disabled.  
+//				We'll keep the link around so that if the provider gets re-enabled, it'll show up again
+//				else {
+//					logger.warn("Link with ref " + link.getActivityRef() + " no longer exists.  Removing link.");
+//					getLinkManager().removeLink(link);
+//				}
 			}
 		}
 		catch (PermissionException e)

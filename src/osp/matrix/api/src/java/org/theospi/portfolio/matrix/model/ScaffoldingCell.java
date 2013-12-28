@@ -1,7 +1,7 @@
 
 /**********************************************************************************
 * $URL: https://source.sakaiproject.org/svn/osp/trunk/matrix/api/src/java/org/theospi/portfolio/matrix/model/ScaffoldingCell.java $
-* $Id: ScaffoldingCell.java 105079 2012-02-24 23:08:11Z ottenhoff@longsight.com $
+* $Id: ScaffoldingCell.java 130580 2013-10-17 17:43:15Z dsobiera@indiana.edu $
 ***********************************************************************************
 *
  * Copyright (c) 2005, 2006, 2007, 2008 The Sakai Foundation
@@ -351,4 +351,46 @@ public class ScaffoldingCell extends IdentifiableObject implements Serializable 
    public void setHideEvaluations(boolean hideEvaluations){
 	   wizardPageDefinition.setHideEvaluations(hideEvaluations);
    }
+   
+   public boolean isItemLevelEvals() {
+		return wizardPageDefinition.isItemLevelEvals();
+	}
+
+	public void setItemLevelEvals(boolean itemLevelEvals) {
+		wizardPageDefinition.setItemLevelEvals(itemLevelEvals);
+	}
+
+	public Id getItemLevelEvaluationDevice() {
+		return wizardPageDefinition.getItemLevelEvaluationDevice();
+	}
+
+	public void setItemLevelEvaluationDevice(Id itemLevelEvaluationDevice) {
+		wizardPageDefinition.setItemLevelEvaluationDevice(itemLevelEvaluationDevice);
+	}
+
+	public String getItemLevelEvaluationDeviceType() {
+		return wizardPageDefinition.getItemLevelEvaluationDeviceType();
+	}
+
+	public void setItemLevelEvaluationDeviceType(
+			String itemLevelEvaluationDeviceType) {
+		wizardPageDefinition.setItemLevelEvaluationDeviceType(itemLevelEvaluationDeviceType);
+	}
+
+	public boolean isEnableItemLevelEvalsInLinkedTools() {
+		return wizardPageDefinition.isEnableItemLevelEvalsInLinkedTools();
+	}
+
+	public void setEnableItemLevelEvalsInLinkedTools(
+			boolean enableItemLevelEvalsInLinkedTools) {
+		wizardPageDefinition.setEnableItemLevelEvalsInLinkedTools(enableItemLevelEvalsInLinkedTools);
+	}
+
+	public boolean isHideItemLevelEvals() {
+		return wizardPageDefinition.isHideItemLevelEvals();
+	}
+
+	public void setHideItemLevelEvals(boolean hideItemLevelEvals) {
+		wizardPageDefinition.setHideItemLevelEvals(hideItemLevelEvals);
+	}
 }

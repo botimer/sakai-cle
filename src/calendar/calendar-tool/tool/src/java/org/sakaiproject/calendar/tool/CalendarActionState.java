@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/calendar/trunk/calendar-tool/tool/src/java/org/sakaiproject/calendar/tool/CalendarActionState.java $
- * $Id: CalendarActionState.java 105079 2012-02-24 23:08:11Z ottenhoff@longsight.com $
+ * $Id: CalendarActionState.java 130984 2013-10-30 22:07:36Z matthew@longsight.com $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2008 The Sakai Foundation
@@ -36,6 +36,7 @@ import org.sakaiproject.site.api.Site;
 import org.sakaiproject.util.CalendarUtil;
 import org.sakaiproject.tool.api.SessionBindingEvent;
 import org.sakaiproject.tool.api.SessionBindingListener;
+import org.sakaiproject.util.FormattedText;
 
 /**
  * Maintains user interface state for the MyCalendar action class.
@@ -554,6 +555,7 @@ public class CalendarActionState
 		 */
 		public String getAddfieldValue(String fieldname)
 		{
+			fieldname = FormattedText.unEscapeHtml(fieldname);
 			Set addfieldsKey = addFieldsMap.keySet();
 
 			Iterator it = addfieldsKey.iterator();

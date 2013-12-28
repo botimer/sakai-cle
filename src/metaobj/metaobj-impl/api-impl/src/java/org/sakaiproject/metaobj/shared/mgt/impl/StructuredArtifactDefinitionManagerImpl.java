@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/metaobj/trunk/metaobj-impl/api-impl/src/java/org/sakaiproject/metaobj/shared/mgt/impl/StructuredArtifactDefinitionManagerImpl.java $
- * $Id: StructuredArtifactDefinitionManagerImpl.java 120216 2013-02-18 19:44:04Z ottenhoff@longsight.com $
+ * $Id: StructuredArtifactDefinitionManagerImpl.java 130481 2013-10-15 17:36:54Z dsobiera@indiana.edu $
  ***********************************************************************************
  *
  * Copyright (c) 2004, 2005, 2006, 2007, 2008 The Sakai Foundation
@@ -382,6 +382,8 @@ public class StructuredArtifactDefinitionManagerImpl extends HibernateDaoSupport
          }
          sad = new StructuredArtifactDefinition(bean);
          bean.setExternalType(sad.getExternalType());
+         bean.setInstruction(sanitizeInstructions(bean.getInstruction()));
+        
          bean.setSchemaHash(calculateSchemaHash(bean));
          getHibernateTemplate().saveOrUpdate(bean);
          lockSADFiles(bean);
@@ -391,6 +393,53 @@ public class StructuredArtifactDefinitionManagerImpl extends HibernateDaoSupport
          throw new PersistenceException("Form name {0} exists", new Object[]{bean.getDescription()}, "description");
       }
       return bean;
+   }
+   
+   /**
+    * There have been issues with hashcodes of the instructions field due to things like carriage returns that seem to get 
+    * converted during the form export/import process.  Then, on import, a form seems to think it's different from the global form
+    * and creates a new local (site) form.  So, this method will pre-convert stuff so that when imported, it'll match up with the original.
+    * @param instructions
+    * @return
+    */
+   private String sanitizeInstructions(String instructions) {
+      String result = instructions;
+      if (instructions != null) {
+         logger.debug("Original instruction hashcode:  " + instructions.hashCode());
+
+
+         Element rootNode = new Element("metaobjForm");
+         Element attrNode = new Element("instruction");
+         attrNode.addContent(new CDATA(instructions));
+         rootNode.addContent(attrNode);
+         Document doc = new Document(rootNode);
+
+         String docStr = (new XMLOutputter()).outputString(doc);
+         SAXBuilder builder = new SAXBuilder();
+
+         try {
+            byte[] bytes = docStr.getBytes();
+            //  for some reason the SAX Builder sometimes won't recognize
+            //these bytes as correct utf-8 characters.  So we want to read it in
+            //as utf-8 and spot it back out as utf-8 and this will correct the
+            //bytes.  In my test, it added two bytes somewhere in the string.
+            //and adding those two bytes made the string work for saxbuilder.
+            //
+            bytes = (new String(bytes, "UTF-8")).getBytes("UTF-8");
+            Document document = builder.build(new ByteArrayInputStream(bytes));
+
+            Element topNode = document.getRootElement();
+
+            result = new String(topNode.getChildTextTrim("instruction").getBytes(), "UTF-8");
+
+         }
+         catch (Exception jdome) {
+            logger.error(".sanitizeInstructions", jdome);
+         }
+
+         logger.debug("Sanitized instruction hashcode: " + result.hashCode());
+      }
+      return result;
    }
    
    /**
@@ -794,6 +843,7 @@ public class StructuredArtifactDefinitionManagerImpl extends HibernateDaoSupport
    }
 
    protected String calculateSchemaHash(StructuredArtifactDefinitionBean bean) {
+      String hashCode = "";
       String hashString = "";
       if (bean.getSchema() != null) {
          hashString += new String(bean.getSchema());
@@ -801,7 +851,11 @@ public class StructuredArtifactDefinitionManagerImpl extends HibernateDaoSupport
       hashString += convertNull2Empty(bean.getDocumentRoot());
       hashString += convertNull2Empty(bean.getDescription());
       hashString += convertNull2Empty(bean.getInstruction());
-      return hashString.hashCode() + "";
+      hashCode = hashString.hashCode() + "";
+      
+      logger.debug("Calculating hashcode for bean: " + bean.getDescription() + "(" + bean.getId() + "); OLD:" + bean.getSchemaHash() + "; NEW:" + hashCode);
+      
+      return hashCode;
    }
    
    /**
@@ -822,9 +876,10 @@ public class StructuredArtifactDefinitionManagerImpl extends HibernateDaoSupport
 	   List<StructuredArtifactDefinitionBean> homes = findAllHomes();
 	   int badCount = 0;
 	   for (StructuredArtifactDefinitionBean bean : homes) {
+	      bean.setInstruction(sanitizeInstructions(bean.getInstruction()));
 		   String calcHash = calculateSchemaHash(bean);
 		   if (!bean.getSchemaHash().equalsIgnoreCase(calcHash)) {
-			   String text = "Form has invalid schema hash: " + bean.getId() + "; stored: " + bean.getSchemaHash() + "; calc: " + calcHash;
+			   String text = "Form has invalid schema hash: " + bean.getDescription() + "(" + bean.getId() + "); stored: " + bean.getSchemaHash() + "; calc: " + calcHash;
 			   logger.warn(text);
 			   badCount++;
 			   if (updateInvalid) {
@@ -833,7 +888,7 @@ public class StructuredArtifactDefinitionManagerImpl extends HibernateDaoSupport
 					   logger.warn(text);
 				   }
 				   else {
-					   bean.setSchemaHash(calculateSchemaHash(bean));
+					   bean.setSchemaHash(calcHash);
 					   getHibernateTemplate().saveOrUpdate(bean);
 					   text = "Form schema hash has been updated: " + bean.getId();
 					   logger.info(text);
@@ -1036,8 +1091,13 @@ public class StructuredArtifactDefinitionManagerImpl extends HibernateDaoSupport
             index++;
             bean.setDescription(origTitle + " " + index);
          }
-
-         save(bean);
+         
+         try{
+        	 save(bean);
+         }catch (OspException e) {
+        	 throw new OspException(e.getMessage(), origTitle, e);
+         }
+         
          // doesn't like imported beans in batch mode???
          getHibernateTemplate().flush();
       }
@@ -1099,7 +1159,7 @@ public class StructuredArtifactDefinitionManagerImpl extends HibernateDaoSupport
       try {
          Hashtable<Id, Id> fileMap = new Hashtable<Id, Id>();
          String tempDirName = getIdManager().createId().getValue();
-         ContentCollectionEdit fileParent = getExpandedFileDir(tempDirName);
+         ContentCollectionEdit fileParent = getExpandedFileDir(tempDirName, worksite);
          boolean gotFile = false;
          
          while (currentEntry != null) {
@@ -1163,6 +1223,7 @@ public class StructuredArtifactDefinitionManagerImpl extends HibernateDaoSupport
     * this uses the bean property importFolderName to name the
     * 
     * @param origName String
+    * @param siteId Site id to look up
     * @return ContentCollectionEdit
     * @throws InconsistentException
     * @throws PermissionException
@@ -1171,8 +1232,8 @@ public class StructuredArtifactDefinitionManagerImpl extends HibernateDaoSupport
     * @throws IdUnusedException
     * @throws TypeException
     */
-   protected ContentCollectionEdit getExpandedFileDir(String origName) throws TypeException, IdUnusedException, PermissionException, IdUsedException, IdInvalidException, InconsistentException {
-      ContentCollection userCollection = getUserCollection();
+   protected ContentCollectionEdit getExpandedFileDir(String origName, String siteId) throws TypeException, IdUnusedException, PermissionException, IdUsedException, IdInvalidException, InconsistentException {
+      ContentCollection baseCollection = getSiteCollection(siteId);
       
       try {
          //TODO use the bean org.theospi.portfolio.admin.model.IntegrationOption.siteOption 
@@ -1180,7 +1241,7 @@ public class StructuredArtifactDefinitionManagerImpl extends HibernateDaoSupport
          
          ResourceLoader rb = new ResourceLoader("org/sakaiproject/metaobj/registry/messages");
          
-         ContentCollectionEdit groupCollection = getContentHosting().addCollection(userCollection.getId() + IMPORT_BASE_FOLDER_ID);
+         ContentCollectionEdit groupCollection = getContentHosting().addCollection(baseCollection.getId() + IMPORT_BASE_FOLDER_ID);
          groupCollection.getPropertiesEdit().addProperty(ResourceProperties.PROP_DISPLAY_NAME, rb.getString("form_import_folder"));
          getContentHosting().commitCollection(groupCollection);
       }
@@ -1195,7 +1256,7 @@ public class StructuredArtifactDefinitionManagerImpl extends HibernateDaoSupport
          return null;
       }
       
-      ContentCollection collection = getContentHosting().getCollection(userCollection.getId() + IMPORT_BASE_FOLDER_ID + "/");
+      ContentCollection collection = getContentHosting().getCollection(baseCollection.getId() + IMPORT_BASE_FOLDER_ID + "/");
       
       String childId = collection.getId() + origName;
       return getContentHosting().addCollection(childId);
@@ -1214,6 +1275,21 @@ public class StructuredArtifactDefinitionManagerImpl extends HibernateDaoSupport
       String userId = user.getId();
       String wsId = SiteService.getUserSiteId(userId);
       String wsCollectionId = getContentHosting().getSiteCollection(wsId);
+      ContentCollection collection = getContentHosting().getCollection(wsCollectionId);
+      return collection;
+   }
+   
+   /**
+    * gets the site's resource collection
+    * 
+    * @param siteId Site id to look up
+    * @return ContentCollection
+    * @throws TypeException
+    * @throws IdUnusedException
+    * @throws PermissionException
+    */
+   protected ContentCollection getSiteCollection(String siteId) throws TypeException, IdUnusedException, PermissionException {
+      String wsCollectionId = getContentHosting().getSiteCollection(siteId);
       ContentCollection collection = getContentHosting().getCollection(wsCollectionId);
       return collection;
    }

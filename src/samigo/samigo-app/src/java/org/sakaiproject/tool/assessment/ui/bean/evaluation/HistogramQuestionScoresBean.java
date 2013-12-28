@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/sam/trunk/samigo-app/src/java/org/sakaiproject/tool/assessment/ui/bean/evaluation/HistogramQuestionScoresBean.java $
- * $Id: HistogramQuestionScoresBean.java 114937 2012-10-22 07:52:33Z david.horwitz@uct.ac.za $
+ * $Id: HistogramQuestionScoresBean.java 130512 2013-10-15 23:46:40Z ktsao@stanford.edu $
  ***********************************************************************************
  *
  * Copyright (c) 2004, 2005, 2006, 2008, 2009 The Sakai Foundation

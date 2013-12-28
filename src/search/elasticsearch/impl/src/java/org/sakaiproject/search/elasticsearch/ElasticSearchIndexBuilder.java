@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/search/trunk/elasticsearch/impl/src/java/org/sakaiproject/search/elasticsearch/ElasticSearchIndexBuilder.java $
- * $Id: ElasticSearchIndexBuilder.java 125882 2013-06-17 20:17:01Z jbush@rsmart.com $
+ * $Id: ElasticSearchIndexBuilder.java 131943 2013-11-25 23:11:44Z jbush@anisakai.com $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008 The Sakai Foundation
@@ -168,6 +168,12 @@ public class ElasticSearchIndexBuilder implements SearchIndexBuilder {
      */
     private List<String> ignoredSitesList = new ArrayList();
 
+    /**
+     * this turns off the threads and does indexing inline.  DO NOT enable this in prod.
+     * It is meant for testing, especially unit tests only.
+     */
+    private boolean testMode = false;
+
     private Map<String, String> settings = new HashMap();
 
     static {
@@ -242,7 +248,13 @@ public class ElasticSearchIndexBuilder implements SearchIndexBuilder {
 
         }
 
-        bulkContentIndexTimer.schedule(new BulkContentIndexerTask(), (delay * 1000), (period * 1000));
+        if (!testMode) {
+            bulkContentIndexTimer.schedule(new BulkContentIndexerTask(), (delay * 1000), (period * 1000));
+        } else {
+            log.warn("IN TEST MODE. DO NOT enable this in production !!!");
+        }
+
+
     }
 
     /**
@@ -277,16 +289,18 @@ public class ElasticSearchIndexBuilder implements SearchIndexBuilder {
             return;
         }
         EntityContentProducer ecp = newEntityContentProducer(event);
-        String siteId = ecp.getSiteId(resourceName);
 
 
         if (ecp == null || ecp.getSiteId(resourceName) == null) {
             log.debug("Not indexing " + resourceName + " as it has no context");
             return;
         }
- 
-       String id = ecp.getId(resourceName);
-       if (onlyIndexSearchToolSites) {
+
+        String siteId = ecp.getSiteId(resourceName);
+
+
+        String id = ecp.getId(resourceName);
+        if (onlyIndexSearchToolSites) {
             try {
                 Site s = siteService.getSite(siteId);
                 ToolConfiguration t = s.getToolForCommonId(SEARCH_TOOL_ID);
@@ -379,6 +393,10 @@ public class ElasticSearchIndexBuilder implements SearchIndexBuilder {
      * @return
      */
     protected void scheduleIndexAdd(String resourceName, EntityContentProducer ecp) {
+        if (testMode) {
+            indexContent(ecp, resourceName);
+            return;
+        }
         contentIndexTimer.schedule(new ContentIndexerTask( resourceName,  ecp), 0);
     }
 
@@ -492,15 +510,20 @@ public class ElasticSearchIndexBuilder implements SearchIndexBuilder {
         public void run() {
             // let's not hog the whole CPU just in case you have lots of sites with lots of data this could take a bit
             Thread.currentThread().setPriority(Thread.NORM_PRIORITY - 1);
+            rebuildIndexForAllIndexableSites();
 
-             // rebuild index
-            for (Site s : siteService.getSites(SiteService.SelectionType.ANY, null, null, null, SiteService.SortType.NONE, null)) {
-                if (isSiteIndexable(s)) {
-                    rebuildSiteIndex(s.getId());
-                }
-            }
+
         }
 
+    }
+
+    protected void rebuildIndexForAllIndexableSites() {
+        // rebuild index
+        for (Site s : siteService.getSites(SiteService.SelectionType.ANY, null, null, null, SiteService.SortType.NONE, null)) {
+            if (isSiteIndexable(s)) {
+                rebuildSiteIndex(s.getId());
+            }
+        }
     }
 
 
@@ -527,6 +550,17 @@ public class ElasticSearchIndexBuilder implements SearchIndexBuilder {
 
     }
 
+    protected void indexContent(EntityContentProducer ecp, String reference){
+        try {
+            //updating was causing issues, so doing delete and re-add
+            deleteDocument(ecp.getId(reference), ecp.getSiteId(reference));
+            prepareIndexAdd(reference, ecp, true);
+        } catch (NoContentException e) {
+            deleteDocument(e);
+        } catch (Exception e) {
+            log.error("problem updating content indexing for entity: " + reference + " error: " + e.getMessage());
+        }
+    }
 
 
     protected class ContentIndexerTask extends TimerTask {
@@ -542,13 +576,7 @@ public class ElasticSearchIndexBuilder implements SearchIndexBuilder {
             log.debug("running content indexing task");
             enableAzgSecurityAdvisor();
             try {
-                //updating was causing issues, so doing delete and re-add
-                deleteDocument(ecp.getId(reference), ecp.getSiteId(reference));
-                prepareIndexAdd(reference, ecp, true);
-            } catch (NoContentException e) {
-                deleteDocument(e);
-            } catch (Exception e) {
-                log.error("problem updating content indexing for entity: " + reference + " error: " + e.getMessage());
+                indexContent(ecp, reference);
             } finally {
                 disableAzgSecurityAdvisor();
             }
@@ -666,7 +694,7 @@ public class ElasticSearchIndexBuilder implements SearchIndexBuilder {
         DeleteResponse deleteResponse  = prepareDelete(id, siteId).execute().actionGet();
 
         if (log.isDebugEnabled()) {
-            if (deleteResponse.notFound()) {
+            if (deleteResponse.isNotFound()) {
                 log.debug("could not delete doc with by id: " + id + " it wasn't found");
             } else {
                 log.debug("ES deleted a doc with id: " + deleteResponse.getId());
@@ -683,24 +711,24 @@ public class ElasticSearchIndexBuilder implements SearchIndexBuilder {
 
         log.info("bulk request of batch size: " + bulkRequest.numberOfActions() + " took " + bulkResponse.getTookInMillis() + " ms");
 
-        for (BulkItemResponse response : bulkResponse.items()) {
+        for (BulkItemResponse response : bulkResponse.getItems()) {
 
-            if (response.response() instanceof DeleteResponse) {
-                DeleteResponse deleteResponse = (DeleteResponse) response.response();
+            if (response.getResponse() instanceof DeleteResponse) {
+                DeleteResponse deleteResponse = (DeleteResponse) response.getResponse();
 
-                if (response.failed()) {
-                    log.error("problem deleting doc: " + response.getId() + " error: " + response.failureMessage());
-                } else if (deleteResponse.notFound()) {
+                if (response.isFailed()) {
+                    log.error("problem deleting doc: " + response.getId() + " error: " + response.getFailureMessage());
+                } else if (deleteResponse.isNotFound()) {
                     log.debug("ES could not find a doc with id: " + deleteResponse.getId() + " to delete.");
                 } else {
                     log.debug("ES deleted a doc with id: " + deleteResponse.getId());
                 }
             }
-            if (response.response() instanceof IndexResponse) {
-                IndexResponse indexResponse = (IndexResponse) response.response();
+            if (response.getResponse() instanceof IndexResponse) {
+                IndexResponse indexResponse = (IndexResponse) response.getResponse();
 
-                if (response.failed()) {
-                    log.error("problem updating content for doc: " + response.getId() + " error: " + response.failureMessage());
+                if (response.isFailed()) {
+                    log.error("problem updating content for doc: " + response.getId() + " error: " + response.getFailureMessage());
                 } else {
                     log.debug("ES indexed content for doc with id: " + indexResponse.getId());
                 }
@@ -781,7 +809,7 @@ public class ElasticSearchIndexBuilder implements SearchIndexBuilder {
                     .setQuery(filteredQuery(matchAllQuery(), missingFilter(SearchService.FIELD_CONTENTS)))
                     .execute()
                     .actionGet();
-            return (int) response.count();
+            return (int) response.getCount();
         } catch (Exception e) {
             log.error("problem getting pending docs: " + e.getMessage());
         }
@@ -793,7 +821,7 @@ public class ElasticSearchIndexBuilder implements SearchIndexBuilder {
      */
     public void assureIndex() {
         IndicesExistsResponse response = client.admin().indices().exists(new IndicesExistsRequest(indexName)).actionGet();
-        if (!response.exists()) {
+        if (!response.isExists()) {
             createIndex();
         }
     }
@@ -804,7 +832,7 @@ public class ElasticSearchIndexBuilder implements SearchIndexBuilder {
     public void createIndex() {
         try {
             CreateIndexResponse createResponse = client.admin().indices().create(new CreateIndexRequest(indexName).settings(settings).mapping(ElasticSearchService.SAKAI_DOC_TYPE, mapping)).actionGet();
-            if (!createResponse.acknowledged()) {
+            if (!createResponse.isAcknowledged()) {
                 log.error("Index wasn't created, can't rebuild");
             }
         } catch (IndexAlreadyExistsException e) {
@@ -820,7 +848,7 @@ public class ElasticSearchIndexBuilder implements SearchIndexBuilder {
      */
     public void recreateIndex() {
         IndicesExistsResponse response = client.admin().indices().exists(new IndicesExistsRequest(indexName)).actionGet();
-        if (response.exists()) {
+        if (response.isExists()) {
 
             client.admin().indices().delete(new DeleteIndexRequest(indexName)).actionGet();
 
@@ -839,6 +867,11 @@ public class ElasticSearchIndexBuilder implements SearchIndexBuilder {
     public void rebuildIndex() {
         recreateIndex();
 
+        if (testMode) {
+            rebuildIndexForAllIndexableSites();
+            return;
+        }
+
         bulkContentIndexTimer.schedule(new RebuildIndexTask(), 0);
     }
 
@@ -847,7 +880,7 @@ public class ElasticSearchIndexBuilder implements SearchIndexBuilder {
      */
     protected void flushIndex() {
         //flush
-        client.admin().indices().flush(new FlushRequest(indexName).refresh(true)).actionGet();
+        client.admin().indices().flush(new FlushRequest(indexName)).actionGet();
     }
 
     /**
@@ -957,6 +990,10 @@ public class ElasticSearchIndexBuilder implements SearchIndexBuilder {
      * the supplied siteId
      */
     public void rebuildIndex(String siteId) {
+        if (testMode) {
+            rebuildSiteIndex(siteId);
+            return;
+        }
         bulkContentIndexTimer.schedule(new RebuildSiteTask(siteId), 0);
     }
 
@@ -1209,5 +1246,9 @@ public class ElasticSearchIndexBuilder implements SearchIndexBuilder {
 
     public void setIndexSettings(String indexSettings) {
         this.indexSettings = indexSettings;
+    }
+
+    public void setTestMode(boolean testMode) {
+        this.testMode = testMode;
     }
 }

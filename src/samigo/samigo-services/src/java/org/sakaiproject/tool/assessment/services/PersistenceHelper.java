@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/sam/trunk/samigo-services/src/java/org/sakaiproject/tool/assessment/services/PersistenceHelper.java $
- * $Id: PersistenceHelper.java 106463 2012-04-02 12:20:09Z david.horwitz@uct.ac.za $
+ * $Id: PersistenceHelper.java 131633 2013-11-15 21:36:42Z arwhyte@umich.edu $
  ***********************************************************************************
  *
  * Copyright (c) 2004, 2005, 2006, 2008 The Sakai Foundation
@@ -27,7 +27,7 @@ import org.apache.commons.logging.LogFactory;
 /**
  * Utility methods for helping with persistence
  * @author dhorwitz
- * @since 2.10
+ * @since 10.0
  */
 public class PersistenceHelper {
 	

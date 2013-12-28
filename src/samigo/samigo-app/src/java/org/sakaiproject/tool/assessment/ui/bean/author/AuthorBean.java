@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/sam/trunk/samigo-app/src/java/org/sakaiproject/tool/assessment/ui/bean/author/AuthorBean.java $
- * $Id: AuthorBean.java 121756 2013-03-25 21:57:51Z ktsao@stanford.edu $
+ * $Id: AuthorBean.java 130512 2013-10-15 23:46:40Z ktsao@stanford.edu $
  ***********************************************************************************
  *
  * Copyright (c) 2004, 2005, 2006, 2008 The Sakai Foundation
@@ -43,7 +43,7 @@ import org.sakaiproject.component.cover.ServerConfigurationService;
  * General authoring information.
  * @author Ed Smiley
  *
- * @version $Id: AuthorBean.java 121756 2013-03-25 21:57:51Z ktsao@stanford.edu $
+ * @version $Id: AuthorBean.java 130512 2013-10-15 23:46:40Z ktsao@stanford.edu $
  */
 public class AuthorBean implements Serializable
 {

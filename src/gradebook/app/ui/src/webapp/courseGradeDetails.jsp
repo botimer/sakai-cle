@@ -119,7 +119,8 @@
 						<h:outputText value="#{msgs.course_grade_details_grade}"/>
 		            </t:commandSortHeader>
 				</f:facet>
-				<t:div styleClass="shorttext">
+				<t:div styleClass="">
+					<h:outputLabel for="Grade" value="#{msgs.course_grade_details_export_course_grades_options_gradeoverr_for} #{scoreRow.enrollment.user.sortName}" styleClass="skip"/>
 					<h:inputText rendered="#{scoreRow.userCanGrade}"
 						id="Grade"
 						value="#{scoreRow.enteredGrade}"
@@ -228,7 +229,7 @@
 				style="margin-left: 5em;"
 			/>
 		</div>
-    <script type="text/javascript" src="/library/js/jquery.js"></script>
+    <script type="text/javascript" src="/library/js/jquery/jquery-1.9.1.min.js"></script>
     <script type="text/javascript">
         $(document).ready(function(){
             $('#exportPrefsLink').click(function(e){

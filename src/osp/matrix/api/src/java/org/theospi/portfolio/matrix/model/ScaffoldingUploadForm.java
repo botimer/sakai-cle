@@ -1,6 +1,6 @@
 /**********************************************************************************
 * $URL: https://source.sakaiproject.org/svn/osp/trunk/matrix/api/src/java/org/theospi/portfolio/matrix/model/ScaffoldingUploadForm.java $
-* $Id: ScaffoldingUploadForm.java 105079 2012-02-24 23:08:11Z ottenhoff@longsight.com $
+* $Id: ScaffoldingUploadForm.java 131548 2013-11-14 16:42:13Z dsobiera@indiana.edu $
 ***********************************************************************************
 *
  * Copyright (c) 2005, 2006, 2008 The Sakai Foundation
@@ -29,6 +29,7 @@ public class ScaffoldingUploadForm {
 
    private String scaffoldingFileName;
    private Reference uploadedScaffolding;
+   private boolean ignoreInvalidForms;
 
    public Reference getUploadedScaffolding() {
       return uploadedScaffolding;
@@ -44,6 +45,14 @@ public class ScaffoldingUploadForm {
 
    public void setScaffoldingFileName(String scaffoldingFileName) {
       this.scaffoldingFileName = scaffoldingFileName;
+   }
+   
+   public boolean isIgnoreInvalidForms() {
+       return ignoreInvalidForms;
+   }
+
+   public void setIgnoreInvalidForms(boolean ignoreInvalidForms) {
+       this.ignoreInvalidForms = ignoreInvalidForms;
    }
 
 }

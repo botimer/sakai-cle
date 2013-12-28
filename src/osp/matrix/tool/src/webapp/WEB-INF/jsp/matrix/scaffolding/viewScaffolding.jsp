@@ -3,7 +3,8 @@
 <%@ include file="../matrixStyle.jspf" %>
 
 <jsp:useBean id="msgs" class="org.sakaiproject.util.ResourceLoader" scope="request"><jsp:setProperty name="msgs" property="baseName" value="org.theospi.portfolio.matrix.bundle.Messages"/></jsp:useBean>
-
+<fmt:setLocale value="${locale}" />
+<fmt:setBundle basename="org.theospi.portfolio.matrix.bundle.Messages" />
 
 <c:forEach var="style" items="${styles}">
    <link href="<c:out value='${style}'/>" type="text/css" rel="stylesheet"
@@ -27,7 +28,10 @@ function hrefViewCell(cellId) {
 			<c:if test="${canRevise.any || (canRevise.own && matrixContents.scaffolding.owner == osp_agent)}">
 				<a
 					href="<osp:url value="osp.permissions.helper/editPermissions_new">
-	               <osp:param name="message"><c:out value="${msgs.action_message_setMatrixPermission}"/>
+	               <osp:param name="message"><fmt:message key="action_message_setMatrixPermission">
+	                <fmt:param><c:out value="${matrixContents.scaffolding.title}"/></fmt:param>
+	                <fmt:param><c:out value="${worksite.title}"/></fmt:param>
+	                </fmt:message>
                   </osp:param>
 	               <osp:param name="name" value="scaffoldingSpecific"/>
 	               <osp:param name="qualifier" value="${matrixContents.scaffolding.reference}"/>

@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/osp/trunk/wizard/api/src/java/org/theospi/portfolio/wizard/taggable/api/WizardActivityProducer.java $
- * $Id: WizardActivityProducer.java 105079 2012-02-24 23:08:11Z ottenhoff@longsight.com $
+ * $Id: WizardActivityProducer.java 131591 2013-11-15 20:24:05Z dsobiera@indiana.edu $
  ***********************************************************************************
  *
  * Copyright (c) 2007, 2008 The Sakai Foundation
@@ -39,6 +39,11 @@ public interface WizardActivityProducer extends TaggableActivityProducer {
 	 */
 	public static final String PRODUCER_ID = WizardActivityProducer.class
 			.getName();
+	
+	/**
+     * The key used to look up a value in the ServerConfigurationService if this producer should be enabled
+     */
+    public static final String PRODUCER_ENABLED_KEY = "wizard.activityProducer.enabled";
 
 	/**
 	 * Method to wrap the given wizard page definition as a taggable activity.

@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/sam/trunk/samigo-app/src/java/org/sakaiproject/tool/assessment/ui/listener/delivery/SubmitToGradingActionListener.java $
- * $Id: SubmitToGradingActionListener.java 123680 2013-05-07 00:45:06Z azeckoski@unicon.net $
+ * $Id: SubmitToGradingActionListener.java 132168 2013-12-03 20:25:29Z ktsao@stanford.edu $
  ***********************************************************************************
  *
  * Copyright (c) 2004, 2005, 2006, 2007, 2008, 2009 The Sakai Foundation
@@ -51,6 +51,7 @@ import org.sakaiproject.event.api.LearningResourceStoreService.LRS_Verb.SAKAI_VE
 import org.sakaiproject.event.cover.EventTrackingService;
 import org.sakaiproject.tool.assessment.data.dao.grading.AssessmentGradingData;
 import org.sakaiproject.tool.assessment.data.dao.grading.ItemGradingData;
+import org.sakaiproject.tool.assessment.data.exception.SamigoDataAccessException;
 import org.sakaiproject.tool.assessment.data.ifc.assessment.AssessmentAccessControlIfc;
 import org.sakaiproject.tool.assessment.data.ifc.assessment.ItemDataIfc;
 import org.sakaiproject.tool.assessment.data.ifc.assessment.PublishedAssessmentIfc;
@@ -131,7 +132,7 @@ public class SubmitToGradingActionListener implements ActionListener {
                 Event event = EventTrackingService.newEvent("", adata.getPublishedAssessmentTitle(), true);
                 LearningResourceStoreService lrss = (LearningResourceStoreService) ComponentManager
                     .get("org.sakaiproject.event.api.LearningResourceStoreService");
-                if (null != lrss) {
+                if (null != lrss && lrss.getEventActor(event) != null) {
                     lrss.registerStatement(getStatementForGradedAssessment(adata, lrss.getEventActor(event), publishedAssessment),
                         "sakai.samigo");
                 }
@@ -249,9 +250,10 @@ public class SubmitToGradingActionListener implements ActionListener {
 	 * @param publishedAssessment
 	 * @param delivery
 	 * @return
+	 * @throws SamigoDataAccessException 
 	 */
 	private synchronized AssessmentGradingData submitToGradingService(
-			ActionEvent ae, PublishedAssessmentFacade publishedAssessment, DeliveryBean delivery, HashMap invalidFINMap, ArrayList invalidSALengthList) throws FinFormatException {
+			ActionEvent ae, PublishedAssessmentFacade publishedAssessment, DeliveryBean delivery, HashMap invalidFINMap, ArrayList invalidSALengthList) throws FinFormatException, SamigoDataAccessException {
 		log.debug("****1a. inside submitToGradingService ");
 		String submissionId = "";
 		HashSet<ItemGradingData> itemGradingHash = new HashSet<ItemGradingData>();
@@ -361,7 +363,7 @@ public class SubmitToGradingActionListener implements ActionListener {
 	private AssessmentGradingData persistAssessmentGrading(ActionEvent ae, 
 			DeliveryBean delivery, HashSet<ItemGradingData> itemGradingHash,
 			PublishedAssessmentFacade publishedAssessment, HashSet<ItemGradingData> adds,
-			HashSet<ItemGradingData> removes, HashMap invalidFINMap, ArrayList invalidSALengthList) throws FinFormatException {
+			HashSet<ItemGradingData> removes, HashMap invalidFINMap, ArrayList invalidSALengthList) throws FinFormatException, SamigoDataAccessException {
 		AssessmentGradingData adata = null;
 		if (delivery.getAssessmentGrading() != null) {
 			adata = delivery.getAssessmentGrading();
@@ -551,6 +553,8 @@ public class SubmitToGradingActionListener implements ActionListener {
 			} else { // itemGrading from new set doesn't exist, add to set in
 				// this case
 				// log.debug("**** SubmitToGrading: need add new item");
+			        //a new item should always have the grading ID set to null
+			        newItem.setItemGradingId(null);
 				newItem.setAgentId(adata.getAgentId());
 				updateItemGradingSet.add(newItem);
 			}

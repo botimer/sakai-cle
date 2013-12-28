@@ -817,6 +817,19 @@ $(document).ready(function() {
 	});
 });	
 
+function resizeFrameForDialog()
+{
+    if (top.location != self.location) {
+        var frame = parent.document.getElementById(window.name);
+    }
+    if( frame ) {
+        var clientH = document.body.clientHeight + 400;
+        $( frame ).height( clientH );
+    }
+    else {
+        throw( "resizeFrame did not get the frame (using name=" + window.name + ")" );
+    }
+}
 
 $(document).ready(function(){
     $('.blockMeOnClick').click(function(e){
@@ -866,7 +879,7 @@ $(document).ready(function(){
                 'height': blockerHeight,
                 'top': pos.top,
                 'left': pos.left,
-                'display': 'block',
+                'display': 'block'
             });
         });
         $buttonContainer.find('.messageProgress').fadeIn('slow')

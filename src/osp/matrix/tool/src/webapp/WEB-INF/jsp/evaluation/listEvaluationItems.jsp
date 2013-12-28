@@ -2,6 +2,8 @@
 <%@ taglib prefix="spring" uri="http://www.springframework.org/tags"%>
 
 <jsp:useBean id="msgs" class="org.sakaiproject.util.ResourceLoader" scope="request"><jsp:setProperty name="msgs" property="baseName" value="org.theospi.portfolio.matrix.bundle.Messages"/></jsp:useBean>
+<fmt:setLocale value="${locale}" />
+<fmt:setBundle basename="org.theospi.portfolio.matrix.bundle.Messages" />
 
 
 <osp-c:authZMap prefix="osp.matrix." var="can" />
@@ -12,7 +14,10 @@
       <c:set var="hasFirstAction" value="true" />
         <a href="<osp:url value="osp.permissions.helper/editPermissions">
         <osp:param name="message">
-        	<c:out value="${msgs.action_message_setPermission}"/>
+        	<fmt:message key="action_message_setPermission">
+        	 <fmt:param><c:out value="${tool.title}"/></fmt:param>
+        	 <fmt:param><c:out value="${worksite.title}"/></fmt:param>
+        	</fmt:message>
          </osp:param>
 
              <osp:param name="name" value="review"/>

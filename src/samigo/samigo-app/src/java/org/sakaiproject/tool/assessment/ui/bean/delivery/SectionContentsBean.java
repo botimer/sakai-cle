@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/sam/trunk/samigo-app/src/java/org/sakaiproject/tool/assessment/ui/bean/delivery/SectionContentsBean.java $
- * $Id: SectionContentsBean.java 121258 2013-03-15 15:03:36Z ottenhoff@longsight.com $
+ * $Id: SectionContentsBean.java 132192 2013-12-04 13:49:49Z holladay@longsight.com $
  ***********************************************************************************
  *
  * Copyright (c) 2004, 2005, 2006, 2008, 2009 The Sakai Foundation
@@ -24,8 +24,11 @@
 package org.sakaiproject.tool.assessment.ui.bean.delivery;
 
 import java.io.Serializable;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
@@ -431,9 +434,21 @@ public class SectionContentsBean
           if(randomDrawDate != null && !"".equals(randomDrawDate)){
 
         	  try{
-        		  //The Date Time is in ISO format
-        		  DateTimeFormatter fmt = ISODateTimeFormat.dateTime();
-        		  DateTime drawDate = fmt.parseDateTime(randomDrawDate);
+
+        		// bjones86 - SAM-1604
+				DateTime drawDate;
+				DateTimeFormatter fmt = ISODateTimeFormat.dateTime();	//The Date Time is in ISO format
+				try {
+					drawDate = fmt.parseDateTime(randomDrawDate);
+				} catch(IllegalStateException ex) {
+					DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZZ");
+					Date date = df.parse(randomDrawDate);
+					if(date == null) {
+						throw new IllegalArgumentException();
+					}
+					drawDate = new DateTime(date);
+				}
+        		  
         		  //We need the locale to localize the output string
         		  Locale loc = new ResourceLoader().getLocale();
         		  String drawDateString = DateTimeFormat.fullDate().withLocale(loc).print(drawDate);

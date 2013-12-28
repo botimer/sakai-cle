@@ -20,6 +20,7 @@ public class EditPresentationFormController extends AbstractCalloutController {
 	//      of an existing presentation. It sets the return view to the contents
 	//      of that presentation.
 	
+    protected static final String PROP_PRESENTATION_ITEM_DEF_ID = "_PresentationItemDef:Id";
 	protected IdManager idManager;
 	
 	public EditPresentationFormController() {
@@ -31,8 +32,14 @@ public class EditPresentationFormController extends AbstractCalloutController {
 		String formTypeId = request.getParameter("formTypeId");
 		String formId = request.getParameter("formId");
 		String itemDefId = request.getParameter("itemDefId");
+		String formCopy = request.getParameter("formCopy");
 		
-		if (formId != null)
+		if (formCopy != null && "true".equals(formCopy) && formId != null) {
+			Map<String, Object> retMap = presentationService.copyForm(presentationId, formTypeId, formId);
+			retMap.put(PROP_PRESENTATION_ITEM_DEF_ID, itemDefId);
+			return retMap;
+		}
+		else if (formId != null)
 			return presentationService.editForm(presentationId, formTypeId, formId, itemDefId);
 		else {
 			return presentationService.createForm(presentationId, formTypeId, itemDefId);

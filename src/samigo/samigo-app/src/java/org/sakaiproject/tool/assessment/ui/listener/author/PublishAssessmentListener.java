@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/sam/trunk/samigo-app/src/java/org/sakaiproject/tool/assessment/ui/listener/author/PublishAssessmentListener.java $
- * $Id: PublishAssessmentListener.java 107319 2012-04-17 13:39:00Z david.horwitz@uct.ac.za $
+ * $Id: PublishAssessmentListener.java 132501 2013-12-11 21:18:24Z holladay@longsight.com $
  ***********************************************************************************
  *
  * Copyright (c) 2004, 2005, 2006, 2007, 2008, 2009 The Sakai Foundation
@@ -81,7 +81,7 @@ import org.sakaiproject.exception.IdUnusedException;
  * <p>Title: Samigo</p>2
  * <p>Description: Sakai Assessment Manager</p>
  * @author Ed Smiley
- * @version $Id: PublishAssessmentListener.java 107319 2012-04-17 13:39:00Z david.horwitz@uct.ac.za $
+ * @version $Id: PublishAssessmentListener.java 132501 2013-12-11 21:18:24Z holladay@longsight.com $
  */
 
 public class PublishAssessmentListener
@@ -153,7 +153,7 @@ public class PublishAssessmentListener
   			author.setJustPublishedAnAssessment(true);
 
   			//update any random draw questions from pool since they could have changed
-  			int success = assessmentService.updateAllRandomPoolQuestions(assessment);
+  			int success = assessmentService.updateAllRandomPoolQuestions(assessment, true);
   			if(success == assessmentService.UPDATE_SUCCESS){
 
   				//grab new updated assessment

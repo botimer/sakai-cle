@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/kernel/trunk/api/src/main/java/org/sakaiproject/authz/api/AuthzGroupService.java $
- * $Id: AuthzGroupService.java 121067 2013-03-12 18:25:04Z david.horwitz@uct.ac.za $
+ * $Id: AuthzGroupService.java 132561 2013-12-13 14:25:40Z enietzel@anisakai.com $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008 Sakai Foundation
@@ -93,6 +93,7 @@ public interface AuthzGroupService extends EntityProducer
 
 	/**
 	 * Access a list of AuthzGroups which contain a specified userid
+	 * NOTE: This call is backed by a cache.
 	 * 
 	 * @param authzGroupIds
 	 *        AuthzGroup selection criteria (list of AuthzGroup ids)
@@ -464,4 +465,25 @@ public interface AuthzGroupService extends EntityProducer
      */
     public Collection<String> getAuthzUsersInGroups(Set<String> groupIds);
 
-}
+    /**
+     * Registers a AuthzGroupAdvisor with the AuthzGroupService. Each advisor will be
+     * called during save(AuthzGroup).
+     * 
+     * @param advisor The AuthzGroupAdvisor to add 
+     */
+    public void addAuthzGroupAdvisor(AuthzGroupAdvisor advisor);
+    
+    /**
+     * Removes an AuthzGroupAdvisor
+     * 
+     * @param advisor The AuthzGroupAdvisor to remove
+     * @return Whether a AuthzGroupAdvisor was previously registered and hence removed
+     */
+    public boolean removeAuthzGroupAdvisor(AuthzGroupAdvisor advisor);
+    
+    /**
+     * List of the current AuthzGroupAdvisors registered with the AuthzGroupService
+     * 
+     * @return List containing the currently registered AuthzGroupAdvisors
+     */
+    public List<AuthzGroupAdvisor> getAuthzGroupAdvisors();}

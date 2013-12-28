@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/kernel/trunk/kernel-impl/src/main/java/org/sakaiproject/content/impl/BaseContentService.java $
- * $Id: BaseContentService.java 124939 2013-05-23 22:12:00Z azeckoski@unicon.net $
+ * $Id: BaseContentService.java 132527 2013-12-12 17:23:21Z azeckoski@unicon.net $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008 Sakai Foundation
@@ -23,6 +23,7 @@ package org.sakaiproject.content.impl;
 
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -42,12 +43,15 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Random;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.Stack;
 import java.util.StringTokenizer;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.TreeSet;
-import java.util.Map.Entry;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
@@ -57,12 +61,14 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.sakaiproject.alias.api.AliasService;
 import org.sakaiproject.antivirus.api.VirusFoundException;
+import org.sakaiproject.antivirus.api.VirusScanIncompleteException;
 import org.sakaiproject.antivirus.api.VirusScanner;
 import org.sakaiproject.authz.api.AuthzGroup;
 import org.sakaiproject.authz.api.AuthzGroupService;
@@ -71,6 +77,7 @@ import org.sakaiproject.authz.api.FunctionManager;
 import org.sakaiproject.authz.api.GroupNotDefinedException;
 import org.sakaiproject.authz.api.Role;
 import org.sakaiproject.authz.api.RoleAlreadyDefinedException;
+import org.sakaiproject.authz.api.SecurityAdvisor;
 import org.sakaiproject.authz.api.SecurityService;
 import org.sakaiproject.component.api.ServerConfigurationService;
 import org.sakaiproject.conditions.api.ConditionService;
@@ -142,6 +149,7 @@ import org.sakaiproject.thread_local.api.ThreadBound;
 import org.sakaiproject.thread_local.api.ThreadLocalManager;
 import org.sakaiproject.time.api.Time;
 import org.sakaiproject.time.api.TimeService;
+import org.sakaiproject.tool.api.Session;
 import org.sakaiproject.tool.api.SessionBindingEvent;
 import org.sakaiproject.tool.api.SessionBindingListener;
 import org.sakaiproject.tool.api.SessionManager;
@@ -204,6 +212,21 @@ SiteContentAdvisorProvider, SiteContentAdvisorTypeRegistry, EntityTransferrerRef
     protected static final String DEFAULT_RESOURCE_QUOTA = "content.quota.";
     protected static final String DEFAULT_DROPBOX_QUOTA = "content.dropbox.quota.";
 
+    /**
+     * This is the name of the sakai.properties property for the VIRUS_SCAN_PERIOD,
+     * this is how long (in seconds) the virus scan service will wait between checking to see if there
+     * is new content that need to be scanned, default=3600
+     */
+    public static final String VIRUS_SCAN_CHECK_PERIOD_PROPERTY = "virus.scan.check.period";
+
+    /**
+     * This is the name of the sakai.properties property for the VIRUS_SCAN_DELAY,
+     * this is how long (in seconds) the virus scan service will wait after starting up
+     * before it does the first check for scanning, default=300
+     */
+    public static final String VIRUS_SCAN_START_DELAY_PROPERTY = "virus.scan.start.delay";
+
+
 	/** The initial portion of a relative access point URL. */
 	protected String m_relativeAccessPoint = null;
 
@@ -216,11 +239,11 @@ SiteContentAdvisorProvider, SiteContentAdvisorTypeRegistry, EntityTransferrerRef
 	/**
 	 * The quota for content resource body bytes (in Kbytes) for any hierarchy in the /user/ or /group/ areas, or 0 if quotas are not enforced.
 	 */
-	protected long m_siteQuota = 1048576;
+	protected long m_siteQuota = 0;
     /**
      * The quota for content dropbox body bytes (in Kbytes), or 0 if quotas are not enforced.
      */
-	protected long m_dropBoxQuota = 1048576;
+	protected long m_dropBoxQuota = 0;
 
 	private boolean m_useSmartSort = true;
 
@@ -237,6 +260,7 @@ SiteContentAdvisorProvider, SiteContentAdvisorTypeRegistry, EntityTransferrerRef
 
 	/** Optional path to external file system file store for body binary. */
 	protected String m_bodyPath = null;
+	protected String m_bodyPathDeleted = null;
 
 	/** Optional set of folders just within the m_bodyPath to distribute files among. */
 	protected String[] m_bodyVolumes = null;
@@ -249,6 +273,39 @@ SiteContentAdvisorProvider, SiteContentAdvisorTypeRegistry, EntityTransferrerRef
 
 	/** Dependency: MemoryService. */
 	protected MemoryService m_memoryService = null;
+
+    	/**
+	 * Use a timer for repeating actions
+	 */
+	private Timer virusScanTimer = new Timer(true);
+
+    /** How long to wait between virus scan checks (seconds) */
+    private int VIRUS_SCAN_PERIOD = 300;
+
+    /** How long to wait between virus scan checks (seconds) */
+    public void setVIRUS_SCAN_PERIOD(int scan_period) {
+        VIRUS_SCAN_PERIOD = scan_period;
+    }
+
+    /** How long to wait before the first virus scan check (seconds) */
+    private int VIRUS_SCAN_DELAY = 300;
+    /** How long to wait before the first virus scan check (seconds) */
+    public void setVIRUS_SCAN_DELAY(int virus_scan_delay) {
+        VIRUS_SCAN_DELAY = virus_scan_delay;
+    }
+
+    private List<String> virusScanQueue = new Vector();
+
+    private final static SecurityAdvisor ALLOW_ADVISOR;
+
+	static {
+		ALLOW_ADVISOR = new SecurityAdvisor(){
+			public SecurityAdvice isAllowed(String userId, String function, String reference)
+			{
+				return SecurityAdvice.ALLOWED;
+			}
+		};
+	}
 
 	/**
 	 * Dependency: MemoryService.
@@ -501,6 +558,17 @@ SiteContentAdvisorProvider, SiteContentAdvisorTypeRegistry, EntityTransferrerRef
 	public void setBodyPath(String value)
 	{
 		m_bodyPath = value;
+	}
+
+	/**
+	 * Configuration: set the external file system path for body storage for deleted files. 
+	 * 
+	 * @param value
+	 *        The complete path to the root of the external file system storage area for resource body bytes of deleted resources.
+	 */
+	public void setBodyPathDeleted(String value)
+	{
+		m_bodyPathDeleted = value;
 	}
 
 	/**
@@ -815,6 +883,15 @@ SiteContentAdvisorProvider, SiteContentAdvisorTypeRegistry, EntityTransferrerRef
 					userDirectoryService, m_serverConfigurationService);
 			dbNoti.setAction(dropboxNotification);
 
+			if (m_bodyPathDeleted != null) {
+				File deletedFolder = new File(m_bodyPathDeleted);
+				if (!deletedFolder.exists()) {
+					if (!deletedFolder.mkdirs()) {
+						M_log.error("failed to create bodyPathDeleted " + m_bodyPathDeleted + ". Resource backup to file system has been disabled! Please set with the property: bodyPathDeleted@org.sakaiproject.content.api.ContentHostingService");
+						m_bodyPathDeleted = null;
+					}
+				}
+			}
 
 			StringBuilder buf = new StringBuilder();
 			if (m_bodyVolumes != null)
@@ -849,6 +926,13 @@ SiteContentAdvisorProvider, SiteContentAdvisorTypeRegistry, EntityTransferrerRef
             m_dropBoxQuota = Long.parseLong(m_serverConfigurationService.getString("content.dropbox.quota", Long.toString(m_dropBoxQuota)));
 
 			M_log.info("init(): site quota: " + m_siteQuota + ", dropbox quota: " + m_dropBoxQuota + ", body path: " + m_bodyPath + " volumes: "+ buf.toString());
+
+            int virusScanPeriod = m_serverConfigurationService.getInt(VIRUS_SCAN_CHECK_PERIOD_PROPERTY, VIRUS_SCAN_PERIOD);
+            int virusScanDelay = m_serverConfigurationService.getInt(VIRUS_SCAN_START_DELAY_PROPERTY, VIRUS_SCAN_DELAY);
+
+            virusScanDelay += new Random().nextInt(60); // add some random delay to get the servers out of sync
+            virusScanTimer.schedule(new VirusTimerTask(), (virusScanDelay * 1000), (virusScanPeriod * 1000) );
+
 		}
 		catch (Exception t)
 		{
@@ -1843,7 +1927,7 @@ SiteContentAdvisorProvider, SiteContentAdvisorTypeRegistry, EntityTransferrerRef
 		}
 
 	} // addProperties
-
+	
 	/**********************************************************************************************************************************************************************************************************************************************************
 	 * Collections
 	 *********************************************************************************************************************************************************************************************************************************************************/
@@ -2232,6 +2316,31 @@ SiteContentAdvisorProvider, SiteContentAdvisorTypeRegistry, EntityTransferrerRef
 		}
 
 	} // getAllEntities
+
+	/**
+	 * Access a List of all the deleted ContentResource objects in this path (and below) which the current user has access.
+	 * 
+	 * @param id
+	 *        A collection id.
+	 * @return a List of the ContentResource objects.
+	 * @throws PermissionException 
+	 * @throws TypeException 
+	 * @throws IdUnusedException 
+	 */
+	public List getAllDeletedResources(String id)
+	{
+		try {
+			ContentCollection collection = getCollection(id);
+			return m_storage.getDeletedResources(collection);
+		} catch (IdUnusedException iue) {
+			M_log.warn("getAllDeletedResources: cannot retrieve collection for : " + id);
+		} catch (TypeException te) {
+			M_log.warn("getAllDeletedResources: resource with id: " + id + " not a collection");
+		} catch (PermissionException pe) {
+			M_log.warn("getAllDeletedResources: access to resource with id: " + id + " failed : " + pe);
+		}
+		return new ArrayList(0);
+	} // getAllDeletedResources
 
 
 	/**
@@ -4022,6 +4131,38 @@ SiteContentAdvisorProvider, SiteContentAdvisorTypeRegistry, EntityTransferrerRef
 	 *            if the resource is locked by someone else.
 	 * @return the ContentResource object found.
 	 */
+	public ContentResourceEdit editDeletedResource(String id) throws PermissionException, IdUnusedException, TypeException, InUseException
+	{
+	  // check security 
+//      if ( ! allowUpdateResource(id) )
+//		   throw new PermissionException(SessionManager.getCurrentSessionUserId(), 
+//                                       AUTH_RESOURCE_WRITE_ANY, getReference(id));
+
+		// ignore the cache - get the collection with a lock from the info store
+		BaseResourceEdit resource = (BaseResourceEdit) m_storage.editDeletedResource(id);
+		if (resource == null) throw new InUseException(id);
+
+		resource.setEvent(EVENT_RESOURCE_WRITE);
+
+		return resource;
+
+	} // editResource
+
+	/**
+	 * Access the resource with this resource id, locked for update. For non-collection resources only. Must commitEdit() to make official, or cancelEdit() when done! The resource content and properties are accessible from the returned Resource object.
+	 * 
+	 * @param id
+	 *        The id of the resource.
+	 * @exception PermissionException
+	 *            if the user does not have permissions to read the resource or read through any containing collection.
+	 * @exception IdUnusedException
+	 *            if the resource id is not found.
+	 * @exception TypeException
+	 *            if the resource is a collection.
+	 * @exception InUseException
+	 *            if the resource is locked by someone else.
+	 * @return the ContentResource object found.
+	 */
 	protected ContentResourceEdit editResourceForDelete(String id) throws PermissionException, IdUnusedException, TypeException, InUseException
 	{
 		// check security (throws if not permitted)
@@ -4240,7 +4381,9 @@ SiteContentAdvisorProvider, SiteContentAdvisorTypeRegistry, EntityTransferrerRef
 	 * @exception InUseException
 	 *            if the resource is locked by someone else.
 	 */
-	public void removeResource(String id) throws PermissionException, IdUnusedException, TypeException, InUseException
+	public void removeResource(String id) throws PermissionException, IdUnusedException, 
+		TypeException, InUseException
+	
 	{
 		BaseResourceEdit edit = (BaseResourceEdit) editResourceForDelete(id);
 		removeResource(edit);
@@ -4291,9 +4434,15 @@ SiteContentAdvisorProvider, SiteContentAdvisorTypeRegistry, EntityTransferrerRef
 
 		// htripath -store the metadata information into a delete table
 		// assumed uuid is not null as checkExplicitLock(id) throws exception when null
-		String uuid = this.getUuid(id);
-		String userId = sessionManager.getCurrentSessionUserId().trim();
-		addResourceToDeleteTable(edit, uuid, userId);
+
+		try {
+			String uuid = this.getUuid(id);
+			String userId = sessionManager.getCurrentSessionUserId().trim();
+			addResourceToDeleteTable(edit, uuid, userId);
+			edit.setContentLength(0);  // we stop removing it entry from the DB 
+		} catch (ServerOverloadException soe) {
+			M_log.debug("removeResource: could not save deleted resource, restore for this resource is not possible " + soe );  
+		}
 
 		// complete the edit
 		m_storage.removeResource(edit, removeContent);
@@ -4333,7 +4482,145 @@ SiteContentAdvisorProvider, SiteContentAdvisorTypeRegistry, EntityTransferrerRef
 
 	} // removeResource
 
+	public void removeDeletedResource(String id) throws PermissionException, IdUnusedException, TypeException, InUseException
+	{
+		BaseResourceEdit edit = (BaseResourceEdit) editDeletedResource(id); 
+		removeDeletedResource(edit);
+	
+	} // removeResource
+	
+	/**
+	 * Remove a resource from the deleted table.
+	 * 
+	 * @param edit
+	 *        The ContentResourceEdit object to remove.
+	 * @exception PermissionException
+	 *            if the user does not have permissions to read a containing collection, or to remove this resource.
+	 */
+	public void removeDeletedResource(ContentResourceEdit edit) throws PermissionException
+	{
+		// check for closed edit
+		if (!edit.isActiveEdit())
+		{
+			Exception e = new Exception();
+			M_log.warn("removeDeletedResource(): closed ContentResourceEdit", e);
+			return;
+		}
 
+		// check security (throws if not permitted)
+//		if ( ! allowRemoveResource(edit.getId()) )
+//		   throw new PermissionException(SessionManager.getCurrentSessionUserId(), 
+//                                       AUTH_RESOURCE_REMOVE_ANY, edit.getReference());
+//
+
+		// complete the edit
+		m_storage.removeDeletedResource(edit);
+
+		// close the edit object
+		((BaseResourceEdit) edit).closeEdit();
+		
+		((BaseResourceEdit) edit).setRemoved();
+
+		// remove old version of this edit from thread-local cache
+		threadLocalManager.set("findResource@" + edit.getId(), null);
+
+		// remove any realm defined for this resource
+		try
+		{
+			m_authzGroupService.removeAuthzGroup(m_authzGroupService.getAuthzGroup(edit.getReference()));
+		}
+		catch (AuthzPermissionException e)
+		{
+			M_log.debug("removeResource: removing realm for : " + edit.getReference() + " : " + e);
+		}
+		catch (GroupNotDefinedException ignore)
+		{
+			M_log.debug("removeResource: removing realm for : " + edit.getReference() + " : " + ignore);
+		}
+
+	} // removeDeletedResource
+
+	public void restoreResource(String id) throws PermissionException, IdUsedException, IdUnusedException,
+		IdInvalidException,	InconsistentException, OverQuotaException, ServerOverloadException, 
+		TypeException, InUseException
+	{
+		ContentResourceEdit deleResource;
+		try {
+			deleResource = editDeletedResource(id);
+		} catch (IdUnusedException iue) {
+			M_log.error("restoreResource: cannot locate deleted resource " + id, iue);
+			throw iue;
+		} catch (TypeException te) {
+			M_log.error("restoreResource: invalid type " + id, te);
+			throw te;
+		} catch (InUseException ie) {
+			M_log.error("restoreResource: resource in use " + id, ie);
+			throw ie;
+		} catch (PermissionException pe) {
+			M_log.error("restoreResource: access to resource not permitted" + id, pe);
+			throw pe;			
+		}
+		ContentResourceEdit newResource;
+		try {
+			newResource = addResource(id);
+		} catch (IdUsedException iue) {
+			M_log.error("restoreResource: cannot restore resource " + id, iue);
+			throw iue;
+		}
+		newResource.setContentType(deleResource.getContentType());
+		newResource.setContentLength(deleResource.getContentLength());
+		newResource.setResourceType(deleResource.getResourceType());
+		newResource.setAvailability(deleResource.isHidden(), deleResource.getReleaseDate(),deleResource.getRetractDate());
+		newResource.setContent(m_storage.streamDeletedResourceBody(deleResource));
+		try {
+			addProperties(newResource.getPropertiesEdit(), deleResource.getProperties());
+			commitResource(newResource);
+			
+		} catch (ServerOverloadException e) {
+			M_log.debug("ServerOverloadException " + e);
+			try
+			{
+				removeResource(newResource.getId());
+			}
+			catch(Exception e1)
+			{
+				// ignore -- no need to remove the resource if it doesn't exist
+				M_log.debug("Unable to remove partially completed resource: " + newResource.getId() + "\n" + e1); 
+			}
+			throw e;
+		} catch (OverQuotaException e) {
+			M_log.debug("OverQuotaException " + e);
+			try
+			{
+				removeResource(newResource.getId());
+			}
+			catch(Exception e1)
+			{
+				// ignore -- no need to remove the resource if it doesn't exist
+				M_log.debug("Unable to remove partially completed resource: " + newResource.getId() + "\n" + e1); 
+			}
+			throw e;
+		} 
+		try {
+			// If you're storing the file in DB this breaks as it removes the restored file.
+			removeDeletedResource(deleResource);
+			// close the edit object
+			((BaseResourceEdit) deleResource).closeEdit();
+		} catch (PermissionException pe) {
+			M_log.error("restoreResource: access to resource not permitted" + id, pe);
+			try
+			{
+				removeResource(newResource.getId());
+			}
+			catch(Exception e1)
+			{
+				// ignore -- no need to remove the resource if it doesn't exist
+				M_log.debug("Unable to remove partially completed resource: " + deleResource.getId() + "\n" + e1); 
+			}
+			throw pe;			
+		} 
+	}
+	
 	/**
 	 * Store the resource in a separate delete table
 	 * 
@@ -4344,22 +4631,43 @@ SiteContentAdvisorProvider, SiteContentAdvisorTypeRegistry, EntityTransferrerRef
 	 * @exception ServerOverloadException
 	 *            if server is configured to save resource body in filesystem and attempt to read from filesystem fails.
 	 */
-	public void addResourceToDeleteTable(ContentResourceEdit edit, String uuid, String userId) throws PermissionException
+	public void addResourceToDeleteTable(ContentResourceEdit edit, String uuid, String userId) throws PermissionException, ServerOverloadException
 	{
 		String id = edit.getId();
 		String content_type = edit.getContentType();
 
+		String resource_type = edit.getResourceType();
 
 		// KNL-245 do not read the resource body, as this is not subsequently written out
 		
 		ResourceProperties properties = edit.getProperties();
 
-		addDeleteResource(id, content_type, null, properties, uuid, userId,
+		InputStream content = null;
+		try
+		{
+			content = edit.streamContent();
+			addDeleteResource(id, 
+				content_type, content, resource_type, edit.getReleaseDate(), edit.getRetractDate(), 
+				properties, uuid, userId,
 				NotificationService.NOTI_OPTIONAL);
+		}
+		finally
+		{
+			if (content != null)
+			{
+				try
+				{
+					content.close();
+				}
+				catch (IOException e)
+				{
+					M_log.warn("Failed to close when saving deleted content stream.", e);
+				}
+			}
+		}
 	}
 
-	public ContentResource addDeleteResource(String id, String type, byte[] content, ResourceProperties properties, String uuid,
-			String userId, int priority) throws PermissionException
+	public ContentResource addDeleteResource(String id, String type, InputStream inputStream, String resourceType, Time releaseDate, Time retractDate, ResourceProperties properties, String uuid, String userId, int priority) throws PermissionException, ServerOverloadException
 			{
 		id = (String) fixTypeAndId(id, type).get("id");
 		// resource must also NOT end with a separator characters (fix it)
@@ -4384,14 +4692,17 @@ SiteContentAdvisorProvider, SiteContentAdvisorTypeRegistry, EntityTransferrerRef
 		edit.setEvent(EVENT_RESOURCE_ADD);
 
 		edit.setContentType(type);
-		if (content != null)
+		edit.setResourceType(resourceType);
+		edit.setReleaseDate(releaseDate);
+		edit.setRetractDate(retractDate);
+		if (inputStream != null)
 		{
-			edit.setContent(content);
+			edit.setContent(inputStream);
 		}
 		addProperties(edit.getPropertiesEdit(), properties);
 
 		// complete the edit - update xml which contains properties xml and store the file content
-		m_storage.commitDeleteResource(edit, uuid);
+		m_storage.commitDeletedResource(edit, uuid);
 
 		// close the edit object
 		((BaseResourceEdit) edit).closeEdit();
@@ -5512,34 +5823,12 @@ SiteContentAdvisorProvider, SiteContentAdvisorTypeRegistry, EntityTransferrerRef
 		
 		commitResourceEdit(edit, priority);
 
-		if (virusScanner.getEnabled()) {
-			try {
-				virusScanner.scanContent(edit.getId());
-			}
-			catch (VirusFoundException e) {
-				//this file is infected we need to remove if
-				try {
-					//the edit is closed so we need to refetch it
-					ContentResourceEdit edit2 = editResource(edit.getId());
-					removeResource(edit2);
-				} catch (PermissionException e1) {
-					// we're unlikely to see this at this point
-					e1.printStackTrace();
-				} catch (IdUnusedException e1) {
-					// we're unlikely to see this at this point
-					e1.printStackTrace();
-				} catch (TypeException e1) {
-					// we're unlikely to see this at this point
-					e1.printStackTrace();
-				} catch (InUseException e1) {
-					// we're unlikely to see this at this point
-					e1.printStackTrace();
-				}
-				throw e;
-			}
-		}
+        // Queue up content for virus scanning
+        if (virusScanner.getEnabled()) {
+            virusScanQueue.add(edit.getId());
+        }
 
-		/**
+        /**
 		 *  check for over quota.
 		 *  We do this after the commit so we can actual tell its size
 		 */
@@ -5573,6 +5862,69 @@ SiteContentAdvisorProvider, SiteContentAdvisorTypeRegistry, EntityTransferrerRef
 
 	} // commitResource
 
+    /**
+	 * This timer task is run by the timer thread based on the period set above
+	 */
+	protected class VirusTimerTask extends TimerTask {
+		public void run() {
+			try {
+				M_log.debug("running timer task");
+                enableAzgSecurityAdvisor();
+                processVirusQueue();
+            } catch (Exception e) {
+				M_log.error("Virus scan failure: " + e.getMessage(), e);
+			} finally {
+                disableAzgSecurityAdvisor();
+            }
+		}
+    }
+
+    public void processVirusQueue() {
+        // grab the queue - any new stuff will be processed next time
+		List<String> queue = new Vector();
+		synchronized (virusScanQueue)
+		{
+			queue.addAll(virusScanQueue);
+			virusScanQueue.clear();
+		}
+
+        Session session = sessionManager.getCurrentSession();
+
+        for (String contentId : queue) {
+            // process the queue of digest requests
+            try {
+                virusScanner.scanContent(contentId);
+            } catch (VirusFoundException e) {
+                //this file is infected we need to remove if
+                try {
+                    //the edit is closed so we need to refetch it
+                    ContentResourceEdit edit2 = editResource(contentId);
+                    ResourceProperties props = edit2.getProperties();
+                    // we need to set the session userId or removeResource fails
+			        String owner = props.getProperty(ResourceProperties.PROP_CREATOR);
+                    User user = userDirectoryService.getUser(owner);
+                    session.setUserEid(user.getEid());
+                    session.setUserId(user.getId());
+                    removeResource(edit2);
+                } catch (PermissionException e1) {
+                    M_log.error(e1.getMessage(), e1);
+                } catch (IdUnusedException e1) {
+                    M_log.error(e1.getMessage(), e1);
+                } catch (TypeException e1) {
+                    M_log.error(e1.getMessage(), e1);
+                } catch (InUseException e1) {
+                    M_log.error(e1.getMessage(), e1);
+                } catch (UserNotDefinedException e1) {
+                    M_log.error(e1.getMessage(), e1);
+                }
+            } catch (VirusScanIncompleteException e1) {
+                M_log.info("virus scanning did not complete adding resource: " + contentId + " back to queue");
+                virusScanQueue.add(contentId);
+            }
+        }
+
+
+    }
 	private boolean checkUpdateContentEncoding(ContentResourceEdit edit) {
 		if (edit == null) {
 			return false;
@@ -7028,11 +7380,11 @@ SiteContentAdvisorProvider, SiteContentAdvisorTypeRegistry, EntityTransferrerRef
 			}
 			else if(AccessMode.GROUPED.equals(access))
 			{
-				Site site = m_siteService.getSite(ref.getContext());
+				String siteReference = m_siteService.siteReference(ref.getContext());
 				boolean useSiteAsContext = false;
-				if(site != null && userId != null)
+				if(siteReference != null && userId != null)
 				{
-					useSiteAsContext = site.isAllowed(userId, AUTH_RESOURCE_ALL_GROUPS);
+					useSiteAsContext = m_securityService.unlock(userId, AUTH_RESOURCE_ALL_GROUPS, siteReference);
 				}
 				if(useSiteAsContext)
 				{
@@ -8659,7 +9011,13 @@ SiteContentAdvisorProvider, SiteContentAdvisorTypeRegistry, EntityTransferrerRef
 			collection = findCollection(id);
 			// Limit size per user inside dropbox
 			if (edit.getId().startsWith(COLLECTION_DROPBOX)) {
-				collection = findCollection(id + parts[3] + Entity.SEPARATOR);
+				try {
+					// if successful, the context is already a valid user id
+					userDirectoryService.getUser(parts[3]);
+					collection = findCollection(id + parts[3] + Entity.SEPARATOR);
+				} catch (UserNotDefinedException tryEid) {
+					// Nothing to do
+				}
 			}
 		}
 		catch (TypeException ignore)
@@ -10146,6 +10504,26 @@ SiteContentAdvisorProvider, SiteContentAdvisorTypeRegistry, EntityTransferrerRef
 		}
 
 
+		/**
+		 * Loads a collection of group references. Any items not found aren't 
+		 * included in the returned collection;
+		 * @param groupRefs The group references to load.
+		 * @return The group objects corresponding to the group references. Will
+		 * not contain <code>null</code>.
+		 */
+		private Collection<Group> findGroupObjects(Collection<String> groupRefs)
+		{
+			Collection<Group> groups = new ArrayList<Group>();
+			for (String groupRef: groupRefs)
+			{
+				Group group = m_siteService.findGroup(groupRef);
+				if (group != null)
+				{
+					groups.add(group);
+				}
+			}
+			return groups;
+		}
 
 		/**
 		 * @inheritDoc
@@ -10157,18 +10535,7 @@ SiteContentAdvisorProvider, SiteContentAdvisorTypeRegistry, EntityTransferrerRef
 			{
 				m_groups = new ArrayList();
 			}
-			Collection groups = new ArrayList();
-			Iterator it = m_groups.iterator();
-			while(it.hasNext())
-			{
-				String ref = (String) it.next();
-				Group group = m_siteService.findGroup(ref);
-				if(group != null)
-				{
-					groups.add(group);
-				}
-			}
-			return groups;
+			return findGroupObjects(m_groups);
 
 		}
 
@@ -10229,16 +10596,7 @@ SiteContentAdvisorProvider, SiteContentAdvisorTypeRegistry, EntityTransferrerRef
 		 */
 		public Collection getInheritedGroupObjects() 
 		{
-			Collection groups = new ArrayList();
-			Collection groupRefs = getInheritedGroups();
-			Iterator it = groupRefs.iterator();
-			while(it.hasNext())
-			{
-				String groupRef = (String) it.next();
-				Group group = m_siteService.findGroup(groupRef);
-				groups.add(group);				
-			}
-			return groups;
+			return findGroupObjects(getInheritedGroups());
 		}
 
 		/** 
@@ -12945,6 +13303,14 @@ SiteContentAdvisorProvider, SiteContentAdvisorTypeRegistry, EntityTransferrerRef
 		 */
 		public byte[] getResourceBody(ContentResource resource) throws ServerOverloadException;
 
+		/*
+		 * Stream the resource's body for deleted resource.
+		 * 
+		 * @exception ServerOverloadException
+		 *            if server is configured to save resource body in filesystem and an error occurs while trying to access the filesystem.
+		 */
+		public InputStream streamDeletedResourceBody(ContentResource resource) throws ServerOverloadException;
+
 		/**
 		 * Stream the resource's body.
 		 * 
@@ -12957,13 +13323,19 @@ SiteContentAdvisorProvider, SiteContentAdvisorTypeRegistry, EntityTransferrerRef
 		 * Return a single character representing the access mode of the resource or collection identified by the parameter, or null if not found.
 		 * @param id
 		 * @return A character identifying the access mode for the content entity, one of 's' for site, 'p' for public or 'g' for group.
+		 * @throws ServerOverloadException 
+
 		 */
 		//public char getAccessMode(String id);
 
 		// htripath-storing into shadow table before deleting the resource
-		public void commitDeleteResource(ContentResourceEdit edit, String uuid);
+		public void commitDeletedResource(ContentResourceEdit edit, String uuid) throws ServerOverloadException;
 
 		public ContentResourceEdit putDeleteResource(String resourceId, String uuid, String userId);
+
+		public List getDeletedResources(ContentCollection collection);      
+		public ContentResourceEdit editDeletedResource(String resourceId);      
+		public void removeDeletedResource(ContentResourceEdit edit); 
 
 		/**
 		 * Retrieve a collection of ContentResource objects pf a particular resource-type.  The collection will 
@@ -13467,6 +13839,35 @@ SiteContentAdvisorProvider, SiteContentAdvisorTypeRegistry, EntityTransferrerRef
             throw exception;
         }
     }
+
+	/**
+	 * Establish a security advisor to allow the "embedded" azg work to occur with no need for additional security permissions.
+	 */
+	protected void enableAzgSecurityAdvisor()
+	{
+		// put in a security advisor so we can do our azg work without need of further permissions
+		// TODO: could make this more specific to the AuthzGroupService.SECURE_UPDATE_AUTHZ_GROUP permission -ggolden
+		m_securityService.pushAdvisor(ALLOW_ADVISOR);
+	}
+
+    	/**
+	 * Disabled the security advisor.
+	 */
+	protected void disableAzgSecurityAdvisor()
+	{
+        SecurityAdvisor popped = m_securityService.popAdvisor(ALLOW_ADVISOR);
+		if (!ALLOW_ADVISOR.equals(popped)) {
+			if (popped == null)
+			{
+				M_log.warn("Someone has removed our advisor.");
+			}
+			else
+			{
+				M_log.warn("Removed someone elses advisor, adding it back.");
+				m_securityService.pushAdvisor(popped);
+			}
+		}
+	}
     
     /**
      * Expand the supplied resource under its parent collection.

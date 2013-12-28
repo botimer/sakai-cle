@@ -4,7 +4,7 @@
   <parent>
     <artifactId>login</artifactId>
     <groupId>org.sakaiproject.login</groupId>
-    <version>2.10-SNAPSHOT</version>
+    <version>10.0-SNAPSHOT</version>
     <relativePath>../../pom.xml</relativePath>
   </parent>
   <name>sakai-login-tool</name>
@@ -51,12 +51,6 @@
       <groupId>commons-logging</groupId>
       <artifactId>commons-logging</artifactId>
       <version>${sakai.commons-logging.version}</version>
-    </dependency>
-    <!-- TODO bind to release version when it is ready 0.1? -->
-    <dependency>
-      <groupId>org.sakaiproject.hybrid</groupId>
-      <artifactId>sakai-hybrid-util</artifactId>
-      <version>${sakai.hybrid.version}</version>
     </dependency>
     <dependency>
       <groupId>org.sakaiproject.login</groupId>

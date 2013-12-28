@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/kernel/trunk/kernel-impl/src/main/java/org/sakaiproject/component/impl/BasicConfigurationService.java $
- * $Id: BasicConfigurationService.java 122249 2013-04-05 11:33:56Z azeckoski@unicon.net $
+ * $Id: BasicConfigurationService.java 130787 2013-10-23 11:47:59Z azeckoski@unicon.net $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008 Sakai Foundation
@@ -692,7 +692,7 @@ public class BasicConfigurationService implements ServerConfigurationService, Ap
     {
         String value = getString(name);
 
-        if (value.length() == 0) return dflt;
+        if (StringUtils.isEmpty(value)) return dflt;
 
         return Integer.parseInt(value);
     }
@@ -704,7 +704,7 @@ public class BasicConfigurationService implements ServerConfigurationService, Ap
     {
         String value = getString(name);
 
-        if (value.length() == 0) return dflt;
+        if (StringUtils.isEmpty(value)) return dflt;
 
         return Boolean.valueOf(value).booleanValue();
     }
@@ -1130,8 +1130,8 @@ public class BasicConfigurationService implements ServerConfigurationService, Ap
          *        (obj1 charge is less than, equal to, or greater than the obj2 charge)
          */
         public int compare(Locale localeOne, Locale localeTwo) {
-            String displayNameOne = localeOne.getDisplayName();
-            String displayNameTwo = localeTwo.getDisplayName();
+            String displayNameOne = localeOne.getDisplayName(localeOne).toLowerCase();
+            String displayNameTwo = localeTwo.getDisplayName(localeTwo).toLowerCase();
             return displayNameOne.compareTo(displayNameTwo);
         }
 
@@ -1282,11 +1282,13 @@ public class BasicConfigurationService implements ServerConfigurationService, Ap
 
             if (!haltProcessing) {
                 // update the config item
+                boolean changed = false;
                 if (currentCI != null) {
                     // update it
                     if (!SOURCE_GET_STRINGS.equals(source)) {
                         // only update if the source is not the getStrings() method
                         currentCI.changed(configItem.getValue(), source);
+                        changed = true;
                         if (!currentCI.isRegistered() && configItem.isRegistered()) {
                             // need to force items which are not yet registered to be registered
                             currentCI.registered = true;
@@ -1301,22 +1303,25 @@ public class BasicConfigurationService implements ServerConfigurationService, Ap
                     }
                     configurationItems.put(configItem.getName(), configItem);
                     ci = configItem;
+                    changed = true;
                 }
 
-                // notify the after listeners
-                if (this.listeners != null && !this.listeners.isEmpty()) {
-                    for (Entry<String, WeakReference<ConfigurationListener>> entry : this.listeners.entrySet()) {
-                        // check if any listener refs are no longer valid
-                        ConfigurationListener listener = entry.getValue().get();
-                        if (listener != null) {
-                            try {
-                                listener.changed(ci, currentCI);
-                            } catch (Exception e) {
-                                M_log.warn("Exception when calling listener ("+listener+"): "+e);
+                // notify the after listeners (only if something changed)
+                if (changed) {
+                    if (this.listeners != null && !this.listeners.isEmpty()) {
+                        for (Entry<String, WeakReference<ConfigurationListener>> entry : this.listeners.entrySet()) {
+                            // check if any listener refs are no longer valid
+                            ConfigurationListener listener = entry.getValue().get();
+                            if (listener != null) {
+                                try {
+                                    listener.changed(ci, currentCI);
+                                } catch (Exception e) {
+                                    M_log.warn("Exception when calling listener ("+listener+"): "+e);
+                                }
+                            } else {
+                                // cleanup bad listener ref
+                                this.listeners.remove(entry.getKey());
                             }
-                        } else {
-                            // cleanup bad listener ref
-                            this.listeners.remove(entry.getKey());
                         }
                     }
                 }
@@ -1346,7 +1351,10 @@ public class BasicConfigurationService implements ServerConfigurationService, Ap
             } else {
                 // update the access log
                 ci.requested();
-                if (defaultValue != null) {
+                // https://jira.sakaiproject.org/browse/KNL-1130 - assume string has no default in cases where it is "" or null
+                if (ServerConfigurationService.TYPE_STRING.equals(ci.type)) {
+                    ci.defaulted = !(defaultValue == null || "".equals(defaultValue));
+                } else if (defaultValue != null) {
                     ci.defaulted = true;
                 }
                 if (!ci.isRegistered()) {

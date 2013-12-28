@@ -472,7 +472,16 @@ public class UIPermissionsManagerImpl implements UIPermissionsManager {
    * @see org.sakaiproject.api.app.messageforums.ui.UIPermissionsManager#isPostToGradebook(org.sakaiproject.api.app.messageforums.DiscussionTopic,
    *      org.sakaiproject.api.app.messageforums.DiscussionForum)
    */
-  public boolean isPostToGradebook(DiscussionTopic topic, DiscussionForum forum)
+  public boolean isPostToGradebook(DiscussionTopic topic, DiscussionForum forum){
+	  return isPostToGradebook(topic, forum, getCurrentUserId());
+  }
+  
+  public boolean isPostToGradebook(DiscussionTopic topic, DiscussionForum forum, String userId)
+  {
+	  return isPostToGradebook(topic, forum, userId, getContextId());
+  }
+  
+  public boolean isPostToGradebook(DiscussionTopic topic, DiscussionForum forum, String userId, String contextId)
   {
     if (LOG.isDebugEnabled())
     {
@@ -482,11 +491,11 @@ public class UIPermissionsManagerImpl implements UIPermissionsManager {
 
     try
     {
-      if (checkBaseConditions(topic, forum))
+      if (checkBaseConditions(topic, forum, userId, contextId))
       {
         return true;
       }
-      Iterator iter = getTopicItemsByCurrentUser(topic);
+      Iterator iter = getTopicItemsByUser(topic, userId, contextId);
       while (iter.hasNext())
       {
         DBMembershipItem item = (DBMembershipItem) iter.next();
@@ -1353,7 +1362,7 @@ public class UIPermissionsManagerImpl implements UIPermissionsManager {
   private String getCurrentUserRole(String siteId)
   {
 	  LOG.debug("getCurrentUserRole()");
-	  if(authzGroupService.getUserRole(getCurrentUserId(), "/site/" + siteId)==null&&sessionManager.getCurrentSessionUserId()==null&&getAnonRole()==true){
+	  if(authzGroupService.getUserRole(getCurrentUserId(), "/site/" + siteId)==null&&sessionManager.getCurrentSessionUserId()==null&&getAnonRole(siteId)==true){
 		  return ".anon";
 	  }
 	  return authzGroupService.getUserRole(getCurrentUserId(), "/site/" + siteId);
@@ -1374,7 +1383,7 @@ public class UIPermissionsManagerImpl implements UIPermissionsManager {
     }
     
     // if user role is still null at this point, check for .anon
-    if(userRole == null && sessionManager.getCurrentSessionUserId() == null && getAnonRole() == true){
+    if(userRole == null && sessionManager.getCurrentSessionUserId() == null && getAnonRole(siteId) == true){
         return ".anon";
     }
     
@@ -1385,6 +1394,11 @@ public class UIPermissionsManagerImpl implements UIPermissionsManager {
     {
 	 return  forumManager.getAnonRole();	   
     }
+   
+   public boolean  getAnonRole(String contextSiteId)
+   {
+	 return  forumManager.getAnonRole(contextSiteId);	   
+   }
   /**
    * @return
    */

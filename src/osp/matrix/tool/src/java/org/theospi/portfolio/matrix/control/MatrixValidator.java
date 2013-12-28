@@ -1,6 +1,6 @@
 /**********************************************************************************
 * $URL: https://source.sakaiproject.org/svn/osp/trunk/matrix/tool/src/java/org/theospi/portfolio/matrix/control/MatrixValidator.java $
-* $Id: MatrixValidator.java 105079 2012-02-24 23:08:11Z ottenhoff@longsight.com $
+* $Id: MatrixValidator.java 131548 2013-11-14 16:42:13Z dsobiera@indiana.edu $
 ***********************************************************************************
 *
  * Copyright (c) 2005, 2006, 2007, 2008 The Sakai Foundation
@@ -154,7 +154,13 @@ public class MatrixValidator extends ValidatorBase {
       if (scaffolding.getCriteria() == null || scaffolding.getCriteria().size() == 0) {
          errors.rejectValue("criteria", "error.required", "required");
       }
-      if (scaffolding.getDescription() != null) {
+      if(scaffolding.getRowLabel() == null || "".equals(scaffolding.getRowLabel())){
+          errors.rejectValue("rowLabel", "error.required", "required");
+      }
+      if(scaffolding.getColumnLabel() == null || "".equals(scaffolding.getColumnLabel())){
+          errors.rejectValue("columnLabel", "error.required", "required");
+      }
+       if (scaffolding.getDescription() != null) {
          StringBuilder sbError = new StringBuilder();
          String tempDesc = FormattedText.processFormattedText(scaffolding.getDescription(), sbError);
          

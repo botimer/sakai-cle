@@ -1,3 +1,8 @@
+/* override for jquery ui */
+.ui-front {
+	z-index: 100001;
+}
+/* end override */
 .firstColumn {
 	width: 5%;
 	text-align: center;
@@ -151,6 +156,16 @@
 .disabled:link {
 	color: #cccccc
 }
+.disabled-multimedia-item {
+	color: #cccccc;
+    margin-top:4px;
+    display: inline-block;
+    /*padding-left: 8px !important;*/
+}
+.disabled-text-item {
+	color: #cccccc;
+    margin-top:4px;
+}
 .disabled:visited {
 	color: #cccccc
 }
@@ -223,12 +238,15 @@ a.edit-link:link, a.edit-link:visited, a.itemLink:link, a.itemLink:visited, a.mu
 .mainList li:hover {
 #    border: 1px solid #B3B3B3;
 }
-.mainList li.canEdit > div {
+/*.mainList li.canEdit > div {
     position: relative;
     padding-left: 40px
-}
+}*/
 .mainList li.canEdit > div.edit-col {
-    float:left;
+/*    float:left; */
+    display: inline-block;
+    vertical-align:top;
+    padding-top: 0.35em;
     padding-left: 0;
     z-index:4
 }
@@ -265,6 +283,10 @@ a.edit-link:link, a.edit-link:visited, a.itemLink:link, a.itemLink:visited, a.mu
     margin-bottom:0;
 }
 
+.statusCol {
+    vertical-align: top
+}
+
 .statusCol,.contentCol {
  display: inline-block;
 
@@ -274,12 +296,6 @@ a.edit-link:link, a.edit-link:visited, a.itemLink:link, a.itemLink:visited, a.mu
 #    z-index:2;
 }
 
-.canEdit .statusCol {
-  display: inline;
-#    top:-8px;
-#    left: -8px;
-#    z-index: 4;
-}
 .link-div h3.link-div-head {
     display:inline;
     font-size:100%;
@@ -444,7 +460,7 @@ h3.author {
 	display: inline;
 }
 .replaceWithComments {
-  margin:5px 5px 5px 20px;
+  margin:5px 5px 5px 20px; 
 }
 .commentPageTitle {
 	margin: 0 10px;
@@ -465,7 +481,7 @@ h3.author {
 	margin-top: 3px
 }
 .commentsCell {
-	margin-bottom: 10px
+	margin-bottom: 10px;
 }
 .specialCommenter {
 	background-color: white;
@@ -490,6 +506,12 @@ h3.author {
 	font-style: italic;
 	color: #930;
 	padding-left: 1em;
+}
+.page-picker-note {
+	font-style: italic;
+	color: #930;
+	padding-left: 0.5em;
+	padding-right: 0.25em;
 }
 .returnwarning {
 	font-size: 110%
@@ -549,13 +571,13 @@ a.peer-eval-stats {
 }
 .studentContentTable {
 	border: none;
-#	background-color: #e4edff;
+/*	background-color: #e4edff; */
 	padding: 4px;
 	padding-top: 0.0em;
 	padding-left: 8px;
 }
 .studentContentTable .studentRow{
-#    padding:5px 0;
+/*    padding:5px 0; */
 }
 
 .duecol {
@@ -572,7 +594,7 @@ ul#toolbar li.dropdown a {
 ul#toolbar li em {
     font-style:normal;
 }
-#dropDownDiv {
+.dropDownDiv {
 	position: absolute;
 	width: 350px;
 	margin-top: 0;
@@ -587,29 +609,29 @@ ul#toolbar li em {
 	background: -ms-linear-gradient(top, #eeeeee 0%,#e4e4e4 100%) !important;
 	background: linear-gradient(top, #eeeeee 0%,#e4e4e4 100%) !important;
     border: 1px solid #d1d1d1 !important;
-    z-index: 10000;
+    z-index: 10;
     -webkit-box-shadow: 1px 1px 3px 2px #eeeeee;
     box-shadow: 1px 1px 3px 2px #eeeeee;
 }
-#dropDownDiv  ul {
+.dropDownDiv  ul {
     margin:0;
     padding: 0;
 }
-#dropDownDiv li {
+.dropDownDiv li {
     border-top:1px solid #ccc !important;
     background: #fff !important;
     padding:5px !important;
     margin:0;
     display:block;
 }
-#dropDownDiv li:first-child {
+.dropDownDiv li:first-child {
     border-top:none !important;
 }
-#dropDownDiv li a {
+.dropDownDiv li a {
     display:block;
     padding: 5px 0 !important;
 }
-#dropDownDiv li div {
+.dropDownDiv li div {
     font-size: .85em !important
 }
 span.nextprev {
@@ -761,7 +783,7 @@ div[role="dialog"] {
 }
 
 .controlsPanel fieldset {
-    margin 10px 0 
+    margin: 10px 0 
 }
 
 .deleteCandidate td:first-child {
@@ -774,17 +796,44 @@ div[role="dialog"] {
 .mainList .edit-colHidden {
     display:none;
 }
-
+#hide-items {
+    display: none;
+}
 .pageList {
     padding: 0 10px;
     list-style:none;
 }
 .pageList li {
-    padding:5px;
+    padding-left:5px;
 }
 .pageList img {
     vertical-align:middle;   
 }
+.itemListContainer {
+    padding-top: 5px;
+}
+.itemList {
+    padding-left: 0px;
+    margin-left: 20px;
+    display: none;
+    list-style:none;
+    background-color: #F3F3F3;
+    padding-bottom: 1.0em;
+    margin-bottom: 0.5em;
+}
+.text-item-placeholder {
+	font-style: italic;
+}
+.mm-test-text {
+    margin-top:0.5em;
+    margin-bottom:1.0em;
+}
+
+.mm-test-text-p {
+    margin-top:0.5em;
+    margin-bottom:1.0em;
+}
+
 /* neeeded by LB for skinning - goes in tool.css so that the
  * portlet title looks like the rest in the system.
  * 
@@ -818,7 +867,7 @@ div[role="dialog"] {
 }
 .portletTitle .action {
     padding: 2px -1px 6px 2px;
-    text-align: right;
+    float: right;
     vertical-align: middle;
 }
 .portletTitle .action a#jsr-edit {
@@ -910,8 +959,23 @@ div[role="dialog"] {
  alternate treatment for list - can go in tool.css
 */
 .edit-col {
- top: 0.35em;
+/* top: 0.35em; */
 }
+.right-col {
+ display: inline-block;
+ position:relative;
+ left:5px;
+ width:93%
+}
+.right-col2 {
+ position:relative;
+ left:5px;
+}
+.right-col3 {
+ position:relative;
+ left:10px;
+}
+
 /*
 .edit-col {
     position: absolute !important;
@@ -977,6 +1041,7 @@ div[role="dialog"] {
 .editInProgress * {
     opacity:.50;    
 }
+
 */
  /*
 end alternate treatment for list

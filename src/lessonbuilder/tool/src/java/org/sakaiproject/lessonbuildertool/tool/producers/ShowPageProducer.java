@@ -110,6 +110,7 @@ import org.sakaiproject.user.cover.UserDirectoryService;
 import org.sakaiproject.exception.IdUnusedException;
 import org.sakaiproject.util.ResourceLoader;
 import org.sakaiproject.util.FormattedText;
+import org.sakaiproject.portal.util.CSSUtils;
 
 import uk.org.ponder.localeutil.LocaleGetter;
 import uk.org.ponder.messageutil.MessageLocator;
@@ -175,7 +176,7 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 	}
         public boolean useSakaiIcons = ServerConfigurationService.getBoolean("lessonbuilder.use-sakai-icons", false);
         public boolean allowSessionId = ServerConfigurationService.getBoolean("session.parameter.allow", false);
-        public boolean allowCcExport = ServerConfigurationService.getBoolean("lessonbuilder.cc-export", false);
+        public boolean allowCcExport = ServerConfigurationService.getBoolean("lessonbuilder.cc-export", true);
 
 
 	// I don't much like the static, because it opens us to a possible race
@@ -191,8 +192,8 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 	public MessageLocator messageLocator;
 	private LocaleGetter localegetter;
 	public static final String VIEW_ID = "ShowPage";
-	private static final String DEFAULT_TYPES = "mp4,mov,m2v,3gp,3g2,avi,m4v,mpg,rm,vob,wmv,mp3,swf,wav,aif,m4a,mid,mpa,ra,wma";
-	private static String[] multimediaTypes = null;
+	private static final String DEFAULT_HTML_TYPES = "html,xhtml,htm,xht";
+	private static String[] htmlTypes = null;
     // mp4 means it plays with the flash player if HTML5 doesn't work.
     // flv is also played with the flash player, but it doesn't get a backup <OBJECT> inside the player
     // Strobe claims to handle MOV files as well, but I feel safer passing them to quicktime, though that requires Quicktime installation
@@ -210,6 +211,8 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
         String browserString = ""; // set by checkIEVersion;
 
 	protected static final int DEFAULT_EXPIRATION = 10 * 60;
+
+	static final String ICONSTYLE = "\n.portletTitle .action img {\n        background: url({}/help.gif) center right no-repeat;\n}\n.portletTitle .action img:hover, .portletTitle .action img:focus {\n        background: url({}/help_h.gif) center right no-repeat\n}\n.portletTitle .title img {\n        background: url({}/reload.gif) center left no-repeat;\n}\n.portletTitle .title img:hover, .portletTitle .title img:focus {\n        background: url({}/reload_h.gif) center left no-repeat\n}\n";
 
 	public String getViewID() {
 		return VIEW_ID;
@@ -266,7 +269,15 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 	// created style arguments. This was done at the time when i thought
 	// the OBJECT tag actually paid attention to the CSS size. it doesn't.
 	public String getStyle(Length w, Length h) {
-		return "width: " + w.getNew() + ", height: " + h.getNew();
+	    String ret = null;
+	    if (lengthOk(w))
+		ret = "width:" + w.getNew();
+	    if (lengthOk(h)) {
+		if (ret != null)
+		    ret = ret + ";";
+		ret = ret + "height:" + h.getNew();
+	    }
+	    return ret;
 	}
 
 	// produce abbreviated versions of URLs, for use in constructing titles
@@ -364,6 +375,7 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 		
 		boolean canEditPage = simplePageBean.canEditPage();
 		boolean canReadPage = simplePageBean.canReadPage();
+		boolean canSeeAll = simplePageBean.canSeeAll();  // always on if caneditpage
 		
 		boolean cameFromGradingPane = params.getPath().equals("none");
 
@@ -436,13 +448,13 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 			}
 		}
 
-		if (multimediaTypes == null) {
-			String mmTypes = ServerConfigurationService.getString("lessonbuilder.multimedia.types", DEFAULT_TYPES);
-			multimediaTypes = mmTypes.split(",");
-			for (int i = 0; i < multimediaTypes.length; i++) {
-				multimediaTypes[i] = multimediaTypes[i].trim().toLowerCase();
+		if (htmlTypes == null) {
+			String mmTypes = ServerConfigurationService.getString("lessonbuilder.html.types", DEFAULT_HTML_TYPES);
+			htmlTypes = mmTypes.split(",");
+			for (int i = 0; i < htmlTypes.length; i++) {
+				htmlTypes[i] = htmlTypes[i].trim().toLowerCase();
 			}
-			Arrays.sort(multimediaTypes);
+			Arrays.sort(htmlTypes);
 		}
 
 		if (mp4Types == null) {
@@ -468,7 +480,10 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 		SimplePageToolDao.PageData lastPage = simplePageBean.toolWasReset();
 
 		// if this page was copied from another site we may have to update links
-		simplePageBean.maybeUpdateLinks();
+		// can only do the fixups if you can write. We could hack permissions, but
+		// I assume a site owner will access the site first
+		if (canEditPage)
+		    simplePageBean.maybeUpdateLinks();
 
 		// if starting the tool, sendingpage isn't set. the following call
 		// will give us the top page.
@@ -501,7 +516,7 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 
 		// check two parts of isitemvisible where we want to give specific errors
 		// potentially need time zone for setting release date
-		if (!canEditPage && currentPage.getReleaseDate() != null && currentPage.getReleaseDate().after(new Date())) {
+		if (!canSeeAll && currentPage.getReleaseDate() != null && currentPage.getReleaseDate().after(new Date())) {
 			DateFormat df = DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT, M_locale);
 			TimeZone tz = timeService.getLocalTimeZone();
 			df.setTimeZone(tz);
@@ -516,7 +531,7 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 		// the only thing not already tested in isItemVisible is groups. In theory
 		// no one should have a URL to a page for which they aren't in the group,
 		// so I'm not trying to give a better message than just hidden
-		if (!canEditPage && currentPage.isHidden() || !simplePageBean.isItemVisible(pageItem)) {
+		if (!canSeeAll && currentPage.isHidden() || !simplePageBean.isItemVisible(pageItem)) {
 			UIOutput.make(tofill, "error-div");
 			UIOutput.make(tofill, "error", messageLocator.getMessage("simplepage.not_available_hidden"));
 			return;
@@ -662,33 +677,39 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 			UIOutput.make(tofill, "edit-title-text", label);
 			UIOutput.make(tofill, "title-descrip-text", descrip);
 
-			if (pageItem.getPageId() == 0) { // top level page
-				UIOutput.make(tofill, "toppage-descrip");
+			if (pageItem.getPageId() == 0 && currentPage.getOwner() == null) { // top level page
+			    // need dropdown 
+				UIOutput.make(tofill, "dropdown");
+				UIOutput.make(tofill, "moreDiv");
 				UIOutput.make(tofill, "new-page").decorate(new UIFreeAttributeDecorator("title", messageLocator.getMessage("simplepage.new-page-tooltip")));
-				UIOutput.make(tofill, "import-cc").decorate(new UIFreeAttributeDecorator("title", messageLocator.getMessage("simplepage.import_cc")));
-				UIOutput.make(tofill, "export-cc").decorate(new UIFreeAttributeDecorator("title", messageLocator.getMessage("simplepage.export_cc")));
+				UIOutput.make(tofill, "import-cc").decorate(new UIFreeAttributeDecorator("title", messageLocator.getMessage("simplepage.import_cc.tooltip")));
+				UIOutput.make(tofill, "export-cc").decorate(new UIFreeAttributeDecorator("title", messageLocator.getMessage("simplepage.export_cc.tooltip")));
 			}
 			
 			// Checks to see that user can edit and that this is either a top level page,
 			// or a top level student page (not a subpage to a student page)
 			if(simplePageBean.getEditPrivs() == 0 && (pageItem.getPageId() == 0)) {
-				UIOutput.make(tofill, "remove-descrip");
+				UIOutput.make(tofill, "remove-li");
 				UIOutput.make(tofill, "remove-page").decorate(new UIFreeAttributeDecorator("title", messageLocator.getMessage("simplepage.remove-page-tooltip")));
 			} else if (simplePageBean.getEditPrivs() == 0 && currentPage.getOwner() != null) {
 			    // getEditPrivs < 2 if we want to let the student delete. Currently we don't. There can be comments
 			    // from other students and the page can be shared
 				SimpleStudentPage studentPage = simplePageToolDao.findStudentPage(currentPage.getTopParent());
 				if (studentPage != null && studentPage.getPageId() == currentPage.getPageId()) {
-					UIOutput.make(tofill, "remove-descrip");
-					UIOutput.make(tofill, "remove-page").decorate(new UIFreeAttributeDecorator("title", messageLocator.getMessage("simplepage.remove-page-tooltip")));
+				    System.out.println("is student page 2");
+					UIOutput.make(tofill, "remove-student");
+					UIOutput.make(tofill, "remove-page-student").decorate(new UIFreeAttributeDecorator("title", messageLocator.getMessage("simplepage.remove-page-tooltip")));
 				}
 			}
 
 			UIOutput.make(tofill, "dialogDiv");
-		} else if (!canReadPage)
+		} else if (!canReadPage) {
 			return;
-		else {
+		} else if (!canSeeAll) {
 			// see if there are any unsatisfied prerequisites
+		        // if this isn't a top level page, this will check that the page above is
+		        // accessible. That matters because we check visible, available and release
+		        // only for this page but not for the containing page
 			List<String> needed = simplePageBean.pagesNeeded(pageItem);
 			if (needed.size() > 0) {
 				// yes. error and abort
@@ -712,6 +733,9 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 						view.setPath(Integer.toString(path.size() - 2));
 						UIInternalLink.make(tofill, "redirect-link", containingPage.title, view);
 						UIOutput.make(tofill, "redirect");
+					} else {
+					    UIOutput.make(tofill, "error-div");
+					    UIOutput.make(tofill, "error", messageLocator.getMessage("simplepage.not_available"));
 					}
 
 					return;
@@ -750,16 +774,11 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 		    // unfortunately the neoportal tacks neo- on front of the skin
 		    // name, so this is more complex than you might think.
 
-		    skinName = simplePageBean.getCurrentSite().getSkin();
-		    if (skinName == null)
-			skinName = ServerConfigurationService.getString("skin.default", "default");
-		    // weird hack. automatically add neo if neo portal enabled
-
-		    String prefix = ServerConfigurationService.getString("portal.neoprefix", "neo-");
-		    if (!skinName.startsWith(prefix))
-			skinName = prefix + skinName;
 		    skinRepo = ServerConfigurationService.getString("skin.repo", "/library/skin");
-		    iconBase = skinRepo + "/" + skinName + "/images/";
+		    iconBase = skinRepo + "/" + CSSUtils.adjustCssSkinFolder(null) + "/images";
+
+		    UIVerbatim.make(tofill, "iconstyle", ICONSTYLE.replace("{}", iconBase));
+
 		}
 
 		if (helpurl != null) {
@@ -769,7 +788,6 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 			decorate(new UIFreeAttributeDecorator("title",
 				 messageLocator.getMessage("simplepage.help-button")));
 		    UIOutput.make(tofill, (pageItem.getPageId() == 0 ? "helpimage" : "helpimage2")).
-			decorate(new UIFreeAttributeDecorator("src", iconBase + "help.gif")).
 			decorate(new UIFreeAttributeDecorator("alt",
 			         messageLocator.getMessage("simplepage.help-button")));
 		    UIOutput.make(tofill, (pageItem.getPageId() == 0 ? "helpnewwindow" : "helpnewwindow2"), 
@@ -783,7 +801,6 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 			decorate(new UIFreeAttributeDecorator("title",
 			        messageLocator.getMessage("simplepage.reset-button")));
 		    UIOutput.make(tofill, (pageItem.getPageId() == 0 ? "resetimage" : "resetimage2")).
-			decorate(new UIFreeAttributeDecorator("src", iconBase + "reload.gif")).
 			decorate(new UIFreeAttributeDecorator("alt",
 			        messageLocator.getMessage("simplepage.reset-button")));
 		}
@@ -930,6 +947,12 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 		// MAIN list of items
 		//
 		// produce the main table
+
+		// Is anything visible?
+		// Note that we don't need to check whether any item is available, since the first visible
+		// item is always available.
+		boolean anyItemVisible = false;
+
 		if (itemList.size() > 0) {
 			UIBranchContainer container = UIBranchContainer.make(tofill, "itemContainer:");
 
@@ -981,10 +1004,11 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 				// (i.getType() == SimplePageItem.PAGE &&
 				// "button".equals(i.getFormat())))
 
-				UIBranchContainer tableRow = UIBranchContainer.make(tableContainer, "item:");
-				if (!simplePageBean.isItemVisible(i)) {
+				if (!simplePageBean.isItemVisible(i, currentPage)) {
 					continue;
 				}
+				anyItemVisible = true;
+				UIBranchContainer tableRow = UIBranchContainer.make(tableContainer, "item:");
 
 				// set class name showing what the type is, so people can do funky CSS
 
@@ -1075,6 +1099,12 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 					    case SimplePageItem.RESOURCE:
 						String mimeType = i.getHtml();
 
+                        if("application/octet-stream".equals(mimeType)) {
+                            // OS X reports octet stream for things like MS Excel documents.
+                            // Force a mimeType lookup so we get a decent icon.
+                            mimeType = null;
+                        }
+
 						if (mimeType == null || mimeType.equals("")) {
 						    String s = i.getSakaiId();
 						    int j = s.lastIndexOf(".");
@@ -1106,7 +1136,7 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 					// way things are
 					// done so the user never has to request a refresh.
 					//   FYI: this actually puts in an IFRAME for inline BLTI items
-					showRefresh = !makeLink(tableRow, "link", i, canEditPage, currentPage, notDone, status) || showRefresh;
+					showRefresh = !makeLink(tableRow, "link", i, canSeeAll, currentPage, notDone, status) || showRefresh;
 					UILink.make(tableRow, "copylink", i.getName(), "http://lessonbuilder.sakaiproject.org/" + i.getId() + "/").
 					    decorate(new UIFreeAttributeDecorator("title", messageLocator.getMessage("simplepage.copylink2").replace("{}", i.getName())));
 
@@ -1168,7 +1198,8 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 
 						String itemGroupString = null;
 						boolean entityDeleted = false;
-
+						boolean notPublished = false;
+						
 						if (i.getType() == SimplePageItem.ASSIGNMENT) {
 							// the type indicates whether scoring is letter
 							// grade, number, etc.
@@ -1209,7 +1240,7 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 							// so it is
 							// safe to dedicate to assessments
 							UIOutput.make(tableRow, "requirement-text", (i.getSubrequirement() ? i.getRequirementText() : "false"));
-							LessonEntity quiz = quizEntity.getEntity(i.getSakaiId());
+							LessonEntity quiz = quizEntity.getEntity(i.getSakaiId(),simplePageBean);
 							if (quiz != null) {
 								String editUrl = quiz.editItemUrl(simplePageBean);
 								if (editUrl != null) {
@@ -1224,7 +1255,8 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 								if (!quiz.objectExists())
 								    entityDeleted = true;
 
-							}
+							} else
+							    notPublished = quizEntity.notPublished(i.getSakaiId());
 						} else if (i.getType() == SimplePageItem.BLTI) {
 						    UIOutput.make(tableRow, "type", "b");
 						    LessonEntity blti= (bltiEntity == null ? null : bltiEntity.getEntity(i.getSakaiId()));
@@ -1278,15 +1310,22 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 						}
 
 						String releaseString = simplePageBean.getReleaseString(i);
-						if (itemGroupString != null || releaseString != null || entityDeleted) {
+						if (itemGroupString != null || releaseString != null || entityDeleted || notPublished) {
 							if (itemGroupString != null)
-							    itemGroupString = simplePageBean.getItemGroupTitles(itemGroupString);
+							    itemGroupString = simplePageBean.getItemGroupTitles(itemGroupString, i);
 							if (itemGroupString != null) {
 							    itemGroupString = " [" + itemGroupString + "]";
 							    if (releaseString != null)
 								itemGroupString = " " + releaseString + itemGroupString;
 							} else if (releaseString != null)
 							    itemGroupString = " " + releaseString;
+							if (notPublished) {
+							    if (itemGroupString != null)
+								itemGroupString = itemGroupString + " " + 
+								    messageLocator.getMessage("simplepage.not-published");
+							    else
+								itemGroupString = messageLocator.getMessage("simplepage.not-published");
+							}
 							if (entityDeleted) {
 							    if (itemGroupString != null)
 								itemGroupString = itemGroupString + " " + 
@@ -1305,6 +1344,32 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 					// separately
 
 				} else if (i.getType() == SimplePageItem.MULTIMEDIA) {
+				    // This code should be read together with the code in SimplePageBean
+				    // that sets up this data, method addMultimedia.  Most display is set
+				    // up here, but note that show-page.js invokes the jquery oembed on all
+				    // <A> items with class="oembed".
+
+				    // historically this code was to display files ,and urls leading to things
+				    // like MP4. as backup if we couldn't figure out what to do we'd put something
+				    // in an iframe. The one exception is youtube, which we supposed explicitly.
+				    //   However we now support several ways to embed content. We use the
+				    // multimediaDisplayType code to indicate which. The codes are
+				    // 	 1 -- embed code, 2 -- av type, 3 -- oembed, 4 -- iframe
+				    // 2 is the original code: MP4, image, and as a special case youtube urls
+				    // since we have old entries with no type code, and that behave the same as
+				    // 2, we start by converting 2 to null.
+				    //  then the logic is
+				    //  if type == null & youtube, do youtube
+				    //  if type == null & image, do iamge
+				    //  if type == null & not HTML do MP4 or other player for file 
+				    //  final fallthrough to handel the new types, with IFRAME if all else fails
+				    // the old code creates ojbects in ContentHosting for both files and URLs.
+				    // The new code saves the embed code or URL itself as an atteibute of the item
+				    // If I were doing it again, I wouldn't create the ContebtHosting item
+				    //   Note that IFRAME is only used for something where the far end claims the MIME
+				    // type is HTML. For weird stuff like MS Word files I use the file display code, which
+				    // will end up producing <OBJECT>.
+
 					// the reason this code is complex is that we try to choose
 					// the best
 					// HTML for displaying the particular type of object. We've
@@ -1315,14 +1380,19 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 				 	String itemGroupString = null;
 					String itemGroupTitles = null;
 					boolean entityDeleted = false;
-					if (canEditPage) {
+					// new format explicit display indication
+					String mmDisplayType = i.getAttribute("multimediaDisplayType");
+					// 2 is the generic "use old display" so treat it as null
+					if ("".equals(mmDisplayType) || "2".equals(mmDisplayType))
+					    mmDisplayType = null;
+					if (canSeeAll) {
 					    try {
 						itemGroupString = simplePageBean.getItemGroupStringOrErr(i, null, true);
 					    } catch (IdUnusedException e) {
 						itemGroupString = "";
 						entityDeleted = true;
 					    }
-					    itemGroupTitles = simplePageBean.getItemGroupTitles(itemGroupString);
+					    itemGroupTitles = simplePageBean.getItemGroupTitles(itemGroupString, i);
 					    if (entityDeleted) {
 						if (itemGroupTitles != null)
 						    itemGroupTitles = itemGroupTitles + " " + messageLocator.getMessage("simplepage.deleted-entity");
@@ -1336,7 +1406,8 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 					} else if (entityDeleted)
 					    continue;
 					
-					UIVerbatim.make(tableRow, "item-path", getItemPath(i));
+					if (!"1".equals(mmDisplayType) && !"3".equals(mmDisplayType))
+					    UIVerbatim.make(tableRow, "item-path", getItemPath(i));
 
 					// the reason this code is complex is that we try to choose
 					// the best
@@ -1381,28 +1452,34 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 					// type,
 					// followed by the hidden INPUT tags with information for the
 					// edit dialog
-					if (simplePageBean.isImageType(i)) {
+					if (mmDisplayType == null && simplePageBean.isImageType(i)) {
 
-						UIOutput.make(tableRow, "imageSpan");
+					    if(canSeeAll || simplePageBean.isItemAvailable(i)) {
+						    UIOutput.make(tableRow, "imageSpan");
 
-						if (itemGroupString != null) {
-							UIOutput.make(tableRow, "item-group-titles3", itemGroupTitles);
-							UIOutput.make(tableRow, "item-groups3", itemGroupString);
-						}
+						    if (itemGroupString != null) {
+							    UIOutput.make(tableRow, "item-group-titles3", itemGroupTitles);
+							    UIOutput.make(tableRow, "item-groups3", itemGroupString);
+						    }
 
-						String imageName = i.getAlt();
-						if (imageName == null || imageName.equals("")) {
-							imageName = abbrevUrl(i.getURL());
-						}
+						    String imageName = i.getAlt();
+						    if (imageName == null || imageName.equals("")) {
+							    imageName = abbrevUrl(i.getURL());
+						    }
 
-						item = UIOutput.make(tableRow, "image").decorate(new UIFreeAttributeDecorator("src", i.getItemURL(simplePageBean.getCurrentSiteId(),currentPage.getOwner()))).decorate(new UIFreeAttributeDecorator("alt", imageName));
-						if (lengthOk(width)) {
-							item.decorate(new UIFreeAttributeDecorator("width", width.getOld()));
-						}
+						    item = UIOutput.make(tableRow, "image").decorate(new UIFreeAttributeDecorator("src", i.getItemURL(simplePageBean.getCurrentSiteId(),currentPage.getOwner()))).decorate(new UIFreeAttributeDecorator("alt", imageName));
+						    if (lengthOk(width)) {
+							    item.decorate(new UIFreeAttributeDecorator("width", width.getOld()));
+						    }
 						
-						if(lengthOk(height)) {
-							item.decorate(new UIFreeAttributeDecorator("height", height.getOld()));
-						}
+						    if(lengthOk(height)) {
+							    item.decorate(new UIFreeAttributeDecorator("height", height.getOld()));
+						    }
+					    } else {
+					        UIComponent notAvailableText = UIOutput.make(tableRow, "notAvailableText", messageLocator.getMessage("simplepage.textItemUnavailable"));
+						// Grey it out
+						    notAvailableText.decorate(new UIFreeAttributeDecorator("class", "disabled-text-item"));
+					    }
 
 						// stuff for the jquery dialog
 						if (canEditPage) {
@@ -1416,50 +1493,56 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 						
 						UIOutput.make(tableRow, "description2", i.getDescription());
 
-					} else if ((youtubeKey = simplePageBean.getYoutubeKey(i)) != null) {
-						String youtubeUrl = "https://www.youtube.com/embed/" + youtubeKey + "?wmode=opaque";
+					} else if (mmDisplayType == null && (youtubeKey = simplePageBean.getYoutubeKey(i)) != null) {
+						String youtubeUrl = SimplePageBean.getYoutubeUrlFromKey(youtubeKey);
 
-						UIOutput.make(tableRow, "youtubeSpan");
+						if(canSeeAll || simplePageBean.isItemAvailable(i)) {
+						    UIOutput.make(tableRow, "youtubeSpan");
 
-						if (itemGroupString != null) {
-							UIOutput.make(tableRow, "item-group-titles4", itemGroupTitles);
-							UIOutput.make(tableRow, "item-groups4", itemGroupString);
-						}
+						    if (itemGroupString != null) {
+							    UIOutput.make(tableRow, "item-group-titles4", itemGroupTitles);
+							    UIOutput.make(tableRow, "item-groups4", itemGroupString);
+						    }
 
-						// if width is blank or 100% scale the height
-						if (width != null && height != null && !height.number.equals("")) {
-							if (width.number.equals("") && width.unit.equals("") || width.number.equals("100") && width.unit.equals("%")) {
+						    // if width is blank or 100% scale the height
+						    if (width != null && height != null && !height.number.equals("")) {
+							    if (width.number.equals("") && width.unit.equals("") || width.number.equals("100") && width.unit.equals("%")) {
 
-								int h = Integer.parseInt(height.number);
-								if (h > 0) {
-									width.number = Integer.toString((int) Math.round(h * 1.641025641));
-									width.unit = height.unit;
-								}
-							}
-						}
+								    int h = Integer.parseInt(height.number);
+								    if (h > 0) {
+									    width.number = Integer.toString((int) Math.round(h * 1.641025641));
+									    width.unit = height.unit;
+								    }
+							    }
+						    }
 
-						// <object style="height: 390px; width: 640px"><param
-						// name="movie"
-						// value="http://www.youtube.com/v/AKIC7OQqBrA?version=3"><param
-						// name="allowFullScreen" value="true"><param
-						// name="allowScriptAccess" value="always"><embed
-						// src="http://www.youtube.com/v/AKIC7OQqBrA?version=3"
-						// type="application/x-shockwave-flash"
-						// allowfullscreen="true" allowScriptAccess="always"
-						// width="640" height="390"></object>
+						    // <object style="height: 390px; width: 640px"><param
+						    // name="movie"
+						    // value="http://www.youtube.com/v/AKIC7OQqBrA?version=3"><param
+						    // name="allowFullScreen" value="true"><param
+						    // name="allowScriptAccess" value="always"><embed
+						    // src="http://www.youtube.com/v/AKIC7OQqBrA?version=3"
+						    // type="application/x-shockwave-flash"
+						    // allowfullscreen="true" allowScriptAccess="always"
+						    // width="640" height="390"></object>
 
-						item = UIOutput.make(tableRow, "youtubeIFrame");
-						// youtube seems ok with length and width
-						if(lengthOk(height)) {
-							item.decorate(new UIFreeAttributeDecorator("height", height.getOld()));
-						}
+						    item = UIOutput.make(tableRow, "youtubeIFrame");
+						    // youtube seems ok with length and width
+						    if(lengthOk(height)) {
+							    item.decorate(new UIFreeAttributeDecorator("height", height.getOld()));
+						    }
 						
-						if(lengthOk(width)) {
-							item.decorate(new UIFreeAttributeDecorator("width", width.getOld()));
-						}
+						    if(lengthOk(width)) {
+							    item.decorate(new UIFreeAttributeDecorator("width", width.getOld()));
+						    }
 						
-						item.decorate(new UIFreeAttributeDecorator("title", messageLocator.getMessage("simplepage.youtube_player")));
-						item.decorate(new UIFreeAttributeDecorator("src", youtubeUrl));
+						    item.decorate(new UIFreeAttributeDecorator("title", messageLocator.getMessage("simplepage.youtube_player")));
+						    item.decorate(new UIFreeAttributeDecorator("src", youtubeUrl));
+						} else {
+						    UIComponent notAvailableText = UIOutput.make(tableRow, "notAvailableText", messageLocator.getMessage("simplepage.textItemUnavailable"));
+						    // Grey it out
+						    notAvailableText.decorate(new UIFreeAttributeDecorator("class", "disabled-text-item"));
+						}
 
 						if (canEditPage) {
 							UIOutput.make(tableRow, "youtubeId", String.valueOf(i.getId()));
@@ -1493,155 +1576,180 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 						// use EMBED. OBJECT does work with Flash.
 						// application/xhtml+xml is XHTML.
 
-					} else if ((mimeType != null && !mimeType.equals("text/html") && !mimeType.equals("application/xhtml+xml")) || (mimeType == null && Arrays.binarySearch(multimediaTypes, extension) >= 0)) {
+					} else if (mmDisplayType == null && 
+						   ((mimeType != null && !mimeType.equals("text/html") && !mimeType.equals("application/xhtml+xml")) ||
+						    // ((mimeType != null && (mimeType.startsWith("audio/") || mimeType.startsWith("video/"))) || 
+						    (mimeType == null && !(Arrays.binarySearch(htmlTypes, extension) >= 0)))) {
 
-						if (mimeType == null)
-							mimeType = "";
-						// this code is used for everything that isn't an image,
-						// Youtube, or HTML. Typically
-						// this is a flash presentation or a movie. Try to be
-						// smart about how we show movies.
-						// HTML is done with an IFRAME in the next "if" case
-						if (itemGroupString != null) {
-							UIOutput.make(tableRow, "item-group-titles5", itemGroupTitles);
-							UIOutput.make(tableRow, "item-groups5", itemGroupString);
-						}
+                        // except where explicit display is set,
+			// this code is used for everything that isn't an image,
+                        // Youtube, or HTML
+			// This could be audio, video, flash, or something random like MS word.
+                        // Random stuff will turn into an object.
+                        // HTML is done with an IFRAME in the next "if" case
+		        // The explicit display types are handled there as well
 
-						UIComponent item2;
-						UIOutput.make(tableRow, "movieSpan");
+					    // in theory the things that fall through to iframe are
+					    // html and random stuff without a defined mime type
+					    // random stuff with mime type is displayed with object
 
-						String movieUrl = i.getItemURL(simplePageBean.getCurrentSiteId(),currentPage.getOwner());
-						// movieUrl = "https://heidelberg.rutgers.edu" + movieUrl;
-						// Safari doens't always pass cookies to plugins, so we have to pass the arg
-						// this requires session.parameter.allow=true in sakai.properties
-						// don't pass the arg unless that is set, since the whole point of defaulting
-						// off is to not expose the session id
-						String sessionParameter = getSessionParameter(movieUrl);
-						if (sessionParameter != null)
-						    movieUrl = movieUrl + "?lb.session=" + sessionParameter;
+						if (mimeType == null) {
+						    mimeType = "";
+                        }
 
-						//	if (allowSessionId)
-						//  movieUrl = movieUrl + "?sakai.session=" + SessionManager.getCurrentSession().getId();
-						String oMimeType = mimeType; // in case we change it for
-						// FLV or others
-						boolean useFlvPlayer = false;
+                        String oMimeType = mimeType; // in case we change it for
+                        // FLV or others
 
-						// isMp4 means we try the flash player (if not HTML5)
-						// we also try the flash player for FLV but for mp4 we do an
-						// additional backup if flash fails, but that doesn't make sense for FLV
-						boolean isMp4 = Arrays.binarySearch(mp4Types, mimeType) >= 0;
-						boolean isHtml5 = Arrays.binarySearch(html5Types, mimeType) >= 0;
-						
-						// wrap whatever stuff we decide to put out in HTML5 if appropriate
-						// javascript is used to do the wrapping, because RSF can't really handle this
-						if (isHtml5) {
-						    boolean isAudio = mimeType.startsWith("audio/");
-						    UIComponent h5video = UIOutput.make(tableRow, (isAudio? "h5audio" : "h5video"));
-						    UIComponent h5source = UIOutput.make(tableRow, (isAudio? "h5asource" : "h5source"));
-						    if (lengthOk(height) && height.getOld().indexOf("%") < 0)
-							h5video.decorate(new UIFreeAttributeDecorator("height", height.getOld()));
-						    if (lengthOk(width) && width.getOld().indexOf("%") < 0)
-							h5video.decorate(new UIFreeAttributeDecorator("width", width.getOld()));
-						    h5source.decorate(new UIFreeAttributeDecorator("src", movieUrl)).
-							decorate(new UIFreeAttributeDecorator("type", mimeType));
-						}
+                        if (itemGroupString != null) {
+                            UIOutput.make(tableRow, "item-group-titles5", itemGroupTitles);
+                            UIOutput.make(tableRow, "item-groups5", itemGroupString);
+                        }
 
-						// FLV is special. There's no player for flash video in
-						// the browser
-						// it shows with a special flash program, which I
-						// supply. For the moment MP4 is
-						// shown with the same player so it uses much of the
-						// same code
-						if (mimeType != null && (mimeType.equals("video/x-flv") || mimeType.equals("video/flv") || isMp4)) {
-							mimeType = "application/x-shockwave-flash";
-							movieUrl = "/lessonbuilder-tool/templates/StrobeMediaPlayback.swf";
-							useFlvPlayer = true;
-						}
-						// for IE, if we're not supplying a player it's safest
-						// to use embed
-						// otherwise Quicktime won't work. Oddly, with IE 9 only
-						// it works if you set CLASSID to the MIME type,
-						// but that's so unexpected that I hate to rely on it.
-						// EMBED is in HTML 5, so I think we're OK
-						// using it permanently for IE.
-						// I prefer OBJECT where possible because of the nesting
-						// ability.
-						boolean useEmbed = ieVersion > 0 && !mimeType.equals("application/x-shockwave-flash");
+			UIOutput.make(tableRow, "movieSpan");
 
-						if (useEmbed) {
-						    item2 = UIOutput.make(tableRow, "movieEmbed").decorate(new UIFreeAttributeDecorator("src", movieUrl)).decorate(new UIFreeAttributeDecorator("alt", messageLocator.getMessage("simplepage.mm_player").replace("{}", abbrevUrl(i.getURL()))));
-						} else {
-							item2 = UIOutput.make(tableRow, "movieObject").decorate(new UIFreeAttributeDecorator("data", movieUrl)).decorate(new UIFreeAttributeDecorator("title", messageLocator.getMessage("simplepage.mm_player").replace("{}", abbrevUrl(i.getURL()))));
-						}
-						if (mimeType != null) {
-							item2.decorate(new UIFreeAttributeDecorator("type", mimeType));
-						}
-						if (canEditPage) {
-							//item2.decorate(new UIFreeAttributeDecorator("style", "border: 1px solid black"));
-						}
+                        if(canSeeAll || simplePageBean.isItemAvailable(i)) {
 
-						// some object types seem to need a specification, so supply our default if necessary
-						if (lengthOk(height) && lengthOk(width)) {
-							item2.decorate(new UIFreeAttributeDecorator("height", height.getOld())).decorate(new UIFreeAttributeDecorator("width", width.getOld()));
-						} else {
-						    if (oMimeType.startsWith("audio/"))
-							item2.decorate(new UIFreeAttributeDecorator("height", "100")).decorate(new UIFreeAttributeDecorator("width", "400"));
-						    else
-							item2.decorate(new UIFreeAttributeDecorator("height", "300")).decorate(new UIFreeAttributeDecorator("width", "400"));
-						}
-						if (!useEmbed) {
-							if (useFlvPlayer) {
-								UIOutput.make(tableRow, "flashvars").decorate(new UIFreeAttributeDecorator("value", "src=" + URLEncoder.encode(myUrl() + i.getItemURL(simplePageBean.getCurrentSiteId(),currentPage.getOwner()))));
-								// need wmode=opaque for player to stack properly with dialogs, etc.
-								// there is a performance impact, but I'm guessing in our application we don't 
-								// need ultimate performance for embedded video. I'm setting it only for
-								// the player, so flash games and other applications will still get wmode=window
-								UIOutput.make(tableRow, "wmode");
-							} else if (mimeType.equals("application/x-shockwave-flash"))
-								UIOutput.make(tableRow, "wmode");
+						    UIComponent item2;
 
-							UIOutput.make(tableRow, "movieURLInject").decorate(new UIFreeAttributeDecorator("value", movieUrl));
-							if (!isMp4) {
-								UIOutput.make(tableRow, "noplugin-p", messageLocator.getMessage("simplepage.noplugin"));
-								UIOutput.make(tableRow, "noplugin-br");
-								UILink.make(tableRow, "noplugin", i.getName(), movieUrl);
-							}
-						}
+                            String movieUrl = i.getItemURL(simplePageBean.getCurrentSiteId(),currentPage.getOwner());
+                            // movieUrl = "https://heidelberg.rutgers.edu" + movieUrl;
+                            // Safari doens't always pass cookies to plugins, so we have to pass the arg
+                            // this requires session.parameter.allow=true in sakai.properties
+                            // don't pass the arg unless that is set, since the whole point of defaulting
+                            // off is to not expose the session id
+                            String sessionParameter = getSessionParameter(movieUrl);
+                            if (sessionParameter != null)
+                                movieUrl = movieUrl + "?lb.session=" + sessionParameter;
 
-						if (isMp4) {
-							// do fallback. for ie use EMBED
-							if (ieVersion > 0) {
-								item2 = UIOutput.make(tableRow, "mp4-embed").decorate(new UIFreeAttributeDecorator("src", i.getItemURL(simplePageBean.getCurrentSiteId(),currentPage.getOwner()))).decorate(new UIFreeAttributeDecorator("alt", messageLocator.getMessage("simplepage.mm_player").replace("{}", abbrevUrl(i.getURL()))));
-							} else {
-								item2 = UIOutput.make(tableRow, "mp4-object").decorate(new UIFreeAttributeDecorator("data", i.getItemURL(simplePageBean.getCurrentSiteId(),currentPage.getOwner()))).decorate(new UIFreeAttributeDecorator("title", messageLocator.getMessage("simplepage.mm_player").replace("{}", abbrevUrl(i.getURL()))));
-						}
-							if (oMimeType != null) {
-								item2.decorate(new UIFreeAttributeDecorator("type", oMimeType));
-							}
+			    UIOutput.make(tableRow, "movie-link-div");
+			    UILink.make(tableRow, "movie-link-link", messageLocator.getMessage("simplepage.download_file"), movieUrl);
 
-							// some object types seem to need a specification, so give a default if needed
-							if (lengthOk(height) && lengthOk(width)) {
-								item2.decorate(new UIFreeAttributeDecorator("height", height.getOld())).decorate(new UIFreeAttributeDecorator("width", width.getOld()));
-							} else {
-							    if (oMimeType.startsWith("audio/"))
-								item2.decorate(new UIFreeAttributeDecorator("height", "100")).decorate(new UIFreeAttributeDecorator("width", "100%"));
-							    else
-								item2.decorate(new UIFreeAttributeDecorator("height", "300")).decorate(new UIFreeAttributeDecorator("width", "100%"));
-							}
+                            //	if (allowSessionId)
+                            //  movieUrl = movieUrl + "?sakai.session=" + SessionManager.getCurrentSession().getId();
+                            boolean useFlvPlayer = false;
 
-							if (!useEmbed) {
-								UIOutput.make(tableRow, "mp4-inject").decorate(new UIFreeAttributeDecorator("value", i.getItemURL(simplePageBean.getCurrentSiteId(),currentPage.getOwner())));
+                            // isMp4 means we try the flash player (if not HTML5)
+                            // we also try the flash player for FLV but for mp4 we do an
+                            // additional backup if flash fails, but that doesn't make sense for FLV
+                            boolean isMp4 = Arrays.binarySearch(mp4Types, mimeType) >= 0;
+                            boolean isHtml5 = Arrays.binarySearch(html5Types, mimeType) >= 0;
+                            
+                            // wrap whatever stuff we decide to put out in HTML5 if appropriate
+                            // javascript is used to do the wrapping, because RSF can't really handle this
+                            if (isHtml5) {
+                                boolean isAudio = mimeType.startsWith("audio/");
+                                UIComponent h5video = UIOutput.make(tableRow, (isAudio? "h5audio" : "h5video"));
+                                UIComponent h5source = UIOutput.make(tableRow, (isAudio? "h5asource" : "h5source"));
+                                if (lengthOk(height) && height.getOld().indexOf("%") < 0)
+                                h5video.decorate(new UIFreeAttributeDecorator("height", height.getOld()));
+                                if (lengthOk(width) && width.getOld().indexOf("%") < 0)
+                                h5video.decorate(new UIFreeAttributeDecorator("width", width.getOld()));
+                                h5source.decorate(new UIFreeAttributeDecorator("src", movieUrl)).
+                                decorate(new UIFreeAttributeDecorator("type", mimeType));
+                            }
 
-								UIOutput.make(tableRow, "mp4-noplugin-p", messageLocator.getMessage("simplepage.noplugin"));
-								UILink.make(tableRow, "mp4-noplugin", i.getName(), i.getItemURL(simplePageBean.getCurrentSiteId(),currentPage.getOwner()));
-							}
-						}
+                            // FLV is special. There's no player for flash video in
+                            // the browser
+                            // it shows with a special flash program, which I
+                            // supply. For the moment MP4 is
+                            // shown with the same player so it uses much of the
+                            // same code
+                            if (mimeType != null && (mimeType.equals("video/x-flv") || mimeType.equals("video/flv") || isMp4)) {
+                                mimeType = "application/x-shockwave-flash";
+                                movieUrl = "/lessonbuilder-tool/templates/StrobeMediaPlayback.swf";
+                                useFlvPlayer = true;
+                            }
+                            // for IE, if we're not supplying a player it's safest
+                            // to use embed
+                            // otherwise Quicktime won't work. Oddly, with IE 9 only
+                            // it works if you set CLASSID to the MIME type,
+                            // but that's so unexpected that I hate to rely on it.
+                            // EMBED is in HTML 5, so I think we're OK
+                            // using it permanently for IE.
+                            // I prefer OBJECT where possible because of the nesting
+                            // ability.
+                            boolean useEmbed = ieVersion > 0 && !mimeType.equals("application/x-shockwave-flash");
+
+                            if (useEmbed) {
+                                item2 = UIOutput.make(tableRow, "movieEmbed").decorate(new UIFreeAttributeDecorator("src", movieUrl)).decorate(new UIFreeAttributeDecorator("alt", messageLocator.getMessage("simplepage.mm_player").replace("{}", abbrevUrl(i.getURL()))));
+                            } else {
+                                item2 = UIOutput.make(tableRow, "movieObject").decorate(new UIFreeAttributeDecorator("data", movieUrl)).decorate(new UIFreeAttributeDecorator("title", messageLocator.getMessage("simplepage.mm_player").replace("{}", abbrevUrl(i.getURL()))));
+                            }
+                            if (mimeType != null) {
+                                item2.decorate(new UIFreeAttributeDecorator("type", mimeType));
+                            }
+                            if (canEditPage) {
+                                //item2.decorate(new UIFreeAttributeDecorator("style", "border: 1px solid black"));
+                            }
+
+                            // some object types seem to need a specification, so supply our default if necessary
+                            if (lengthOk(height) && lengthOk(width)) {
+                                item2.decorate(new UIFreeAttributeDecorator("height", height.getOld())).decorate(new UIFreeAttributeDecorator("width", width.getOld()));
+                            } else {
+                                if (oMimeType.startsWith("audio/"))
+                                item2.decorate(new UIFreeAttributeDecorator("height", "100")).decorate(new UIFreeAttributeDecorator("width", "400"));
+                                else
+                                item2.decorate(new UIFreeAttributeDecorator("height", "300")).decorate(new UIFreeAttributeDecorator("width", "400"));
+                            }
+                            if (!useEmbed) {
+                                if (useFlvPlayer) {
+                                    UIOutput.make(tableRow, "flashvars").decorate(new UIFreeAttributeDecorator("value", "src=" + URLEncoder.encode(myUrl() + i.getItemURL(simplePageBean.getCurrentSiteId(),currentPage.getOwner()))));
+                                    // need wmode=opaque for player to stack properly with dialogs, etc.
+                                    // there is a performance impact, but I'm guessing in our application we don't 
+                                    // need ultimate performance for embedded video. I'm setting it only for
+                                    // the player, so flash games and other applications will still get wmode=window
+                                    UIOutput.make(tableRow, "wmode");
+                                } else if (mimeType.equals("application/x-shockwave-flash"))
+                                    UIOutput.make(tableRow, "wmode");
+
+                                UIOutput.make(tableRow, "movieURLInject").decorate(new UIFreeAttributeDecorator("value", movieUrl));
+                                if (!isMp4) {
+                                    UIOutput.make(tableRow, "noplugin-p", messageLocator.getMessage("simplepage.noplugin"));
+                                    UIOutput.make(tableRow, "noplugin-br");
+                                    UILink.make(tableRow, "noplugin", i.getName(), movieUrl);
+                                }
+                            }
+
+                            if (isMp4) {
+                                // do fallback. for ie use EMBED
+                                if (ieVersion > 0) {
+                                    item2 = UIOutput.make(tableRow, "mp4-embed").decorate(new UIFreeAttributeDecorator("src", i.getItemURL(simplePageBean.getCurrentSiteId(),currentPage.getOwner()))).decorate(new UIFreeAttributeDecorator("alt", messageLocator.getMessage("simplepage.mm_player").replace("{}", abbrevUrl(i.getURL()))));
+                                } else {
+                                    item2 = UIOutput.make(tableRow, "mp4-object").decorate(new UIFreeAttributeDecorator("data", i.getItemURL(simplePageBean.getCurrentSiteId(),currentPage.getOwner()))).decorate(new UIFreeAttributeDecorator("title", messageLocator.getMessage("simplepage.mm_player").replace("{}", abbrevUrl(i.getURL()))));
+                            }
+                                if (oMimeType != null) {
+                                    item2.decorate(new UIFreeAttributeDecorator("type", oMimeType));
+                                }
+
+                                // some object types seem to need a specification, so give a default if needed
+                                if (lengthOk(height) && lengthOk(width)) {
+                                    item2.decorate(new UIFreeAttributeDecorator("height", height.getOld())).decorate(new UIFreeAttributeDecorator("width", width.getOld()));
+                                } else {
+                                    if (oMimeType.startsWith("audio/"))
+                                    item2.decorate(new UIFreeAttributeDecorator("height", "100")).decorate(new UIFreeAttributeDecorator("width", "100%"));
+                                    else
+                                    item2.decorate(new UIFreeAttributeDecorator("height", "300")).decorate(new UIFreeAttributeDecorator("width", "100%"));
+                                }
+
+                                if (!useEmbed) {
+                                    UIOutput.make(tableRow, "mp4-inject").decorate(new UIFreeAttributeDecorator("value", i.getItemURL(simplePageBean.getCurrentSiteId(),currentPage.getOwner())));
+
+                                    UIOutput.make(tableRow, "mp4-noplugin-p", messageLocator.getMessage("simplepage.noplugin"));
+                                    UILink.make(tableRow, "mp4-noplugin", i.getName(), i.getItemURL(simplePageBean.getCurrentSiteId(),currentPage.getOwner()));
+                                }
+                            }
+                        } else {
+					        UIVerbatim notAvailableText = UIVerbatim.make(tableRow, "notAvailableText", messageLocator.getMessage("simplepage.multimediaItemUnavailable"));
+                            // Grey it out
+						    notAvailableText.decorate(new UIFreeAttributeDecorator("class", "disabled-multimedia-item"));
+                        }
 
 						if (canEditPage) {
 							UIOutput.make(tableRow, "movieId", String.valueOf(i.getId()));
 							UIOutput.make(tableRow, "movieHeight", getOrig(height));
 							UIOutput.make(tableRow, "movieWidth", getOrig(width));
 							UIOutput.make(tableRow, "mimetype5", oMimeType);
+							UIOutput.make(tableRow, "prerequisite", (i.isPrerequisite()) ? "true" : "false");
 							UIOutput.make(tableRow, "current-item-id6", Long.toString(i.getId()));
 
 							UIOutput.make(tableRow, "movie-td");
@@ -1650,7 +1758,9 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 						
 						UIOutput.make(tableRow, "description3", i.getDescription());
 					} else {
-						// finally, HTML. Use an iframe
+					    // this is fallthrough for html or an explicit mm display type (i.e. embed code)
+					    // odd types such as MS word will be handled by the AV code, and presented as <OBJECT>
+
 						// definition of resizeiframe, at top of page
 						if (!iframeJavascriptDone && getOrig(height).equals("auto")) {
 							UIOutput.make(tofill, "iframeJavascript");
@@ -1665,23 +1775,40 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 						}
 
 						String itemUrl = i.getItemURL(simplePageBean.getCurrentSiteId(),currentPage.getOwner());
-						item = UIOutput.make(tableRow, "iframe").decorate(new UIFreeAttributeDecorator("src", itemUrl));
-						// if user specifies auto, use Javascript to resize the
-						// iframe when the
-						// content changes. This only works for URLs with the
-						// same origin, i.e.
-						// URLs in this sakai system
-						if (getOrig(height).equals("auto")) {
+						if ("1".equals(mmDisplayType)) {
+						    // embed
+						    item = UIVerbatim.make(tableRow, "mm-embed", i.getAttribute("multimediaEmbedCode"));
+						    //String style = getStyle(width, height);
+						    //if (style != null)
+						    //item.decorate(new UIFreeAttributeDecorator("style", style));
+						} else if ("3".equals(mmDisplayType)) {
+						    item = UILink.make(tableRow, "mm-oembed", i.getAttribute("multimediaUrl"), i.getAttribute("multimediaUrl"));
+						    if (lengthOk(width))
+							item.decorate(new UIFreeAttributeDecorator("maxWidth", width.getOld()));
+						    if (lengthOk(height))
+							item.decorate(new UIFreeAttributeDecorator("maxHeight", height.getOld()));
+						    // oembed
+						} else  {
+						    UIOutput.make(tableRow, "iframe-link-div");
+						    UILink.make(tableRow, "iframe-link-link", messageLocator.getMessage("simplepage.open_new_window"), itemUrl);
+						    item = UIOutput.make(tableRow, "iframe").decorate(new UIFreeAttributeDecorator("src", itemUrl));
+						    // if user specifies auto, use Javascript to resize the
+						    // iframe when the
+						    // content changes. This only works for URLs with the
+						    // same origin, i.e.
+						    // URLs in this sakai system
+						    if (getOrig(height).equals("auto")) {
 							item.decorate(new UIFreeAttributeDecorator("onload", "resizeiframe('" + item.getFullID() + "')"));
 							if (lengthOk(width)) {
-								item.decorate(new UIFreeAttributeDecorator("width", width.getOld()));
+							    item.decorate(new UIFreeAttributeDecorator("width", width.getOld()));
 							}
 							item.decorate(new UIFreeAttributeDecorator("height", "300"));
-						} else {
+						    } else {
 							// we seem OK without a spec
 							if (lengthOk(height) && lengthOk(width)) {
 								item.decorate(new UIFreeAttributeDecorator("height", height.getOld())).decorate(new UIFreeAttributeDecorator("width", width.getOld()));
 							}
+						    }
 						}
 						item.decorate(new UIFreeAttributeDecorator("title", messageLocator.getMessage("simplepage.web_content").replace("{}", abbrevUrl(i.getURL()))));
 
@@ -1706,11 +1833,11 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 
 					boolean isAvailable = simplePageBean.isItemAvailable(i);
 					// faculty missing preqs get warning but still see the comments
-					if (!isAvailable && canEditPage)
+					if (!isAvailable && canSeeAll)
 					    UIOutput.make(tableRow, "missing-prereqs", messageLocator.getMessage("simplepage.fake-missing-prereqs"));
 
 					// students get warning and not the content
-					if (!isAvailable && !canEditPage) {
+					if (!isAvailable && !canSeeAll) {
 					    UIOutput.make(tableRow, "missing-prereqs", messageLocator.getMessage("simplepage.missing-prereqs"));
 					}else {
 						UIOutput.make(tableRow, "commentsDiv");
@@ -1773,7 +1900,7 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 							
 							    String itemGroupString = simplePageBean.getItemGroupString(i, null, true);
 							    if (itemGroupString != null) {
-							    	String itemGroupTitles = simplePageBean.getItemGroupTitles(itemGroupString);
+							    	String itemGroupTitles = simplePageBean.getItemGroupTitles(itemGroupString, i);
 							    	if (itemGroupTitles != null) {
 							    		itemGroupTitles = "[" + itemGroupTitles + "]";
 							    	}
@@ -1921,9 +2048,9 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 
 					boolean isAvailable = simplePageBean.isItemAvailable(i);
 					// faculty missing preqs get warning but still see the comments
-					if (!isAvailable && canEditPage)
+					if (!isAvailable && canSeeAll)
 					    UIOutput.make(tableRow, "student-missing-prereqs", messageLocator.getMessage("simplepage.student-fake-missing-prereqs"));
-					if (!isAvailable && !canEditPage)
+					if (!isAvailable && !canSeeAll)
 					    UIOutput.make(tableRow, "student-missing-prereqs", messageLocator.getMessage("simplepage.student-missing-prereqs"));
 					else {
 						UIOutput.make(tableRow, "studentDiv");
@@ -2124,7 +2251,7 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 							
 							String itemGroupString = simplePageBean.getItemGroupString(i, null, true);
 							if (itemGroupString != null) {
-								String itemGroupTitles = simplePageBean.getItemGroupTitles(itemGroupString);
+								String itemGroupTitles = simplePageBean.getItemGroupTitles(itemGroupString, i);
 								if (itemGroupTitles != null) {
 									itemGroupTitles = "[" + itemGroupTitles + "]";
 								}
@@ -2140,7 +2267,7 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 					
 					UIOutput.make(tableRow, "questionSpan");
 
-					boolean isAvailable = simplePageBean.isItemAvailable(i);
+					boolean isAvailable = simplePageBean.isItemAvailable(i) || canSeeAll;
 					
 					UIOutput.make(tableRow, "questionDiv");
 					
@@ -2193,7 +2320,7 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 						UIInput shortanswerInput = UIInput.make(questionForm, "shortanswerInput", "#{simplePageBean.questionResponse}");
 						if(!isAvailable || response != null) {
 							shortanswerInput.decorate(new UIDisabledDecorator());
-							if(response != null) {
+							if(response.getShortanswer() != null) {
 								shortanswerInput.setValue(response.getShortanswer());
 							}
 						}
@@ -2290,15 +2417,22 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 					// remaining type must be a block of HTML
 					UIOutput.make(tableRow, "itemSpan");
 
-					String itemGroupString = simplePageBean.getItemGroupString(i, null, true);
-					String itemGroupTitles = simplePageBean.getItemGroupTitles(itemGroupString);
-					if (itemGroupTitles != null) {
+					if (canSeeAll) {
+					    String itemGroupString = simplePageBean.getItemGroupString(i, null, true);
+					    String itemGroupTitles = simplePageBean.getItemGroupTitles(itemGroupString, i);
+					    if (itemGroupTitles != null) {
 						itemGroupTitles = "[" + itemGroupTitles + "]";
+					    }
+					    
+					    UIOutput.make(tableRow, "item-groups-titles-text", itemGroupTitles);
 					}
 
-					UIOutput.make(tableRow, "item-groups-titles-text", itemGroupTitles);
-
-					UIVerbatim.make(tableRow, "content", (i.getHtml() == null ? "" : i.getHtml()));
+					if(canSeeAll || simplePageBean.isItemAvailable(i)) {
+					    UIVerbatim.make(tableRow, "content", (i.getHtml() == null ? "" : i.getHtml()));
+					} else {
+					    UIComponent unavailableText = UIOutput.make(tableRow, "content", messageLocator.getMessage("simplepage.textItemUnavailable"));
+					    unavailableText.decorate(new UIFreeAttributeDecorator("class", "disabled-text-item"));
+					}
 
 					// editing is done using a special producer that calls FCK.
 					if (canEditPage) {
@@ -2336,7 +2470,7 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 			// that it's here doesn't mean it shows
 			// up at the end. This code produces errors and other odd stuff.
 
-			if (canEditPage) {
+			if (canSeeAll) {
 				// if the page is hidden, warn the faculty [students get stopped
 				// at
 				// the top]
@@ -2364,7 +2498,7 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 
 		// more warnings: if no item on the page, give faculty instructions,
 		// students an error
-		if (itemList.size() == 0) {
+		if (!anyItemVisible) {
 			if (canEditPage) {
 				UIOutput.make(tofill, "startupHelp")
 				    .decorate(new UIFreeAttributeDecorator("src", 
@@ -2566,7 +2700,7 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 				fake = true; // need to set this in case it's available for missing entity
 			}
 		} else if (i.getType() == SimplePageItem.ASSESSMENT) {
-			LessonEntity lessonEntity = quizEntity.getEntity(i.getSakaiId());
+			LessonEntity lessonEntity = quizEntity.getEntity(i.getSakaiId(),simplePageBean);
 			if (available && lessonEntity != null) {
 				if (i.isPrerequisite()) {
 					simplePageBean.checkItemPermissions(i, true);
@@ -2760,7 +2894,9 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 
 	/**
 	 * Checks for the version of IE. Returns 0 if we're not running IE.
-	 * 
+	 * But there's a problem. IE 11 doesn't have the MSIE tag. But it stiill
+	 * needs to be treated as IE, because the OBJECT tag won't work with Quicktime
+	 * Since all I test is > 0, I use a simplified version that returns 0 or 1
 	 * @return
 	 */
 	public int checkIEVersion() {
@@ -2770,96 +2906,103 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 		browserString = usageSession.getUserAgent();
 		if (browserString == null)
 		    return 0;
-		int ieIndex = browserString.indexOf(" MSIE ");
-		int ieVersion = 0;
-		if (ieIndex >= 0) {
-			String ieV = browserString.substring(ieIndex + 6);
-			int i = 0;
-			int e = ieV.length();
-			while (i < e) {
-				if (Character.isDigit(ieV.charAt(i))) {
-					i++;
-				} else {
-					break;
-				}
-			}
-			if (i > 0) {
-				ieV = ieV.substring(0, i);
-				ieVersion = Integer.parseInt(ieV);
-			}
-		}
+		int ieIndex = browserString.indexOf("Trident/");
+		if (ieIndex >= 0)
+		    return 1;
+		else
+		    return 0;
 
-		return ieVersion;
+		// int ieVersion = 0;
+		// if (ieIndex >= 0) {
+		//	String ieV = browserString.substring(ieIndex + 6);
+		//	int i = 0;
+		//	int e = ieV.length();
+		//	while (i < e) {
+		//		if (Character.isDigit(ieV.charAt(i))) {
+		//			i++;
+		//		} else {
+		//			break;
+		//		}
+		//	}
+		//	if (i > 0) {
+		//		ieV = ieV.substring(0, i);
+		//		ieVersion = Integer.parseInt(ieV);
+		//}			}
+		//
+		//		return ieVersion;
 	}
 
 	private void createToolBar(UIContainer tofill, SimplePage currentPage, boolean isStudent) {
 		UIBranchContainer toolBar = UIBranchContainer.make(tofill, "tool-bar:");
+		boolean studentPage = currentPage.getOwner() != null;
 
-		// decided not to use long tooltips. with screen reader they're too
-		// verbose. We now have good help
-		createToolBarLink(ReorderProducer.VIEW_ID, toolBar, "reorder", "simplepage.reorder", currentPage, "simplepage.reorder-tooltip");
+		// toolbar
 
-		createToolBarLink(EditPageProducer.VIEW_ID, toolBar, "add-text", "simplepage.text", currentPage, "simplepage.text.tooltip").setItemId(null);
-		
-		createFilePickerToolBarLink(ResourcePickerProducer.VIEW_ID, toolBar, "add-resource", "simplepage.resource", false, false,  currentPage, "simplepage.resource.tooltip");
-
-		UILink subpagelink = UIInternalLink.makeURL(toolBar, "subpage-link", "#");
-		subpagelink.decorate(new UITooltipDecorator(messageLocator.getMessage("simplepage.subpage")));
-		subpagelink.linktext = new UIBoundString(messageLocator.getMessage("simplepage.subpage"));
-
-		UILink questionlink = UIInternalLink.makeURL(toolBar, "question-link", "#");
-		questionlink.decorate(new UITooltipDecorator(messageLocator.getMessage("simplepage.questionDescription")));
-		questionlink.linktext = new UIBoundString(messageLocator.getMessage("simplepage.questionLinkText"));
-		
-		//createToolBarLink(AssignmentPickerProducer.VIEW_ID, toolBar, "add-assignment", "simplepage.assignment", currentPage, "simplepage.assignment");
-		//createToolBarLink(QuizPickerProducer.VIEW_ID, toolBar, "add-quiz", "simplepage.quiz", currentPage, "simplepage.quiz");
-		//createToolBarLink(ForumPickerProducer.VIEW_ID, toolBar, "add-forum", "simplepage.forum", currentPage, "simplepage.forum");
-		createFilePickerToolBarLink(ResourcePickerProducer.VIEW_ID, toolBar, "add-multimedia", "simplepage.multimedia", true, false, currentPage, "simplepage.multimedia.tooltip");
-
-		UILink.make(toolBar, "help", messageLocator.getMessage("simplepage.help"), 
-			    getLocalizedURL( isStudent ? "student.html" : "general.html"));
+		// dropdowns
+		UIOutput.make(toolBar, "icondropc");
 		UIOutput.make(toolBar, "icondrop");
 
-		// Don't show these tools on a student page.
-		if(currentPage.getOwner() == null) {
-			// Q: Are we running a kernel with KNL-273?
-			Class contentHostingInterface = ContentHostingService.class;
-			try {
-				Method expandMethod = contentHostingInterface.getMethod("expandZippedResource", new Class[] { String.class });
-				
-				UIOutput.make(tofill, "addwebsite-descrip");
-				createFilePickerToolBarLink(ResourcePickerProducer.VIEW_ID, tofill, "add-website", "simplepage.website", false, true, currentPage, "simplepage.website.tooltip");
-			} catch (NoSuchMethodException nsme) {
-				// A: No
-			} catch (Exception e) {
-				// A: Not sure
-				log.warn("SecurityException thrown by expandZippedResource method lookup", e);
-			}
-			
-			createToolBarLink(AssignmentPickerProducer.VIEW_ID, toolBar, "add-assignment", "simplepage.assignment", currentPage, "simplepage.assignment");
-			
-			// dropdown
+		// right side
+		createToolBarLink(ReorderProducer.VIEW_ID, toolBar, "reorder", "simplepage.reorder", currentPage, "simplepage.reorder-tooltip");
+		UILink.make(toolBar, "help", messageLocator.getMessage("simplepage.help"), 
+			    getLocalizedURL( isStudent ? "student.html" : "general.html"));
+		if (!studentPage)
+		    createToolBarLink(PermissionsHelperProducer.VIEW_ID, toolBar, "permissions", "simplepage.permissions", currentPage, "simplepage.permissions.tooltip");
 
-			createToolBarLink(QuizPickerProducer.VIEW_ID, tofill, "add-quiz", "simplepage.quiz", currentPage, "simplepage.quiz");
+		// add content menu
+		createToolBarLink(EditPageProducer.VIEW_ID, tofill, "add-text", "simplepage.text", currentPage, "simplepage.text.tooltip").setItemId(null);
+		createFilePickerToolBarLink(ResourcePickerProducer.VIEW_ID, tofill, "add-multimedia", "simplepage.multimedia", true, false, currentPage, "simplepage.multimedia.tooltip");
+		createFilePickerToolBarLink(ResourcePickerProducer.VIEW_ID, tofill, "add-resource", "simplepage.resource", false, false,  currentPage, "simplepage.resource.tooltip");
+		UILink subpagelink = UIInternalLink.makeURL(tofill, "subpage-link", "#");
+
+		// content menu not on students
+		if (!studentPage) {
+
+		    // add website.
+		    // Are we running a kernel with KNL-273?
+		    Class contentHostingInterface = ContentHostingService.class;
+		    try {
+			Method expandMethod = contentHostingInterface.getMethod("expandZippedResource", new Class[] { String.class });
 			
-			UIOutput.make(tofill, "forum-descrip");
-			createToolBarLink(ForumPickerProducer.VIEW_ID, tofill, "add-forum", "simplepage.forum", currentPage, "simplepage.forum");
-			// in case we're on an old system without current BLTI
-			if (bltiEntity != null && ((BltiInterface)bltiEntity).servicePresent()) {
-			    UIOutput.make(tofill, "blti-descrip");
-			    createToolBarLink(BltiPickerProducer.VIEW_ID, tofill, "add-blti", "simplepage.blti", currentPage, "simplepage.blti");
-			}
-			UIOutput.make(tofill, "permissions-descrip");
-			createToolBarLink(PermissionsHelperProducer.VIEW_ID, tofill, "permissions", "simplepage.permissions", currentPage, "simplepage.permissions.tooltip");
+			UIOutput.make(tofill, "addwebsite-li");
+			createFilePickerToolBarLink(ResourcePickerProducer.VIEW_ID, tofill, "add-website", "simplepage.website", false, true, currentPage, "simplepage.website.tooltip");
+		    } catch (NoSuchMethodException nsme) {
+			// A: No
+		    } catch (Exception e) {
+			// A: Not sure
+			log.warn("SecurityException thrown by expandZippedResource method lookup", e);
+		    }
 			
-			GeneralViewParameters eParams = new GeneralViewParameters(VIEW_ID);
-			eParams.addTool = GeneralViewParameters.COMMENTS;
-			UIOutput.make(tofill, "student-descrip");
-			UIInternalLink.make(tofill, "add-comments", messageLocator.getMessage("simplepage.comments"), eParams);
+		    UIOutput.make(tofill, "assignment-li");
+		    createToolBarLink(AssignmentPickerProducer.VIEW_ID, tofill, "add-assignment", "simplepage.assignment", currentPage, "simplepage.assignment");
+
+		    UIOutput.make(tofill, "quiz-li");
+		    createToolBarLink(QuizPickerProducer.VIEW_ID, tofill, "add-quiz", "simplepage.quiz", currentPage, "simplepage.quiz");
+
+		    UIOutput.make(tofill, "forum-li");
+		    createToolBarLink(ForumPickerProducer.VIEW_ID, tofill, "add-forum", "simplepage.forum", currentPage, "simplepage.forum.tooltip");
+
+		    UIOutput.make(tofill, "question-li");
+		    UILink questionlink = UIInternalLink.makeURL(tofill, "question-link", "#");
+
+		    GeneralViewParameters eParams = new GeneralViewParameters(VIEW_ID);
+		    eParams.addTool = GeneralViewParameters.COMMENTS;
+		    UIOutput.make(tofill, "student-li");
+		    UIInternalLink.make(tofill, "add-comments", messageLocator.getMessage("simplepage.comments"), eParams).
+			decorate(new UITooltipDecorator(messageLocator.getMessage("simplepage.comments.tooltip")));
 			
-			eParams = new GeneralViewParameters(VIEW_ID);
-			eParams.addTool = GeneralViewParameters.STUDENT_CONTENT;
-			UIInternalLink.make(tofill, "add-content", messageLocator.getMessage("simplepage.add-content"), eParams);
+		    eParams = new GeneralViewParameters(VIEW_ID);
+		    eParams.addTool = GeneralViewParameters.STUDENT_CONTENT;
+		    UIOutput.make(tofill, "studentcontent-li");
+		    UIInternalLink.make(tofill, "add-content", messageLocator.getMessage("simplepage.add-student-content"), eParams).
+			decorate(new UITooltipDecorator(messageLocator.getMessage("simplepage.student-descrip")));
+
+		    // in case we're on an old system without current BLTI
+		    if (bltiEntity != null && ((BltiInterface)bltiEntity).servicePresent()) {
+			UIOutput.make(tofill, "blti-li");
+			createToolBarLink(BltiPickerProducer.VIEW_ID, tofill, "add-blti", "simplepage.blti", currentPage, "simplepage.blti.tooltip");
+		    }
+			
 		}
 	}
 
@@ -3094,6 +3237,7 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 		UICommand.make(form, "mm-add-item", messageLocator.getMessage("simplepage.save_message"), "#{simplePageBean.addMultimedia}");
 		UIInput.make(form, "mm-item-id", "#{simplePageBean.itemId}");
 		UIInput.make(form, "mm-is-mm", "#{simplePageBean.isMultimedia}");
+		UIInput.make(form, "mm-display-type", "#{simplePageBean.multimediaDisplayType}");
 		UIInput.make(form, "mm-is-website", "#{simplePageBean.isWebsite}");
 		UICommand.make(form, "mm-cancel", messageLocator.getMessage("simplepage.cancel"), null);
 	}
@@ -3324,6 +3468,8 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 		fileparams.viewID = ResourcePickerProducer.VIEW_ID;
 		UIInternalLink.make(form, "change-resource-movie", messageLocator.getMessage("simplepage.change_resource"), fileparams);
 
+		UIBoundBoolean.make(form, "question-prerequisite", "#{simplePageBean.prerequisite}",false);
+
 		UICommand.make(form, "delete-movie-item", messageLocator.getMessage("simplepage.delete"), "#{simplePageBean.deleteItem}");
 		UICommand.make(form, "update-movie", messageLocator.getMessage("simplepage.edit"), "#{simplePageBean.updateMovie}");
 		UICommand.make(form, "movie-cancel", messageLocator.getMessage("simplepage.cancel"), null);
@@ -3420,7 +3566,7 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 		GeneralViewParameters view = new GeneralViewParameters(PagePickerProducer.VIEW_ID);
 		view.setSendingPage(-1L);
 		view.newTopLevel = true;
-		UIInternalLink.make(tofill, "new-page-choose", messageLocator.getMessage("simplepage.choose_existing_page"), view);
+		UIInternalLink.make(tofill, "new-page-choose", messageLocator.getMessage("simplepage.lm_existing_page"), view);
 
 		UICommand.make(form, "new-page-submit", messageLocator.getMessage("simplepage.save"), "#{simplePageBean.addPages}");
 		UICommand.make(form, "new-page-cancel", messageLocator.getMessage("simplepage.cancel"), "#{simplePageBean.cancel}");
@@ -3596,8 +3742,17 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 		if (noSpecifiedAnswers && "true".equals(question.getAttribute("questionGraded")))
 		    manuallyGraded = true;
 
-		if (noSpecifiedAnswers && !manuallyGraded)
-		    return Status.COMPLETED;  // a poll    
+		if (noSpecifiedAnswers && !manuallyGraded) {
+		    // poll. should we show completed if not required? Don't for
+		    // other item types, but here there's no separate tool where you
+		    // can look at the status. I'm currently showing completed, to
+		    // be consistent with non-polls, where I always show a result
+		    if (response != null)
+			return Status.COMPLETED;
+		    if(question.isRequired())
+			return Status.REQUIRED;
+		    return Status.NOT_REQUIRED;
+		}
 
 		if (manuallyGraded && (response != null && !response.isOverridden())) {
 			return Status.NEEDSGRADING;

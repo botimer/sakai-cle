@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/polls/trunk/impl/src/java/org/sakaiproject/poll/logic/impl/ExternalLogicImpl.java $
- * $Id: ExternalLogicImpl.java 123679 2013-05-07 00:40:37Z azeckoski@unicon.net $
+ * $Id: ExternalLogicImpl.java 131010 2013-10-31 19:13:59Z ottenhoff@longsight.com $
  ***********************************************************************************
  *
  * Copyright (c) 2006, 2007 The Sakai Foundation
@@ -467,6 +467,7 @@ public class ExternalLogicImpl implements ExternalLogic {
 				replacementValues.put("localSakaiName",
 						developerHelperService.getConfigurationSetting("ui.service", "Sakai"));
 				replacementValues.put("recipientFirstName",user.getFirstName());
+				replacementValues.put("recipientDisplayName", user.getDisplayName());
 				replacementValues.put("pollQuestion", pollQuestion);
 				replacementValues.put("siteTitle", siteTitle); 
 

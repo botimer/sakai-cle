@@ -1,5 +1,5 @@
 /**
- * $Id: AcountValidationLocator.java 126127 2013-06-21 22:12:19Z matthew@longsight.com $
+ * $Id: AcountValidationLocator.java 132392 2013-12-10 00:03:47Z matthew@longsight.com $
  * $URL: https://source.sakaiproject.org/svn/reset-pass/trunk/account-validator-tool/src/java/org/sakaiproject/accountvalidator/tool/otp/AcountValidationLocator.java $
  * 
  **************************************************************************
@@ -190,6 +190,10 @@ public class AcountValidationLocator implements BeanLocator  {
 	          String key = (String) it.next();
 	          
 	          ValidationAccount item = (ValidationAccount) delivered.get(key);
+                  if (ValidationAccount.STATUS_CONFIRMED.equals(item.getStatus()) || ValidationAccount.STATUS_EXPIRED.equals(item.getStatus()))
+                  {
+                      return "error";
+                  }
 	           log.debug("Validating Item: " + item.getId() + " for user: " + item.getUserId());
 	           String firstName = item.getFirstName();
 	           String surname = item.getSurname();

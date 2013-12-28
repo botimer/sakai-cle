@@ -1,7 +1,7 @@
 
 /**********************************************************************************
 * $URL: https://source.sakaiproject.org/svn/osp/trunk/wizard/api/src/java/org/theospi/portfolio/wizard/WizardFunctionConstants.java $
-* $Id: WizardFunctionConstants.java 105079 2012-02-24 23:08:11Z ottenhoff@longsight.com $
+* $Id: WizardFunctionConstants.java 131548 2013-11-14 16:42:13Z dsobiera@indiana.edu $
 ***********************************************************************************
 *
  * Copyright (c) 2005, 2006, 2008 The Sakai Foundation
@@ -57,5 +57,7 @@ public interface WizardFunctionConstants {
    
    public final static String WIZARD_TYPE_SEQUENTIAL = "org.theospi.portfolio.wizard.model.Wizard.sequential";
    public final static String WIZARD_TYPE_HIERARCHICAL = "org.theospi.portfolio.wizard.model.Wizard.hierarchical";
+   
+   public static final String UNASSIGNED_GROUP = "UNASSIGNED_GROUP";
 }
 

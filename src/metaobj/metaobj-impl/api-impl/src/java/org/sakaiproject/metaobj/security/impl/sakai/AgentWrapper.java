@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/metaobj/trunk/metaobj-impl/api-impl/src/java/org/sakaiproject/metaobj/security/impl/sakai/AgentWrapper.java $
- * $Id: AgentWrapper.java 105079 2012-02-24 23:08:11Z ottenhoff@longsight.com $
+ * $Id: AgentWrapper.java 130481 2013-10-15 17:36:54Z dsobiera@indiana.edu $
  ***********************************************************************************
  *
  * Copyright (c) 2004, 2005, 2006, 2007, 2008, 2009 The Sakai Foundation
@@ -131,7 +131,7 @@ public class AgentWrapper extends IdentifiableObject implements Agent {
 
       return getWorksiteRoles(currentPlacement.getContext());
    }
-
+   
    public boolean isRole() {
       return false;
    }

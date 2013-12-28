@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/portal/trunk/portal-impl/impl/src/java/org/sakaiproject/portal/charon/handlers/LogoutHandler.java $
- * $Id: LogoutHandler.java 105079 2012-02-24 23:08:11Z ottenhoff@longsight.com $
+ * $Id: LogoutHandler.java 132923 2013-12-26 21:35:50Z csev@umich.edu $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008 The Sakai Foundation
@@ -26,12 +26,13 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.sakaiproject.portal.api.PortalHandlerException;
 import org.sakaiproject.tool.api.Session;
+import org.sakaiproject.portal.api.PortalService;
 
 /**
  * 
  * @author ieb
  * @since Sakai 2.4
- * @version $Rev: 105079 $
+ * @version $Rev: 132923 $
  * 
  */
 public class LogoutHandler extends BasePortalHandler
@@ -49,7 +50,7 @@ public class LogoutHandler extends BasePortalHandler
 	{
 
 		// Check to see what portal we have been using
-		String controlPortal = (String) session.getAttribute("sakai-controlling-portal");
+		String controlPortal = (String) session.getAttribute(PortalService.SAKAI_CONTROLLING_PORTAL);
 		if ( controlPortal != null ) controlPortal = "/" + controlPortal;
 
 		if ((parts.length == 2) && (parts[1].equals(LogoutHandler.URL_FRAGMENT)))

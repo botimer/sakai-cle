@@ -4,7 +4,7 @@
   <parent>
     <artifactId>osp-common</artifactId>
     <groupId>org.sakaiproject.osp</groupId>
-    <version>2.10-SNAPSHOT</version>
+    <version>10.0-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
   <artifactId>osp-common-impl</artifactId>
@@ -72,6 +72,10 @@
       <groupId>org.sakaiproject.metaobj</groupId>
       <artifactId>sakai-metaobj-impl</artifactId>
     </dependency>
+    <dependency>
+      <groupId>org.sakaiproject.sitemanage</groupId>
+      <artifactId>sakai-siteassociation-api</artifactId>
+    </dependency>    
     <dependency>
       <groupId>org.sakaiproject.osp</groupId>
       <artifactId>osp-common-api</artifactId>

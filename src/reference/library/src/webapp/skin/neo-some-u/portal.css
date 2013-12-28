@@ -1042,6 +1042,10 @@ ul#otherSiteList li a span, ul.otherSitesCategorList li a span {
     margin-top: .5em;
     margin-bottom: .5em;
 }
+.serviceInfo {
+    font-size:.9em;
+    color:#333;    
+}
 /* a third wrapper - reserved for copyright blurbs  */
 .sakaiCopyrightInfo {
     padding: 5px 0;
@@ -1318,6 +1322,9 @@ ul#otherSiteList li a span, ul.otherSitesCategorList li a span {
 }
 .icon-sakai-createuser {
     background-position: -540px -504px;
+}
+.icon-sakai-add-tool {
+    background-position: 0 0;
 }
 
 /* PART 10: specific functionality: presence, chat */

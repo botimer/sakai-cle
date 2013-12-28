@@ -1,6 +1,6 @@
 /**********************************************************************************
 * $URL: https://source.sakaiproject.org/svn/osp/trunk/wizard/tool/src/java/org/theospi/portfolio/wizard/tool/WizardTool.java $
-* $Id: WizardTool.java 126969 2013-07-12 12:40:08Z jean-francois.leveque@upmc.fr $
+* $Id: WizardTool.java 131548 2013-11-14 16:42:13Z dsobiera@indiana.edu $
 ***********************************************************************************
 *
  * Copyright (c) 2005, 2006, 2007, 2008 The Sakai Foundation
@@ -347,6 +347,9 @@ public class WizardTool extends BuilderTool {
 
          setWizardListSize(wizards.size());
       }
+      
+      if (wizards != null) 
+          setWizardListSize(wizards.size());
       
       return returned;
    }

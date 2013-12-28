@@ -173,6 +173,33 @@ public class LessonBuilderEntityProducer extends AbstractEntityProvider
 
    private Set<String> servers;
 
+    /* 
+     * There are several types of updating when we move a lesson from one site to another:
+     * Fixing HTML text:
+     *  fixItems - during load, called on the XML structure for each page
+     *    for each item object in the new page, if it's text, fixup the URLs (fixUrls)
+     *  fixUrls - for a piece of HTML, fixup urls on it, with convertHtmlContent
+     *  convertHtmlContent - for a piece of HTML, fixup urls on it
+     *      finds all URLs in a text and calls processUrl
+     *  processUrl
+     *      for special dummy "http://lessonbuilder.sakaiproject.org/ITEMID update the ID
+     *      for /access/content, etc, update site ID
+     *      see migrateEmbeddedlinks below for updating references to other sakai objects
+     *
+     * Fixing sakaiid's so that Sakai items point to the assignment, test, etc. in the new site
+     *   updateEntityReferences - called by Sakai as part of load with map of old and new references
+     *          one-argument version called from tool to get anything that couldn't be done during load
+     *      if the kernel supports migrateAllLinks, call migrateEmbeddedLinks
+     *      look up the all items in the map, and update the sakaiId to the new assignment, test, etc, id
+     *          Sakai supplies a map for objects in old site to new site. However not all tools support it
+     *          the one-argument version constructs a map when the entry is an "objectid". This is returned
+     *             from the tool-specific Lessons code, and may be different for assignments, test, quizes, etc.
+     *             but normally the objectid uses the title of the object in the tool since titles of quizes, etc
+     *             are unique in a given site. the update operation calls findobject in the tool-specific interface
+     *             to locate the quiz with that title
+     *   migrateEmbedded links - for all text items in site, call kernel linkMigrationHelper
+     */     
+
  // The attributes in HTML that should have their values looked at and possibly re-written
    private Collection<String> attributes = new HashSet<String>(
 				    Arrays.asList(new String[] { "href", "src", "background", "action",
@@ -202,13 +229,10 @@ public class LessonBuilderEntityProducer extends AbstractEntityProvider
 
       try {
 	  linkMigrationHelper = RequestFilter.class.getClassLoader().loadClass("org.sakaiproject.util.api.LinkMigrationHelper");
-	  System.out.println("linkMigrationHelper " + linkMigrationHelper);
 	  // this is in the kernel, so it should already be loaded
 	  linkMigrationHelperInstance = ComponentManager.get(linkMigrationHelper);
-	  System.out.println("linkMigrationHelper instance " + linkMigrationHelperInstance);
 	  if (linkMigrationHelper != null)
 	      migrateAllLinks = linkMigrationHelper.getMethod("migrateAllLinks", new Class[] { Set.class, String.class });
-	  System.out.println("migrateAllLinks " + linkMigrationHelper);
       } catch (Exception e) {
 	  System.out.println("Exception in introspection " + e);
 	  System.out.println("loader " + RequestFilter.class.getClassLoader());
@@ -443,7 +467,7 @@ public class LessonBuilderEntityProducer extends AbstractEntityProvider
 			e = assignmentEntity;
 		    e = e.getEntity(item.getSakaiId());
 		    if (e != null) {
-			String objectid = e.getObjectId();
+			String objectid = e.getObjectId();  // this is something like assignment/ID/TITLE. It's used to find the object in the new site if necessary
 			if (objectid!= null)
 			    addAttr(doc, itemElement, "objectid", objectid);
 		    }
@@ -979,12 +1003,17 @@ public class LessonBuilderEntityProducer extends AbstractEntityProvider
 		     Long oldPageId = Long.valueOf(oldPageIdString);
 		     SimplePage page = simplePageToolDao.makePage("0", siteId, title, 0L, 0L);
 		     String gradebookPoints = pageElement.getAttribute("gradebookpoints");
-		     if (gradebookPoints != null && !gradebookPoints.equals(""))
+		     if (gradebookPoints != null && !gradebookPoints.equals("")) {
 			 page.setGradebookPoints(Double.valueOf(gradebookPoints));
+		     }
 		     String cssSheet = pageElement.getAttribute("csssheet");
 		     if (cssSheet != null && !cssSheet.equals(""))
 			 page.setCssSheet(cssSheet.replaceFirst("^/group/" + fromSiteId, "/group/" + siteId));
 		     simplePageToolDao.quickSaveItem(page);
+		     if (gradebookPoints != null && !gradebookPoints.equals("")) {
+			 gradebookIfc.addExternalAssessment(siteId, "lesson-builder:" + page.getPageId(), null,
+							    title, Double.valueOf(gradebookPoints), null, "Lesson Builder");
+		     }
 		     pageMap.put(oldPageId, page.getPageId());
 		 }
 	     }
@@ -1340,6 +1369,14 @@ public class LessonBuilderEntityProducer extends AbstractEntityProvider
 		itemstring = entityid.substring(REF_LB_FORUM.length());
 	    }
 		
+	    // find the object in the new site. There are two approaches:
+	    // if we're lucky, we find it in the traveralMap. That's built by Sakai, and maps objects in 
+	    //   the old site to objects in the new site.
+	    // this uses the alt field, which for these item types contains an object ID such as assignment/ID/TITLE
+	    // findObject them asks the tool to find that object in the new site. Obviously it's the title we use,
+	    // since the ID will be different in the new site. Of course if the object is in the tranversalMap, we use
+	    // that, but not all tools make entries in the map.
+
 	    String sakaiid = e.findObject(objectid, transversalMap, toContext);
 	    if (sakaiid != null) {
 		long itemid = -1;

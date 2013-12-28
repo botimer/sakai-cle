@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/metaobj/trunk/metaobj-util/tool-lib/src/java/org/sakaiproject/metaobj/shared/control/tag/ListScrollTag.java $
- * $Id: ListScrollTag.java 105079 2012-02-24 23:08:11Z ottenhoff@longsight.com $
+ * $Id: ListScrollTag.java 130481 2013-10-15 17:36:54Z dsobiera@indiana.edu $
  ***********************************************************************************
  *
  * Copyright (c) 2004, 2005, 2006, 2007, 2008 The Sakai Foundation
@@ -97,9 +97,11 @@ public class ListScrollTag extends BodyTagSupport {
          writer.write(">");
 
          //  <input type="button" value="Next" onclick="window.document.location='url'">
-         writer.write("<div class=\"instruction\">");
-         writer.write(viewing);
-         writer.write("</div>");
+         if (!listScroll.getHideRecCounts()) {
+         	writer.write("<div class=\"instruction\">");
+         	writer.write(viewing);
+         	writer.write("</div>");
+         }
          writer.write("<input type=\"button\" value=\"" + first + "\" onclick=\"window.document.location=\'");
          writer.write(listUrl + "&" + ListScroll.STARTING_INDEX_TAG + "=0");
          writer.write("\'\"");
@@ -112,6 +114,9 @@ public class ListScrollTag extends BodyTagSupport {
 
          writer.write("<input type=\"button\" value=\"" + previous + "\" onclick=\"window.document.location=\'");
          writer.write(listUrl + "&" + ListScroll.STARTING_INDEX_TAG + "=" + listScroll.getPrevIndex());
+         if (listScroll.isProcessPreviousFromEnd()) {
+         	writer.write("&" + ListScroll.REVERSE_PROCESS_LIST_TAG + "=true");
+         }
          writer.write("\'\"");
          if (listScroll.getPrevIndex() == -1) {
             writer.write(" disabled=\"disabled\" ");
@@ -132,8 +137,15 @@ public class ListScrollTag extends BodyTagSupport {
 
          writer.write("&nbsp;");
 
+         int lastIndex = Integer.MAX_VALUE;
+         String processLastInReverse = "";
+         if (listScroll.isProcessLastFromEnd()) {
+         	lastIndex = listScroll.getTotal()-1;
+         	processLastInReverse = "&" + ListScroll.REVERSE_PROCESS_LIST_TAG + "=true";
+         }
          writer.write("<input type=\"button\" value=\"" + last + "\" onclick=\"window.document.location=\'");
-         writer.write(listUrl + "&" + ListScroll.STARTING_INDEX_TAG + "=" + Integer.MAX_VALUE);
+         writer.write(listUrl + "&" + ListScroll.STARTING_INDEX_TAG + "=" + lastIndex);
+         writer.write(processLastInReverse);
          writer.write("\'\"");
          if (listScroll.getNextIndex() == -1) {
             writer.write(" disabled=\"disabled\" ");

@@ -170,6 +170,7 @@
       </constructor-arg>
       <constructor-arg index="2">
          <props>
+            <prop key="importSad">PROPAGATION_REQUIRED,+org.sakaiproject.metaobj.shared.model.OspException</prop>
             <prop key="*">PROPAGATION_REQUIRED</prop>
          </props>
       </constructor-arg>

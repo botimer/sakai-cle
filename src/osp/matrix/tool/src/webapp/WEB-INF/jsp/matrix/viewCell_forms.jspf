@@ -4,7 +4,11 @@
 		<tr class="cellItemAddLine">
 			<td colspan="2">
 				<h4>
-					<c:out value="${msgs.title_form_with_name}"/> <c:out value="${cellFormDef.name}" />
+					<fmt:message key="title_form_with_name">
+					 <fmt:param>
+					  <c:out value="${cellFormDef.name}" />
+					 </fmt:param>
+					</fmt:message>
 				</h4>
 			</td>
 			<td nowrap="nowrap">
@@ -196,7 +200,11 @@
 			<tr>
 				<td colspan="6">
 				<p class="instruction indnt2">
-				<c:out value="${msgs.form_section_empty}"/> <c:out value="${cellFormDef.name}" />
+				<fmt:message key="form_section_empty"> 
+				 <fmt:param>
+				  <c:out value="${cellFormDef.name}" />
+				 </fmt:param>
+				</fmt:message>
 				</td>
 			</tr>
 		</c:if>

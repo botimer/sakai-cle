@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/sam/trunk/samigo-app/src/java/org/sakaiproject/tool/assessment/ui/bean/evaluation/AgentResults.java $
- * $Id: AgentResults.java 121258 2013-03-15 15:03:36Z ottenhoff@longsight.com $
+ * $Id: AgentResults.java 130512 2013-10-15 23:46:40Z ktsao@stanford.edu $
  ***********************************************************************************
  *
  * Copyright (c) 2004, 2005, 2006, 2007, 2008 The Sakai Foundation
@@ -61,6 +61,7 @@ public class AgentResults
   private Long itemGradingId;
   private String agentId;
   private String agentEid;
+  private String agentDisplayId;
   private String firstName;
   private String lastName;
   private String lastInitial;
@@ -470,5 +471,13 @@ public class AgentResults
 	      if (sec > 0) timeElapsedInString = timeElapsedInString + sec + " sec ";
 	    }
 	    return timeElapsedInString;	
-	}	
+	}
+
+    public String getAgentDisplayId() {
+        return agentDisplayId;
+    }
+
+    public void setAgentDisplayId(String agentDisplayId) {
+        this.agentDisplayId = agentDisplayId;
+    }
 }

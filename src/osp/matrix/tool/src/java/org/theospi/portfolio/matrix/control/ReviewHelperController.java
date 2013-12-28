@@ -1,6 +1,6 @@
 /**********************************************************************************
 * $URL: https://source.sakaiproject.org/svn/osp/trunk/matrix/tool/src/java/org/theospi/portfolio/matrix/control/ReviewHelperController.java $
-* $Id: ReviewHelperController.java 105079 2012-02-24 23:08:11Z ottenhoff@longsight.com $
+* $Id: ReviewHelperController.java 131548 2013-11-14 16:42:13Z dsobiera@indiana.edu $
 ***********************************************************************************
 *
  * Copyright (c) 2005, 2006, 2007, 2008, 2009 The Sakai Foundation
@@ -220,6 +220,21 @@ public class ReviewHelperController implements Controller {
            return new ModelAndView("postProcessor", model);
         }
          
+        // Check for workflow post process
+        if (session.get(ReviewHelper.REVIEW_POST_PROCESSOR_WORKFLOWS) != null && 
+                FormHelper.RETURN_ACTION_SAVE.equals((String)session.get(FormHelper.RETURN_ACTION_TAG))) {
+           Set workflows = (Set)session.get(ReviewHelper.REVIEW_POST_PROCESSOR_WORKFLOWS);
+           List wfList = Arrays.asList(workflows.toArray());
+           Collections.sort(wfList, Workflow.getComparator());
+           model.put("workflows", wfList);
+           model.put("manager", manager);
+           model.put("obj_id", strId);
+           session.remove(FormHelper.RETURN_ACTION_TAG);
+           return new ModelAndView("postProcessor", model);
+        }
+        
+         session.remove(FormHelper.RETURN_ACTION_TAG);
+        
          return new ModelAndView(returnView, model);
       }
 
@@ -280,6 +295,10 @@ public class ReviewHelperController implements Controller {
          case Review.REFLECTION_TYPE:
             formTypeId = obj.getReflectionDevice().getValue();
             formTypeTitleKey = "osp.reviewType." + Review.REFLECTION_TYPE;
+            break;
+         case Review.ITEM_LEVEL_EVAL_TYPE:
+            formTypeId = obj.getItemLevelEvaluationDevice().getValue();
+            formTypeTitleKey = "osp.reviewType." + Review.ITEM_LEVEL_EVAL_TYPE;
             break;
       }
 
@@ -396,7 +415,7 @@ public class ReviewHelperController implements Controller {
 
     	   String[] contentArray = {cellPageType, cellPageName, cellPageTypeBig, matrixWizardType, matrixWizardName, siteName, typeIntroStr, directLink};
     	   String content = myResources.getFormattedMessage("feedbackEvalNotificationBody", contentArray);
-         String from = "postmaster@".concat(ServerConfigurationService.getServerName());
+           String from = "postmaster@".concat(ServerConfigurationService.getServerName());
     	   from = ServerConfigurationService.getString("setup.request", from);
     	   //String to = ownerUser.getEmail();
     	   

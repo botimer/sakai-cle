@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/sam/trunk/samigo-app/src/java/org/sakaiproject/tool/assessment/ui/bean/shared/PersonBean.java $
- * $Id: PersonBean.java 106463 2012-04-02 12:20:09Z david.horwitz@uct.ac.za $
+ * $Id: PersonBean.java 130512 2013-10-15 23:46:40Z ktsao@stanford.edu $
  ***********************************************************************************
  *
  * Copyright (c) 2004, 2005, 2006, 2007, 2008, 2009 The Sakai Foundation
@@ -83,6 +83,11 @@ private static Log log = LogFactory.getLog(PersonBean.class);
   public String getEid()
   {
     return AgentFacade.getEid();
+  }
+
+  public String getDisplayId()
+  {
+      return AgentFacade.getDisplayId();
   }
 
   public void setAnonymousId(String anonymousId)

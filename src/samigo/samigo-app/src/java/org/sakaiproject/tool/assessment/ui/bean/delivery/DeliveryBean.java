@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/sam/trunk/samigo-app/src/java/org/sakaiproject/tool/assessment/ui/bean/delivery/DeliveryBean.java $
- * $Id: DeliveryBean.java 121258 2013-03-15 15:03:36Z ottenhoff@longsight.com $
+ * $Id: DeliveryBean.java 132168 2013-12-03 20:25:29Z ktsao@stanford.edu $
  ***********************************************************************************
  *
  * Copyright (c) 2004, 2005, 2006, 2007, 2008, 2009 The Sakai Foundation
@@ -31,7 +31,6 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -67,6 +66,7 @@ import org.sakaiproject.tool.assessment.data.dao.assessment.PublishedSecuredIPAd
 import org.sakaiproject.tool.assessment.data.dao.grading.AssessmentGradingData;
 import org.sakaiproject.tool.assessment.data.dao.grading.ItemGradingData;
 import org.sakaiproject.tool.assessment.data.dao.grading.MediaData;
+import org.sakaiproject.tool.assessment.data.exception.SamigoDataAccessException;
 import org.sakaiproject.tool.assessment.data.ifc.assessment.AssessmentAccessControlIfc;
 import org.sakaiproject.tool.assessment.data.ifc.assessment.AssessmentBaseIfc;
 import org.sakaiproject.tool.assessment.data.ifc.shared.TypeIfc;
@@ -98,13 +98,11 @@ import org.sakaiproject.tool.cover.SessionManager;
 import org.sakaiproject.tool.cover.ToolManager;
 import org.sakaiproject.util.ResourceLoader;
 
-import uk.org.ponder.rsf.state.support.TMLFixer;
-
 /**
  *
  * @author casong
  * @author esmiley@stanford.edu added agentState
- * $Id: DeliveryBean.java 121258 2013-03-15 15:03:36Z ottenhoff@longsight.com $
+ * $Id: DeliveryBean.java 132168 2013-12-03 20:25:29Z ktsao@stanford.edu $
  *
  * Used to be org.navigoproject.ui.web.asi.delivery.XmlDeliveryForm.java
  */
@@ -1469,6 +1467,15 @@ public class DeliveryBean
 		  log.debug(sae.getMessage());
 		  return "takeAssessment";
 	  }
+	  catch (SamigoDataAccessException e) {
+    	  e.printStackTrace();
+    	  FacesContext context = FacesContext.getCurrentInstance();
+    	  String err = (String) ContextUtil.getLocalizedString(
+    			  "org.sakaiproject.tool.assessment.bundle.AuthorMessages",
+    			  "saveanswer_exception_error");
+    	  context.addMessage(null, new FacesMessage(err));
+    	  return "takeAssessment";
+      }
 	  
 	  // We don't need to call completeItemGradingData to create new ItemGradingData for linear access
 	  // because each ItemGradingData is created when it is viewed/answered 
@@ -1510,7 +1517,7 @@ public class DeliveryBean
 	  // finish within time limit, clean timedAssessment from queue
 	  removeTimedAssessmentFromQueue();
 	  
-	  // finsih secure delivery
+	  // finish secure delivery
 	  setSecureDeliveryHTMLFragment( "" );
 	  setBlockDelivery( false );
 	  SecureDeliveryServiceAPI secureDelivery = SamigoApiFactory.getInstance().getSecureDeliveryServiceAPI();
@@ -1604,6 +1611,15 @@ public class DeliveryBean
 			  log.debug(sae.getMessage());
 			  return "takeAssessment";
 		  }
+		  catch (SamigoDataAccessException e) {
+	    	  e.printStackTrace();
+	    	  FacesContext context = FacesContext.getCurrentInstance();
+	    	  String err = (String) ContextUtil.getLocalizedString(
+	    			  "org.sakaiproject.tool.assessment.bundle.AuthorMessages",
+	    			  "saveanswer_exception_error");
+	    	  context.addMessage(null, new FacesMessage(err));
+	    	  return "takeAssessment";
+	      }
 	  }
 
 	  DeliveryActionListener l2 = new DeliveryActionListener();
@@ -1685,10 +1701,18 @@ public class DeliveryBean
   		  log.debug(e.getMessage());
   		  return "takeAssessment";
     	}
-		  catch (SaLengthException sae) {
-			  log.debug(sae.getMessage());
-			  return "takeAssessment";
-		  }
+    	catch (SaLengthException sae) {
+    		log.debug(sae.getMessage());
+    		return "takeAssessment";
+    	}
+    	catch (SamigoDataAccessException e) {
+    		e.printStackTrace();
+    		String err = (String) ContextUtil.getLocalizedString(
+    				"org.sakaiproject.tool.assessment.bundle.AuthorMessages",
+    				"saveanswer_exception_error");
+    		context.addMessage(null, new FacesMessage(err));
+    		return "takeAssessment";
+    	}
     }
     
     String returnValue = "saveForLaterWarning";
@@ -1735,8 +1759,17 @@ public class DeliveryBean
 		  log.debug(sae.getMessage());
 		  return "takeAssessment";
 	  }
+      catch (SamigoDataAccessException e) {
+    	  e.printStackTrace();
+    	  FacesContext context = FacesContext.getCurrentInstance();
+    	  String err = (String) ContextUtil.getLocalizedString(
+    			  "org.sakaiproject.tool.assessment.bundle.AuthorMessages",
+    			  "saveanswer_exception_error");
+    	  context.addMessage(null, new FacesMessage(err));
+    	  return "takeAssessment";
+      }
     }
-    
+
     if (getSettings().isFormatByPart())
     {
       partIndex++;
@@ -1822,6 +1855,15 @@ public class DeliveryBean
 			  log.debug(sae.getMessage());
 			  return "takeAssessment";
 		  }
+		  catch (SamigoDataAccessException e) {
+	    	  e.printStackTrace();
+	    	  FacesContext context = FacesContext.getCurrentInstance();
+	    	  String err = (String) ContextUtil.getLocalizedString(
+	    			  "org.sakaiproject.tool.assessment.bundle.AuthorMessages",
+	    			  "saveanswer_exception_error");
+	    	  context.addMessage(null, new FacesMessage(err));
+	    	  return "takeAssessment";
+	      }
 	  }
 	  
 	  DeliveryActionListener l2 = new DeliveryActionListener();
@@ -1940,17 +1982,9 @@ public class DeliveryBean
     log.debug("**** password=" + password);
     log.debug("**** setting username=" + getSettings().getUsername());
     log.debug("**** setting password=" + getSettings().getPassword());
-    EventLogService eventService = new EventLogService();
-    EventLogFacade eventLogFacade = new EventLogFacade();
-    
-    List eventLogDataList = eventService.getEventLogData(adata.getAssessmentGradingId());
-    EventLogData eventLogData= (EventLogData) eventLogDataList.get(0);
     
     if (password == null || username == null)
     {
-    	eventLogData.setErrorMsg(eventLogMessages.getString("error_pw_access"));
-    	eventLogFacade.setData(eventLogData);    
-    	eventService.saveOrUpdateEventLog(eventLogFacade);
     	return "passwordAccessError";
     }
     if (password.equals(getSettings().getPassword()) &&
@@ -1962,9 +1996,6 @@ public class DeliveryBean
     }
     else
     {
-    	eventLogData.setErrorMsg(eventLogMessages.getString("error_pw_access"));
-    	eventLogFacade.setData(eventLogData);    
-    	eventService.saveOrUpdateEventLog(eventLogFacade);
     	return "passwordAccessError";
     }
   }
@@ -2011,28 +2042,7 @@ public class DeliveryBean
         log.debug("*** checked password="+results);
         
         if("passwordAccessError".equals(results)) {
-        	eventLogData.setAssessmentId(publishedAssessment.getPublishedAssessmentId());
-        	eventLogData.setStartDate(new Date());
-        	String agentEid = AgentFacade.getEid();
-            //ONC-3500
-            if(agentEid == null || "".equals(agentEid)){
-          	  agentEid= "N/A";
-            }
-            eventLogData.setUserEid(agentEid);
-            eventLogData.setTitle(publishedAssessment.getTitle());
-            String site_id= AgentFacade.getCurrentSiteId();
-            if(site_id == null) {
-          	  //take assessment via url
-          	  PublishedAssessmentService publishedAssessmentService = new PublishedAssessmentService();
-      		  site_id = publishedAssessmentService.getPublishedAssessmentOwner(publishedAssessment.getPublishedAssessmentId());
-            }
-            eventLogData.setSiteId(site_id);
-            eventLogData.setProcessId(null);
-            eventLogData.setEndDate(null);
-            eventLogData.setEclipseTime(null);
-            eventLogData.setErrorMsg(eventLogMessages.getString("error_pw_access"));
-        	eventLogFacade.setData(eventLogData);    
-        	eventService.saveOrUpdateEventLog(eventLogFacade);        	
+        	updatEventLog("error_pw_access");   	
         }
       }
 
@@ -2045,30 +2055,33 @@ public class DeliveryBean
          log.debug("*** checked password & IP="+results);
          
          if(("ipAccessError").equals(results)) {
-         	eventLogData.setAssessmentId(publishedAssessment.getPublishedAssessmentId());
-         	eventLogData.setStartDate(new Date());
-         	String agentEid = AgentFacade.getEid();
-             //ONC-3500
-             if(agentEid == null || ("").equals(agentEid)){
-           	  agentEid= "N/A";
-             }
-             eventLogData.setUserEid(agentEid);
-             eventLogData.setTitle(publishedAssessment.getTitle());
-             String site_id= AgentFacade.getCurrentSiteId();
-             if(site_id == null) {
-           	  //take assessment via url
-           	  PublishedAssessmentService publishedAssessmentService = new PublishedAssessmentService();
-       		  site_id = publishedAssessmentService.getPublishedAssessmentOwner(publishedAssessment.getPublishedAssessmentId());
-             }
-             eventLogData.setSiteId(site_id);
-             eventLogData.setProcessId(null);
-             eventLogData.setEndDate(null);
-             eventLogData.setEclipseTime(null);
-             eventLogData.setErrorMsg(eventLogMessages.getString("error_ip_access"));
-         	eventLogFacade.setData(eventLogData);    
-         	eventService.saveOrUpdateEventLog(eventLogFacade);        	
+        	updatEventLog("error_ip_access");
          }
          
+      }
+
+      // secure delivery START phase
+      // should occur before timer check, so that timer will be stopped if access is denied
+      setSecureDeliveryHTMLFragment( "" );
+      setBlockDelivery( false );
+      SecureDeliveryServiceAPI secureDelivery = SamigoApiFactory.getInstance().getSecureDeliveryServiceAPI();
+      if ( "takeAssessment".equals(results) && secureDelivery.isSecureDeliveryAvaliable() ) {
+   
+    	  String moduleId = publishedAssessment.getAssessmentMetaDataByLabel( SecureDeliveryServiceAPI.MODULE_KEY );
+    	  if ( moduleId != null && ! SecureDeliveryServiceAPI.NONE_ID.equals( moduleId ) ) {
+    		  HttpServletRequest request = (HttpServletRequest) FacesContext.getCurrentInstance().getExternalContext().getRequest();
+    		  PhaseStatus status = secureDelivery.validatePhase(moduleId, Phase.ASSESSMENT_START, publishedAssessment, request );
+    		  setSecureDeliveryHTMLFragment( 
+    		  			secureDelivery.getHTMLFragment(moduleId, publishedAssessment, request, Phase.ASSESSMENT_START, status, new ResourceLoader().getLocale() ) );
+    		  setBlockDelivery( PhaseStatus.FAILURE == status );
+    		  if ( PhaseStatus.SUCCESS == status ) {
+    			  results = "takeAssessment";
+              }
+    		  else {
+    			  results = "secureDeliveryError";
+    			  updatEventLog("error_secure_delivery");
+              }
+    	  }    	  
       }
 
       // if results != "takeAssessment", stop the clock if it is a timed assessment
@@ -2099,27 +2112,6 @@ public class DeliveryBean
         return nextAction;
       }
       
-      // secure delivery START phase
-      setSecureDeliveryHTMLFragment( "" );
-      setBlockDelivery( false );
-      SecureDeliveryServiceAPI secureDelivery = SamigoApiFactory.getInstance().getSecureDeliveryServiceAPI();
-      if ( ("takeAssessment".equals(results) || "".equals(results)) && secureDelivery.isSecureDeliveryAvaliable() ) {
-   
-    	  String moduleId = publishedAssessment.getAssessmentMetaDataByLabel( SecureDeliveryServiceAPI.MODULE_KEY );
-    	  if ( moduleId != null && ! SecureDeliveryServiceAPI.NONE_ID.equals( moduleId ) ) {
-    		  HttpServletRequest request = (HttpServletRequest) FacesContext.getCurrentInstance().getExternalContext().getRequest();
-    		  PhaseStatus status = secureDelivery.validatePhase(moduleId, Phase.ASSESSMENT_START, publishedAssessment, request );
-    		  setSecureDeliveryHTMLFragment( 
-    		  			secureDelivery.getHTMLFragment(moduleId, publishedAssessment, request, Phase.ASSESSMENT_START, status, new ResourceLoader().getLocale() ) );
-    		  setBlockDelivery( PhaseStatus.FAILURE == status );
-    		  if ( PhaseStatus.SUCCESS == status )
-    			  results = "takeAssessment";
-    		  else
-    			  results = "secureDeliveryError";
-    	  }    	  
-    	  return results;
-      }
-
       // #3. results="" => no security checking required
       if ("".equals(results))
       {
@@ -2146,6 +2138,36 @@ public class DeliveryBean
     }
   }
 
+  public void updatEventLog(String errorMsg)
+  {
+	  EventLogService eventService = new EventLogService();
+      EventLogFacade eventLogFacade = new EventLogFacade();
+      EventLogData eventLogData = new EventLogData();
+      
+	  eventLogData.setAssessmentId(publishedAssessment.getPublishedAssessmentId());
+	  eventLogData.setStartDate(new Date());
+	  String agentEid = AgentFacade.getEid();
+	  //ONC-3500
+	  if(agentEid == null || "".equals(agentEid)){
+		  agentEid= "N/A";
+	  }
+	  eventLogData.setUserEid(agentEid);
+	  eventLogData.setTitle(publishedAssessment.getTitle());
+	  String site_id= AgentFacade.getCurrentSiteId();
+	  if(site_id == null) {
+		  //take assessment via url
+		  PublishedAssessmentService publishedAssessmentService = new PublishedAssessmentService();
+		  site_id = publishedAssessmentService.getPublishedAssessmentOwner(publishedAssessment.getPublishedAssessmentId());
+	  }
+	  eventLogData.setSiteId(site_id);
+	  eventLogData.setProcessId(null);
+	  eventLogData.setEndDate(null);
+	  eventLogData.setEclipseTime(null);
+	  eventLogData.setErrorMsg(eventLogMessages.getString(errorMsg));
+	  eventLogFacade.setData(eventLogData);    
+	  eventService.saveOrUpdateEventLog(eventLogFacade);        	
+  }
+  
   public String pvalidate()
   {
     // in post 2.1, clicking at Begin Assessment takes users to the
@@ -3056,6 +3078,13 @@ public class DeliveryBean
 	  this.noQuestions = noQuestions;
   }
   
+  /**
+   * 
+   * @param isSubmitForGrade
+   * @param isFromTimer
+   * @param isViaUrlLogin
+   * @return
+   */
   public String checkBeforeProceed(boolean isSubmitForGrade, boolean isFromTimer, boolean isViaUrlLogin){
     // public method, who know if publishedAssessment is set, so check
     // to be sure
@@ -3066,6 +3095,7 @@ public class DeliveryBean
     if (this.actionMode == PREVIEW_ASSESSMENT) {
 		  return "safeToProceed";
     }
+    
   
     GradingService service = new GradingService();
     AssessmentGradingData assessmentGrading=null;

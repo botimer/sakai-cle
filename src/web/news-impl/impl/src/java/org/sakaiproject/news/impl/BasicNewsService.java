@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/web/trunk/news-impl/impl/src/java/org/sakaiproject/news/impl/BasicNewsService.java $
- * $Id: BasicNewsService.java 105080 2012-02-24 23:10:31Z ottenhoff@longsight.com $
+ * $Id: BasicNewsService.java 129461 2013-09-09 18:57:14Z holladay@longsight.com $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008 The Sakai Foundation
@@ -451,7 +451,7 @@ public class BasicNewsService implements NewsService, EntityTransferrer
 					+ SiteService.MAIN_CONTAINER + ".\n");
 			
 			// get the default news url
-			String defaultUrl = ServerConfigurationService.getString("news.feedURL");
+			String defaultUrl = ServerConfigurationService.getString("news.feedURL", "http://sakaiproject.org/news-rss-feed");
 			
 			// start with an element with our very own (service) name
 			Element element = doc.createElement(SERVICE_NAME);
@@ -633,7 +633,7 @@ public class BasicNewsService implements NewsService, EntityTransferrer
 			SiteService.save(toSite);
 			ToolSession session = SessionManager.getCurrentToolSession();
 
-			if (session.getAttribute(ATTR_TOP_REFRESH) == null)	
+			if (session != null && session.getAttribute(ATTR_TOP_REFRESH) == null)	
 			{
 				session.setAttribute(ATTR_TOP_REFRESH, Boolean.TRUE);
 			}
@@ -733,7 +733,7 @@ public class BasicNewsService implements NewsService, EntityTransferrer
 				SiteService.save(toSite);
 				ToolSession session = SessionManager.getCurrentToolSession();
 
-				if (session.getAttribute(ATTR_TOP_REFRESH) == null)	
+				if (session != null && session.getAttribute(ATTR_TOP_REFRESH) == null)	
 				{
 					session.setAttribute(ATTR_TOP_REFRESH, Boolean.TRUE);
 				}

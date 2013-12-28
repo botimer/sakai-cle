@@ -1,9 +1,9 @@
-<%-- $Id: deliverMultipleChoiceSingleCorrect.jsp 124187 2013-05-17 00:03:14Z ktsao@stanford.edu $
+<%-- $Id: deliverMultipleChoiceSingleCorrect.jsp 130983 2013-10-30 21:21:40Z ottenhoff@longsight.com $
 include file for delivering multiple choice questions
 should be included in file importing DeliveryMessages
 --%>
 <!--
-* $Id: deliverMultipleChoiceSingleCorrect.jsp 124187 2013-05-17 00:03:14Z ktsao@stanford.edu $
+* $Id: deliverMultipleChoiceSingleCorrect.jsp 130983 2013-10-30 21:21:40Z ottenhoff@longsight.com $
 <%--
 ***********************************************************************************
 *
@@ -25,11 +25,6 @@ should be included in file importing DeliveryMessages
 --%>
 -->
 
-<script type="text/javascript" language="JavaScript"
-	src="/samigo-app/js/jquery-1.3.2.min.js"></script>
-<script type="text/javascript" language="JavaScript"
-	src="/samigo-app/js/jquery-ui-1.7.2.custom.min.js"></script>
-	
 <h:outputText value="<script type='text/javascript'>" escape="false" />
 <h:outputText value="var selectedRadioButton#{question.itemData.itemId};" escape="false" />
 <h:outputText value="function uncheckRadioButtons#{question.itemData.itemId}(radioButton) {" escape="false" />

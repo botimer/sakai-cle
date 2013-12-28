@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/assignment/trunk/assignment-impl/impl/src/java/org/sakaiproject/assignment/taggable/impl/AssignmentActivityProducerImpl.java $
- * $Id: AssignmentActivityProducerImpl.java 111458 2012-08-14 20:00:12Z chmaurer@iupui.edu $
+ * $Id: AssignmentActivityProducerImpl.java 131546 2013-11-14 16:37:54Z dsobiera@indiana.edu $
  ***********************************************************************************
  *
  * Copyright (c) 2007, 2008 The Sakai Foundation
@@ -109,7 +109,7 @@ public class AssignmentActivityProducerImpl implements
 	}
 
 	public TaggableActivity getActivity(String activityRef,
-			TaggingProvider provider) {
+			TaggingProvider provider, String taggedItem) {
 		// We aren't picky about the provider, so ignore that argument.
 		TaggableActivity activity = null;
 		if (checkReference(activityRef)) {

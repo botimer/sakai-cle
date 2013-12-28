@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/assignment/trunk/assignment-api/api/src/java/org/sakaiproject/assignment/api/AssignmentService.java $
- * $Id: AssignmentService.java 118472 2013-01-18 13:48:13Z nbotimer@unicon.net $
+ * $Id: AssignmentService.java 127838 2013-07-26 15:55:26Z matthew.buckett@it.ox.ac.uk $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008 The Sakai Foundation
@@ -721,7 +721,7 @@ public interface AssignmentService extends EntityProducer
 	 * @throws PermissionException
 	 *         if the current user is not allowed to read this.
 	 */
-         public AssignmentSubmission getSubmission(String assignmentReference, String submitterId);
+	public AssignmentSubmission getSubmission(String assignmentReference, String submitterId);
 	
 	/**
 	 * Access a User's AssignmentSubmission inside a list of AssignmentSubmission object.

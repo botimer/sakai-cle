@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/sam/trunk/samigo-services/src/java/org/sakaiproject/tool/assessment/facade/AssessmentGradingFacadeQueries.java $
- * $Id: AssessmentGradingFacadeQueries.java 122927 2013-04-17 19:10:42Z holladay@longsight.com $
+ * $Id: AssessmentGradingFacadeQueries.java 132168 2013-12-03 20:25:29Z ktsao@stanford.edu $
  ***********************************************************************************
  *
  * Copyright (c) 2004, 2005, 2006, 2007, 2008, 2009 The Sakai Foundation
@@ -71,6 +71,7 @@ import org.sakaiproject.tool.assessment.data.dao.grading.ItemGradingAttachment;
 import org.sakaiproject.tool.assessment.data.dao.grading.ItemGradingData;
 import org.sakaiproject.tool.assessment.data.dao.grading.MediaData;
 import org.sakaiproject.tool.assessment.data.dao.grading.StudentGradingSummaryData;
+import org.sakaiproject.tool.assessment.data.exception.SamigoDataAccessException;
 import org.sakaiproject.tool.assessment.data.ifc.assessment.AnswerIfc;
 import org.sakaiproject.tool.assessment.data.ifc.assessment.AssessmentAttachmentIfc;
 import org.sakaiproject.tool.assessment.data.ifc.assessment.EvaluationModelIfc;
@@ -711,7 +712,11 @@ public class AssessmentGradingFacadeQueries extends HibernateDaoSupport implemen
     if (itemGradingId != null) {
     	ItemGradingData itemGradingData = getItemGrading(itemGradingId);
     	itemGradingData.setAutoScore(Double.valueOf(0));
-    	saveItemGrading(itemGradingData);
+    	try {
+			saveItemGrading(itemGradingData);
+		} catch (SamigoDataAccessException e) {
+			log.warn("error updating Item after media deletion", e);
+		}
     }
   }
 
@@ -1020,7 +1025,7 @@ public class AssessmentGradingFacadeQueries extends HibernateDaoSupport implemen
   }
 
 
-  public void saveItemGrading(ItemGradingData item) {
+  public void saveItemGrading(ItemGradingData item) throws SamigoDataAccessException {
     int retryCount = persistenceHelper.getRetryCount().intValue();
     while (retryCount > 0){ 
       try {
@@ -1030,11 +1035,14 @@ public class AssessmentGradingFacadeQueries extends HibernateDaoSupport implemen
       catch (Exception e) {
         log.warn("problem saving itemGrading: "+e.getMessage());
         retryCount = persistenceHelper.retryDeadlock(e, retryCount);
+        if (retryCount == 0) {
+        	throw new SamigoDataAccessException(e);
+        }
       }
     }
   }
 
-  public void saveOrUpdateAssessmentGrading(AssessmentGradingData assessment) {
+  public void saveOrUpdateAssessmentGrading(AssessmentGradingData assessment) throws SamigoDataAccessException {
     int retryCount = persistenceHelper.getRetryCount().intValue();
     while (retryCount > 0){ 
       try {
@@ -1048,6 +1056,9 @@ public class AssessmentGradingFacadeQueries extends HibernateDaoSupport implemen
       catch (Exception e) {
         log.warn("problem inserting/updating assessmentGrading: "+e.getMessage());
         retryCount = persistenceHelper.retryDeadlock(e, retryCount);
+        if (retryCount == 0) {
+        	throw new SamigoDataAccessException(e);
+        }
       }
     }
   }
@@ -1550,7 +1561,7 @@ public class AssessmentGradingFacadeQueries extends HibernateDaoSupport implemen
   }
 
 
-  public void saveOrUpdateAll(Collection c) {
+  public void saveOrUpdateAll(Collection c) throws SamigoDataAccessException {
     int retryCount = persistenceHelper.getRetryCount().intValue();
     while (retryCount > 0){ 
       try {
@@ -1560,6 +1571,9 @@ public class AssessmentGradingFacadeQueries extends HibernateDaoSupport implemen
       catch (Exception e) {
         log.warn("problem inserting assessmentGrading: "+e.getMessage());
         retryCount = persistenceHelper.retryDeadlock(e, retryCount);
+        if (retryCount == 0) {
+        	throw new SamigoDataAccessException(e);
+        }
       }
     }
   }
@@ -1678,14 +1692,11 @@ public class AssessmentGradingFacadeQueries extends HibernateDaoSupport implemen
 	    final HibernateCallback hcb = new HibernateCallback(){
 	    	public Object doInHibernate(Session session) throws HibernateException, SQLException {
 	    		Query q = session.createQuery(
-	    				"select pia " +
-	    				"from PublishedItemData pia " +
-	    				"where pia.itemId in (" +
 	    				"select p.itemId " +
 	    				"from PublishedItemData p, AssessmentGradingData a, ItemGradingData i " +
 	    				"where a.publishedAssessmentId=? and a.forGrade=? and p.section.id=? " +
 	    				"and i.assessmentGradingId = a.assessmentGradingId " +
-	    				"and p.itemId = i.publishedItemId) ");
+	    				"and p.itemId = i.publishedItemId ");
 
 	    		q.setLong(0, publishedAssessmentId.longValue());
 	    		q.setBoolean(1, true);
@@ -1695,13 +1706,30 @@ public class AssessmentGradingFacadeQueries extends HibernateDaoSupport implemen
 	    };
 	    List assessmentGradings = getHibernateTemplate().executeFind(hcb);
 
+	    final Collection<Long> itemIds = new ArrayList<Long>();
 	    Iterator iter = assessmentGradings.iterator();
-	    PublishedItemData publishedItemData;
 	    while(iter.hasNext()) {
-	    	publishedItemData = (PublishedItemData) iter.next();
-	    	log.debug("itemId = " + publishedItemData.getItemId());
-	    	itemSet.add(publishedItemData);
+    		itemIds.add((Long) iter.next());
 	    }
+    
+	    final HibernateCallback hcb2 = new HibernateCallback() {
+	    	public Object doInHibernate(Session session) throws HibernateException, SQLException {
+	    		Query q = session.createQuery(
+	    				"select pia from PublishedItemData pia where pia.itemId in ( :idList )");
+	    		q.setParameterList("idList", itemIds);   		
+	    		return q.list();
+	    	};
+	    };
+
+	    List publishedItems = getHibernateTemplate().executeFind(hcb2);
+	    Iterator pubIter = publishedItems.iterator();
+	    PublishedItemData publishedItemData2;
+	    while(pubIter.hasNext()) {
+	    	publishedItemData2 = (PublishedItemData) pubIter.next();
+	    	log.debug("itemId = " + publishedItemData2.getItemId());
+	    	itemSet.add(publishedItemData2);
+	    }
+	    
 	    return itemSet;
   }
 
@@ -2935,6 +2963,11 @@ public class AssessmentGradingFacadeQueries extends HibernateDaoSupport implemen
 	    				adata.setIsAutoSubmitted(Boolean.TRUE);
 	    				adata.setStatus(Integer.valueOf(1));
 	    				completeItemGradingData(adata, sectionSetMap);
+	    				try {
+	    					completeItemGradingData(adata, sectionSetMap);
+	    				} catch (SamigoDataAccessException e) {
+	    					log.error("problem completing ItemGradingData: "+e.getMessage());
+	    				}
 	    				updateCurrentGrade = true;
 
 	    				List eventLogDataList = eventService.getEventLogData(adata.getAssessmentGradingId());
@@ -3122,12 +3155,12 @@ public class AssessmentGradingFacadeQueries extends HibernateDaoSupport implemen
 		  return startedCountsMap;
 	  }
 
-	  public void completeItemGradingData(AssessmentGradingData assessmentGradingData) {
+	  public void completeItemGradingData(AssessmentGradingData assessmentGradingData) throws SamigoDataAccessException {
 		  completeItemGradingData(assessmentGradingData, null);
 	  }
 			
 	  
-	  public void completeItemGradingData(AssessmentGradingData assessmentGradingData, HashMap sectionSetMap) {
+	  private void completeItemGradingData(AssessmentGradingData assessmentGradingData, HashMap sectionSetMap) throws SamigoDataAccessException {
 		  ArrayList answeredPublishedItemIdList = new ArrayList();
 		  List publishedItemIds = getPublishedItemIds(assessmentGradingData.getAssessmentGradingId());
 		  Iterator iter = publishedItemIds.iterator();
@@ -3206,7 +3239,7 @@ public class AssessmentGradingFacadeQueries extends HibernateDaoSupport implemen
 		  }
 	  }
 
-	  private void saveItemGradingData(AssessmentGradingData assessmentGradingData, Long publishedItemId) {
+	  private void saveItemGradingData(AssessmentGradingData assessmentGradingData, Long publishedItemId) throws SamigoDataAccessException {
 		  log.debug("Adding one ItemGradingData...");
 		  ItemGradingData itemGradingData = new ItemGradingData();
 		  itemGradingData.setAssessmentGradingId(assessmentGradingData.getAssessmentGradingId());

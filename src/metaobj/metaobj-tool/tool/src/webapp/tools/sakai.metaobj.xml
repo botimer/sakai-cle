@@ -6,7 +6,12 @@
       <configuration name="test" value="reg-value"/>
 
       <category name="sakai.main"/>
+<!-- ONC - Remove course and project options
+      <category name="course"/>
+      <category name="project"/>
+END ONC  -->
       <category name="portfolio" />
+      <category name="scs" />
 
       <keyword name="structured"/>
       <keyword name="artifact"/>

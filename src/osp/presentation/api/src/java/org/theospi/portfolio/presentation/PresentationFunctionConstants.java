@@ -40,6 +40,13 @@ public class PresentationFunctionConstants {
    public final static String COMMENT_PRESENTATION = PRESENTATION_PREFIX + "comment";
    public final static String HIDE_PRESENTATION = PRESENTATION_PREFIX + "hide";
    public final static String REVIEW_PRESENTATION = PRESENTATION_PREFIX + "review";
+   public final static String REQUEST_VIEW_PRESENTATION = PRESENTATION_PREFIX + "request";
+   
+   public final static String PRESENTATION_SHARE_USER_EVENT_REFERENCE_PREFIX = "ospPresentation";
+   public final static String PRESENTATION_SHARE_USER_CACHE_PREFIX = "sharedList";
+   public final static String PRESENTATION_SHARE_USER = "presentationShareUser";
+   public final static String PRESENTATION_SHARE_USER_EVENT_REFERENCE_DELIM = "/";
+
    
    public final static String LAYOUT_PREFIX = "osp.presentation.layout.";
    public final static String DELETE_LAYOUT = LAYOUT_PREFIX + "delete";

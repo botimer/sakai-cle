@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/calendar/trunk/calendar-tool/tool/src/java/org/sakaiproject/calendar/tool/CalendarAction.java $
- * $Id: CalendarAction.java 126861 2013-07-10 16:06:02Z gjthomas@iupui.edu $
+ * $Id: CalendarAction.java 132147 2013-12-03 17:08:43Z ottenhoff@longsight.com $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008, 2009 The Sakai Foundation
@@ -1688,6 +1688,10 @@ extends VelocityPortletStateAction
 			else if (calendarUrl.length() == 0)
 			{
 				addAlert(sstate, rb.getString("java.alert.subsurlempty"));
+			}
+			else if(!FormattedText.validateURL(calendarUrl))
+			{
+				addAlert(sstate,rb.getString("java.alert.subsurlinvalid"));
 			}
 			else
 			{

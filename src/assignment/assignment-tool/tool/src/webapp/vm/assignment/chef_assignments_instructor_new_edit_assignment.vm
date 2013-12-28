@@ -1,4 +1,4 @@
-<!-- $Id: chef_assignments_instructor_new_edit_assignment.vm 123894 2013-05-09 15:46:40Z holladay@longsight.com $ -->
+<!-- $Id: chef_assignments_instructor_new_edit_assignment.vm 132411 2013-12-10 15:19:04Z jean-francois.leveque@upmc.fr $ -->
 <!-- start: chef_assignments_instructor_new_edit_assignment.vm  -->
 ##<!-- $Header: Exp $ -->
 ## Assignments - Instructor new Assignment view
@@ -14,10 +14,10 @@ $(document).ready(function() {
 	 		$("#subType > option").each(function(){
 	 			if(checked){
 	 				if($(this).val() != 5){
-	 					$(this).attr('disabled', 'disabled');
+	 					$(this).prop('disabled', 'disabled');
 	 				}
 	 			}else{
-	 				$(this).removeAttr('disabled');
+	 				$(this).removeProp('disabled');
 	 			
 	 			}
 	 		});
@@ -110,6 +110,15 @@ $(document).ready(function() {
 			}
 		}
 	*#
+	
+	function togglePeerAssessmentOptions(checked){
+		var section = document.getElementById("peerAssessmentOptions");
+		if(checked){
+			section.style.display="block";
+		}else{
+			section.style.display="none";
+		}
+	}
 	
 	function toggleReviewServiceOptions(checked){
 		var section = document.getElementById("reviewServiceOptions");
@@ -317,10 +326,10 @@ $(document).ready(function() {
 			<label>
 				$tlang.getString("gen.duedat")
 			</label>
-			#chef_dateselectionwidgetwithtitles($name_DueYear $name_DueMonth $name_DueDay $!value_year_from $!value_year_to $value_DueYear $value_DueMonth $value_DueDay $dateFormat $tlang.getString("dateselectionwidget.month") $tlang.getString("dateselectionwidget.day") $tlang.getString("dateselectionwidget.year") "")
+			#chef_dateselectionwidgetwithtitles($name_DueYear $name_DueMonth $name_DueDay $!value_year_from $!value_year_to $value_DueYear $value_DueMonth $value_DueDay $dateFormat $tlang.getString("dateselectionwidget.month") $tlang.getString("dateselectionwidget.day") $tlang.getString("dateselectionwidget.year") "dueDateChange(this)")
 				&nbsp;$tlang.getString("gen.at")&nbsp; 
             <label class="skip" for="$name_DueHour">$tlang.getString("dateselectionwidget.hour")</label>
-			<select name="$name_DueHour" id="$name_DueHour" title="$tlang.getString("dateselectionwidget.hour")">
+			<select name="$name_DueHour" id="$name_DueHour" title="$tlang.getString("dateselectionwidget.hour")" onchange="dueDateChange(this)">
 				#foreach ($i in [1..12])
 					#if ($i == $value_DueHour)
 						<option value="$i" selected="selected">$i</option>
@@ -330,13 +339,13 @@ $(document).ready(function() {
 				#end
 			</select>
             <label class="skip" for="$name_DueMin">$tlang.getString("dateselectionwidget.minute")</label>
-			<select name="$name_DueMin" id="$name_DueMin" title="$tlang.getString("dateselectionwidget.minute")">
+			<select name="$name_DueMin" id="$name_DueMin" title="$tlang.getString("dateselectionwidget.minute")" onchange="dueDateChange(this)">
 				#foreach ($i in [00, 05, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55])
 					<option value="$i" #if($i == $value_DueMin)selected="selected"#end>#if($i ==0)00#elseif($i == 5)05#else$i#end</option>
 				#end
 			</select>
             <label class="skip" for="$name_DueAMPM">$tlang.getString("dateselectionwidget.ampm")</label>
-			<select name="$name_DueAMPM" id="$name_DueAMPM" title="$tlang.getString("dateselectionwidget.ampm")">
+			<select name="$name_DueAMPM" id="$name_DueAMPM" title="$tlang.getString("dateselectionwidget.ampm")" onchange="dueDateChange(this)">
 				#foreach ($i in ["AM", "PM"])
 					#if ($i == $value_DueAMPM)
 						<option value="$i" selected="selected">$i</option>
@@ -563,6 +572,16 @@ $(document).ready(function() {
 					#chef_setupformattedtextarea($name_Description)
 					</td></tr></table>
 			</div>
+		<p class="checkbox  indnt2">
+			#if ($value_CheckHideDueDate.equals("true"))
+				<input id="$name_CheckHideDueDate" name="$name_CheckHideDueDate" type="checkbox" value="true" checked="checked" />
+			#else
+				<input id="$name_CheckHideDueDate" name="$name_CheckHideDueDate" type="checkbox" value="true" />
+			#end
+			<label for="$name_CheckHideDueDate">
+				$tlang.getString("gen.hideduedate")
+			</label>
+		</p>
 		#if ($!name_CheckAddDueDate)
 			<p class="checkbox indnt2">
 				#if ($value_CheckAddDueDate.equals("true"))
@@ -709,10 +728,9 @@ $(document).ready(function() {
 								<br/>
 								<input onchange="toggleSmallMatchesDisabled()" type="radio" name="$name_NEW_ASSIGNMENT_REVIEW_SERVICE_EXCLUDE_TYPE" id="wordCount" value="1" #if ($value_NEW_ASSIGNMENT_REVIEW_SERVICE_EXCLUDE_TYPE ==  1) checked="checked" #end/>
 								<label for="wordCount">
-									$tlang.getString("review.exclude.matches.wordcount") 
+									$tlang.getString("review.exclude.matches.wordmax") 
 								</label>
 								<input type="text" size="3" maxlength="3" id="tiiExcludeValueWords" name="$name_NEW_ASSIGNMENT_REVIEW_SERVICE_EXCLUDE_VALUE" #if ($value_NEW_ASSIGNMENT_REVIEW_SERVICE_EXCLUDE_TYPE ==  1) value="$value_NEW_ASSIGNMENT_REVIEW_SERVICE_EXCLUDE_VALUE" #else disabled="disabled" #end/>
-								$tlang.getString("review.exclude.matches.words")
 								<br/>
 								
 								<input onchange="toggleSmallMatchesDisabled()" type="radio" name="$name_NEW_ASSIGNMENT_REVIEW_SERVICE_EXCLUDE_TYPE" id="percentage" value="2" #if ($value_NEW_ASSIGNMENT_REVIEW_SERVICE_EXCLUDE_TYPE == 2) checked="checked" #end/>
@@ -802,7 +820,7 @@ $(document).ready(function() {
 						## hide the assignment list from Gradebook when clicked
 						<input type="radio" name="$!name_Addtogradebook" id="$!gradebookChoice_add" value="$!gradebookChoice_add" #if($!gradebookChoice.equals("$!gradebookChoice_add"))checked#end 
 							onclick="
-							if ($('#new_assignment_grade_points').attr('value'))
+							if ($('#new_assignment_grade_points').prop('value'))
 							{
 								if (document.getElementById('categoryList')) 
 								{
@@ -817,19 +835,19 @@ $(document).ready(function() {
 									if (document.getElementById('gradebookList'))
 										$('#gradebookList').fadeOut('slow');
 									if (document.getElementById('associate'))
-										$('#associate').attr('checked',false);
+										$('#associate').prop('checked',false);
 								}
 							}
 							else
 							{
 								## show alert since gradebook integration is only allowed for point-based assignment
-								$('#no').attr('checked',true);
+								$('#no').prop('checked',true);
 								if (document.getElementById('categoryList'))
 									$('#categoryList').fadeOut('slow');
 								if (document.getElementById('gradebookList'))
 									$('#gradebookList').fadeOut('slow');
 								if (document.getElementById('associate'))
-									$('#associate').attr('checked',false);
+									$('#associate').prop('checked',false);
 								if (document.getElementById('gradebookListWarnAssoc'))
 								{
 					       	 		$('#gradebookListWarnAssoc' ).fadeIn('slow');
@@ -855,7 +873,7 @@ $(document).ready(function() {
 								#if($!gradebookChoice.equals("$!gradebookChoice_associate"))checked#end 
 								onclick="if( document.getElementById('gradebookList') )
 								{
-									if ($('#new_assignment_grade_points').attr('value')) 
+									if ($('#new_assignment_grade_points').prop('value')) 
 									{
 										## show the gradebook assignment list
 										$('#categoryList').fadeOut('slow');
@@ -864,10 +882,10 @@ $(document).ready(function() {
 									else
 									{
 										## show alert since gradebook integration is only allowed for point-based assignment
-										$('#no').attr('checked',true);
+										$('#no').prop('checked',true);
 										$('#categoryList').fadeOut('slow');
 										$('#gradebookList').fadeOut('slow');
-										$('#associate').attr('checked',false);
+										$('#associate').prop('checked',false);
 						       	 		$('#gradebookListWarn' ).fadeIn('slow');
 						        		$('#gradebookListWarn').animate({opacity: 1.0}, 2500)
 						  				$('#gradebookListWarn' ).fadeOut('slow',function () 
@@ -900,7 +918,7 @@ $(document).ready(function() {
 								#elseif($!gradebookAssignmentsSelectedDisabled.get($gaId).equals("selected")) 
 									selected="selected"
 								#end>
-									$!gradebookAssignmentsLabel.get($gaId)
+									$validator.escapeHtml($!gradebookAssignmentsLabel.get($gaId))
 							</option>
 						#end
 					</select>
@@ -919,6 +937,96 @@ $(document).ready(function() {
 				</p>
 			#end
 		#end
+		## Peer Assessment
+		#if ($allowPeerAssessment)
+			<div style="display:block">
+				<h4>
+				$peerAssessmentName
+				</h4>
+				<div class="checkbox  indnt2">
+					#if ($!value_UsePeerAssessment.equals("true"))
+						<input id="$name_UsePeerAssessment" name="$name_UsePeerAssessment" type="checkbox" value="true" checked="checked" onclick="togglePeerAssessmentOptions(this.checked)"/>
+					#else
+						<input id="$name_UsePeerAssessment" name="$name_UsePeerAssessment" type="checkbox" value="true"  onclick="togglePeerAssessmentOptions(this.checked)"/>
+					#end
+					<label for="$name_UsePeerAssessment">
+						$peerAssessmentUse
+					</label>
+				</div>
+				#if ($!value_UsePeerAssessment.equals("true"))
+					<div id="peerAssessmentOptions" class="indnt3">
+				#else
+					<div id="peerAssessmentOptions" style="display:none" class="indnt3">
+				#end
+					<p class="instruction">
+						$tlang.getString("peerassessment.note")
+					</p>
+					$tlang.getString("peerassessment.periodfinishes")
+					<div class="indnt4">
+						#chef_dateselectionwidgetwithtitles($name_PeerPeriodYear $name_PeerPeriodMonth $name_PeerPeriodDay $!value_year_from $!value_year_to $value_PeerPeriodYear $value_PeerPeriodMonth $value_PeerPeriodDay $dateFormat $tlang.getString("dateselectionwidget.month") $tlang.getString("dateselectionwidget.day") $tlang.getString("dateselectionwidget.year") "")
+						&nbsp;$tlang.getString("gen.at")&nbsp; 
+			            <label class="skip" for="$name_PeerPeriodHour">$tlang.getString("dateselectionwidget.hour")</label>
+						<select name="$name_PeerPeriodHour" id="$name_PeerPeriodHour" title="$tlang.getString("dateselectionwidget.hour")">
+							#foreach ($i in [1..12])
+								#if ($value_PeerPeriodHour==$i)
+									<option value="$i" selected="selected">$i</option>
+								#else
+									<option value="$i">$i</option>
+								#end
+							#end
+						</select>
+			            <label class="skip" for="$name_PeerPeriodMin">$tlang.getString("dateselectionwidget.minute")</label>
+						<select name="$name_PeerPeriodMin" id="$name_PeerPeriodMin" title="$tlang.getString("dateselectionwidget.minute")">
+							#foreach ($i in [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55])
+								<option value="$i" #if($i == $value_PeerPeriodMin)selected="selected"#end>#if($i ==0)00#elseif($i == 5)05#else$i#end</option>
+							#end
+						</select>
+			            <label class="skip" for="$name_PeerPeriodAMPM">$tlang.getString("dateselectionwidget.ampm")</label>
+						<select name="$name_PeerPeriodAMPM" id="$name_PeerPeriodAMPM" title="$tlang.getString("dateselectionwidget.ampm")">
+							#foreach ($i in ["AM", "PM"])
+								#if ($i == $value_PeerPeriodAMPM)
+									<option value="$i" selected="selected">$i</option>
+								#else
+										<option value="$i">$i</option>
+								#end
+							#end
+						</select>
+					</div>
+					##Anonymous Eval
+					#if ($!value_PeerAssessmentAnonEval.equals("true"))
+						<input id="$name_PeerAssessmentAnonEval" name="$name_PeerAssessmentAnonEval" type="checkbox" value="true" checked="checked"/>
+					#else
+						<input id="$name_PeerAssessmentAnonEval" name="$name_PeerAssessmentAnonEval" type="checkbox" value="true"/>
+					#end
+					<label for="$name_PeerAssessmentAnonEval">
+						$tlang.getString("peerassessment.anonymousEvaluation")
+					</label>
+					<br/>
+					##Students View Reviews
+					#if ($!value_PeerAssessmentStudentViewReviews.equals("true"))
+						<input id="$name_PeerAssessmentStudentViewReviews" name="$name_PeerAssessmentStudentViewReviews" type="checkbox" value="true" checked="checked"/>
+					#else
+						<input id="$name_PeerAssessmentStudentViewReviews" name="$name_PeerAssessmentStudentViewReviews" type="checkbox" value="true"/>
+					#end
+					<label for="$name_PeerAssessmentStudentViewReviews">
+						$tlang.getString("peerassessment.studentViewReviews")
+					</label>
+					<br/>
+					##Number of Submissions for review
+					<input name="$name_PeerAssessmentNumReviews" id="$name_PeerAssessmentNumReviews" value="$!value_PeerAssessmentNumReviews" type="text" size="5" maxlength="11"/>
+					<label for="$name_PeerAssessmentNumReviews">
+						$tlang.getString("peerassessment.numSubmissions")
+					</label>
+					<br/>
+					$tlang.getString("peerassessment.reviewInstructions")
+					<br/>
+					<textarea name="$name_PeerAssessmentInstructions" id="$name_PeerAssessmentInstructions" cols="80" rows="30" wrap="virtual">$validator.escapeHtmlTextarea($!value_PeerAssessmentInstructions)</textarea>
+					#chef_setupformattedtextarea($name_PeerAssessmentInstructions)
+				</div>
+			</div>
+		#end
+		
+		
 		## group/section support
 		#if ($allowAddSiteAssignment)
 			#if ($!groups)
@@ -1622,7 +1730,7 @@ $(document).ready(function() {
 			</div>
 		<input type="hidden" name="sakai_csrf_token" value="$sakai_csrf_token" />
 	</form>
-	<script language="JavaScript" type="text/JavaScript">
+	<script type="text/JavaScript">
 		<!--
 			function toggleSelectAll(caller, elementName)
 			{

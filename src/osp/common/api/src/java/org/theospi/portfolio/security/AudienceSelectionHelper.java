@@ -1,6 +1,6 @@
 /**********************************************************************************
 * $URL: https://source.sakaiproject.org/svn/osp/trunk/common/api/src/java/org/theospi/portfolio/security/AudienceSelectionHelper.java $
-* $Id: AudienceSelectionHelper.java 105079 2012-02-24 23:08:11Z ottenhoff@longsight.com $
+* $Id: AudienceSelectionHelper.java 131548 2013-11-14 16:42:13Z dsobiera@indiana.edu $
 ***********************************************************************************
 *
  * Copyright (c) 2005, 2006, 2007, 2008 The Sakai Foundation
@@ -76,6 +76,13 @@ public interface AudienceSelectionHelper {
    
    public static final String CONTEXT2 =
        "org.theospi.portfolio.security.context2";
+   
+   /**
+    *   This is used to check if this is a wizard page... if so, then only allow the roles with the correct
+    *   evaluation permission to be listed.  This is not the same for a matrix cell
+    */   
+   public static final String WIZARD_PAGE_EVALUATE_FUNCTION =
+       "org.theospi.portfolio.security.wizardPageEvaluateFunction";
    
    /**
     * this is the id that MatrixFunctionConstants.REVIEW_MATRIX function uses for matrix reviewers:

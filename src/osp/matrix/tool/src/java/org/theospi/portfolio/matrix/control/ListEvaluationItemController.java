@@ -21,6 +21,7 @@
 package org.theospi.portfolio.matrix.control;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -54,6 +55,7 @@ import org.sakaiproject.tool.cover.SessionManager;
 import org.sakaiproject.user.api.Preferences;
 import org.sakaiproject.user.api.PreferencesEdit;
 import org.sakaiproject.user.api.UserNotDefinedException;
+import org.sakaiproject.user.api.User;
 import org.sakaiproject.user.cover.PreferencesService;
 import org.sakaiproject.user.cover.UserDirectoryService;
 import org.springframework.validation.Errors;
@@ -90,6 +92,7 @@ public class ListEvaluationItemController implements FormController, LoadObjectC
    private final static String EVAL_SITE_FETCH = "org.theospi.portfolio.evaluation.siteEvals";
    private final static String EVAL_SORT_DIRECTION = "org.theospi.portfolio.evaluation.sortDirection";
    private final static String EVAL_SORT_COLUMN    = "org.theospi.portfolio.evaluation.sortColumn";
+   private final static String EVAL_FILTER_GROUP    = "org.theospi.portfolio.evaluation.filterGroup";
    private final static String DEFAULT_SORT_DIRECTION = "asc";
    
    public static final String GROUP_FILTER = "group_filter";
@@ -100,13 +103,15 @@ public class ListEvaluationItemController implements FormController, LoadObjectC
     */
    public Object fillBackingObject(Object incomingModel, Map request, Map session, Map application) throws Exception {
       
-      List list = new ArrayList();
+      List<EvaluationContentWrapper> list = new ArrayList<EvaluationContentWrapper>();
+      //String evalType = CURRENT_SITE_EVALS; //(String)request.get("evalTypeKey");      
       String evalType = (String)request.get("evalTypeKey");
       String sortColumn = (String)request.get("sortByColumn");
       String sortDirection = (String)request.get("direction");
+      String filteredGroup = (String) request.get(GROUP_FILTER);
       
       // Save user preferences, if any have changed
-      if ( evalType != null || sortColumn != null || sortDirection != null ) {
+      if ( evalType != null || sortColumn != null || sortDirection != null  || filteredGroup != null) {
          PreferencesEdit prefEdit = getPreferencesEdit();
          
          ResourceProperties propEdit = prefEdit.getPropertiesEdit(EVAL_PLACEMENT_PREF + getToolManager().getCurrentPlacement().getId());
@@ -120,6 +125,10 @@ public class ListEvaluationItemController implements FormController, LoadObjectC
          if (sortDirection != null)
             propEdit.addProperty(EVAL_SORT_DIRECTION, sortDirection);
 
+         if (filteredGroup != null){
+             propEdit.addProperty(EVAL_FILTER_GROUP, filteredGroup);
+         }
+         
          try {
             PreferencesService.commit(prefEdit);
          }
@@ -139,6 +148,10 @@ public class ListEvaluationItemController implements FormController, LoadObjectC
          
       evalType = getUserEvalProperty(evalPrefs);
       
+      if(filteredGroup == null){
+          filteredGroup = getFilterGroupProperty(evalPrefs);
+      }
+      
       // Get list of reviewer items
       if (ALL_EVALS.equals(evalType)) {
          list = wizardManager.getEvaluatableItems(authManager.getAgent());
@@ -148,13 +161,145 @@ public class ListEvaluationItemController implements FormController, LoadObjectC
          siteIds.add( worksiteManager.getCurrentWorksiteId().getValue() );
          list = wizardManager.getEvaluatableItems(authManager.getAgent(), siteIds);
       }
+
+      String worksiteId = getWorksiteManager().getCurrentWorksiteId().getValue();
+      boolean allowAllGroups = true;
+      boolean hasGroups = false;
+      List<String> siteIds = new ArrayList<String>();
+      Map<String, Site> siteMap = new HashMap<String, Site>();
+      if (ALL_EVALS.equals(getUserEvalProperty(evalPrefs))) {
+          List siteList = getWorksiteManager().getUserSites();
+          siteIds = new ArrayList(siteList.size());
+            
+          for (Iterator i = siteList.iterator(); i.hasNext();) {
+              Site site = (Site) i.next();
+              siteIds.add( site.getId() );
+              if(!hasGroups){
+                  hasGroups = hasGroups || site.hasGroups();
+              }
+              siteMap.put(site.getId(), site);
+          }
+      }else{
+          siteIds.add(worksiteId);
+          hasGroups = getMatrixManager().hasGroups(worksiteId);
+          siteMap.put(worksiteId, getWorksiteManager().getSite(worksiteId));
+      }
       
+      List<Group> groupList = new ArrayList<Group>();
+      for (String siteId : siteIds) {
+        groupList.addAll(new ArrayList<Group>(getMatrixManager().getGroupList(siteId, allowAllGroups)));
+        
+      }
+      //make sure filter group exist:
+      boolean foundGroup = false;
+      for (Group group : groupList) {
+        if(group.getId().equals(filteredGroup)){
+            foundGroup = true;
+            break;
+        }
+      }
+      if(!foundGroup && !MatrixFunctionConstants.UNASSIGNED_GROUP.equals(filteredGroup)){
+          filteredGroup = "";
+      }
+      
+      request.put("hasGroups", hasGroups);
+      //Collections.sort(groupList);
+      //TODO: Figure out why ClassCastExceptions fire if we do this the obvious way...  The User list sorts fine
+      Collections.sort(groupList, new Comparator<Group>() {
+          public int compare(Group arg0, Group arg1) {
+              return arg0.getTitle().toLowerCase().compareTo(arg1.getTitle().toLowerCase());
+          }});
+      
+      
+      request.put("userGroups", groupList);
+      request.put("userGroupsCount", groupList.size());
+      
+      
+      request.put("filteredGroup", filteredGroup);
+
+
+      if(hasGroups){
+          List<User> userList = new ArrayList<User>();
+          Map<String, List<User>> userMap = new HashMap<String, List<User>>();
+          
+          
+          for (String siteId : siteIds) {
+              List<User> users = new ArrayList<User>(getMatrixManager().getUserList(siteId, filteredGroup, allowAllGroups, groupList));
+              userList.addAll(users);
+              userMap.put(siteId, users);
+          }
+
+
+          request.put("members", userList);
+
+          //Hold permission results for each scaffolding for quicker accessing
+          Map<String, Boolean> allGroupsForScaffolding = new HashMap<String, Boolean>();
+          
+          List<EvaluationContentWrapper> removeList = new ArrayList<EvaluationContentWrapper>();
+          
+          //loop through each returned EvaluationContentWrapper
+          for(EvaluationContentWrapper wrapper : list ) {
+              //if filteredGroup "All Groups" is selected and this is a matrix evaluation item
+              if((filteredGroup == null || "".equals(filteredGroup)) && Cell.TYPE.equals( wrapper.getEvalType())){
+                      //grab the scaffolding for the matrix
+                      Scaffolding scaffolding = getMatrixManager()
+                            .getScaffoldingCellByWizardPageDef(
+                                    getMatrixManager().getWizardPage(
+                                            wrapper.getId())
+                                            .getPageDefinition().getId())
+                            .getScaffolding();
+                      boolean viewAllGroups = false;
+                      //if this scaffolding is not cached in the map, then add it
+                      if(!allGroupsForScaffolding.containsKey(scaffolding.getReference())){
+                          viewAllGroups= getAuthzManager().isAuthorized(MatrixFunctionConstants.VIEW_ALL_GROUPS, getIdManager().getId(scaffolding.getReference()));
+                          allGroupsForScaffolding.put(scaffolding.getReference(), viewAllGroups);
+                      }else{
+                          viewAllGroups = allGroupsForScaffolding.get(scaffolding.getReference());
+                      }
+                      
+                      //if the current user doesn't have view all groups permission for this scaffolding,
+                      //then you need to check to see if the user has the ability to view the owner within
+                      //their own groups
+                      if(!viewAllGroups){
+                          if(!siteListContainsUser(userMap, siteMap, wrapper, filteredGroup)){
+                              removeList.add(wrapper);
+                          }
+                      }
+              }else if(!siteListContainsUser(userMap, siteMap, wrapper, filteredGroup)){
+                  //a specific group was selected 
+                  //and the wrapper owner doesn't exist in the group
+                  
+                  //So add the evaluation item to the remove list if the owner is part of the viewable group(s)
+                  removeList.add(wrapper);
+              }
+          }
+          
+          //go through each removeList item and remove the evaluation in the command var.
+          for (EvaluationContentWrapper evaluationContentWrapper : removeList) {
+              list.remove(evaluationContentWrapper);
+          }
+      }
+           
       // Sort list of reviewer items
       boolean asc = sortDirection.equalsIgnoreCase(DEFAULT_SORT_DIRECTION);
       Collections.sort(list, new EvaluationContentComparator(sortColumn, asc));
       list = getListScrollIndexer().indexList(request, request, list);
 
       return list; /* goes into 'reviewerItems'  */
+   }
+   
+   private boolean siteListContainsUser(Map<String, List<User>> userMap, Map<String, Site> siteMap, EvaluationContentWrapper wrapper, String filteredGroup) {
+       List<User> userList = userMap.get(wrapper.getSiteId());
+       Site site = siteMap.get(wrapper.getSiteId());
+       Collection<Group> groups = site.getGroupsWithMember(wrapper.getOwner().getId());
+       
+       boolean groupCheck = true;
+       if (filteredGroup != null && !"".equals(filteredGroup) && !MatrixFunctionConstants.UNASSIGNED_GROUP.equals(filteredGroup)) {
+           Group group = site.getGroup(filteredGroup);
+           groupCheck = groups.contains(group);
+       }
+       
+       return userList.contains(wrapper.getOwner()) && groupCheck;
    }
    
    /* (non-Javadoc)
@@ -224,82 +369,6 @@ public class ListEvaluationItemController implements FormController, LoadObjectC
       boolean userSite = SiteService.isUserSite(getWorksiteManager().getCurrentWorksiteId().getValue());
       model.put("isUserSite", userSite);
       
-      boolean hasGroups = getMatrixManager().hasGroups(worksiteId);
-      model.put("hasGroups", hasGroups);
-      
-      
-      boolean allowAllGroups = true;
-      List<Group> groupList = new ArrayList<Group>(getMatrixManager().getGroupList(worksiteId, allowAllGroups));
-      //Collections.sort(groupList);
-      //TODO: Figure out why ClassCastExceptions fire if we do this the obvious way...  The User list sorts fine
-      Collections.sort(groupList, new Comparator<Group>() {
-    	  public int compare(Group arg0, Group arg1) {
-    		  return arg0.getTitle().toLowerCase().compareTo(arg1.getTitle().toLowerCase());
-    	  }});
-      
-      
-      model.put("userGroups", groupList);
-      model.put("userGroupsCount", groupList.size());
-      
-      String filteredGroup = (String) request.get(GROUP_FILTER);
-      model.put("filteredGroup", filteredGroup);
-
-
-      if(hasGroups){
-    	  List userList = new ArrayList(getMatrixManager().getUserList(worksiteId, filteredGroup, allowAllGroups, groupList));
-
-    	  model.put("members", userList);
-
-    	  //Hold permission results for each scaffolding for quicker accessing
-    	  Map<String, Boolean> allGroupsForScaffolding = new HashMap<String, Boolean>();
-    	  
-    	  List<EvaluationContentWrapper> removeList = new ArrayList();
-    	  
-    	  //loop through each returned EvaluationContentWrapper
-    	  for(Iterator i = ((List) command).iterator(); i.hasNext(); ) {
-    		  EvaluationContentWrapper wrapper = (EvaluationContentWrapper)i.next();
-    		  //if filteredGroup "All Groups" is selected and this is a matrix evaluation item
-    		  if((filteredGroup == null || "".equals(filteredGroup)) && Cell.TYPE.equals( wrapper.getEvalType())){
-    			  	  //grab the scaffolding for the matrix
-    				  Scaffolding scaffolding = getMatrixManager()
-							.getScaffoldingCellByWizardPageDef(
-									getMatrixManager().getWizardPage(
-											wrapper.getId())
-											.getPageDefinition().getId())
-							.getScaffolding();
-    				  boolean viewAllGroups = false;
-    				  //if this scaffolding is not cached in the map, then add it
-    				  if(!allGroupsForScaffolding.containsKey(scaffolding.getReference())){
-    					  viewAllGroups= getAuthzManager().isAuthorized(MatrixFunctionConstants.VIEW_ALL_GROUPS, getIdManager().getId(scaffolding.getReference()));
-    					  allGroupsForScaffolding.put(scaffolding.getReference(), viewAllGroups);
-    				  }else{
-    					  viewAllGroups = allGroupsForScaffolding.get(scaffolding.getReference());
-    				  }
-    				  
-    				  //if the current user doesn't have view all groups permission for this scaffolding,
-    				  //then you need to check to see if the user has the ability to view the owner within
-    				  //their own groups
-    				  if(!viewAllGroups){
-    					  if(!userList.contains(wrapper.getOwner())){
-    						  removeList.add(wrapper);
-    					  }
-    				  }
-    		  }else if(!userList.contains(wrapper.getOwner())){
-    			  //a specific group was selected 
-    			  //and the wrapper owner doesn't exist in the group
-    			  
-    			  //So add the evaluation item to the remove list if the owner is part of the viewable group(s)
-    			  removeList.add(wrapper);
-    		  }
-    	  }
-    	  
-    	  //go through each removeList item and remove the evaluation in the command var.
-    	  for (EvaluationContentWrapper evaluationContentWrapper : removeList) {
-    		  ((List) command).remove(evaluationContentWrapper);
-    	  }
-      }
-      
-      
       return model;
    }
 
@@ -323,6 +392,19 @@ public class ListEvaluationItemController implements FormController, LoadObjectC
          return EvaluationContentComparator.SORT_TITLE;
    }
     
+   
+   /** Returns user preference for filter by group.
+    **/
+   private String getFilterGroupProperty( ResourceProperties evalPrefs ) {
+      String defaultProp = "";
+               
+      String prop = evalPrefs.getProperty(EVAL_FILTER_GROUP);
+      if (prop != null) 
+         return prop;
+      else
+         return defaultProp;
+   }
+   
    /** Returns user preference for evaluations to display (all sites or just current site)
     **/
    private String getUserEvalProperty( ResourceProperties evalPrefs ) {

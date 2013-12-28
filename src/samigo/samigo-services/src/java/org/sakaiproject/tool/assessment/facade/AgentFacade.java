@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/sam/trunk/samigo-services/src/java/org/sakaiproject/tool/assessment/facade/AgentFacade.java $
- * $Id: AgentFacade.java 107462 2012-04-22 08:50:13Z david.horwitz@uct.ac.za $
+ * $Id: AgentFacade.java 130512 2013-10-15 23:46:40Z ktsao@stanford.edu $
  ***********************************************************************************
  *
  * Copyright (c) 2004, 2005, 2006, 2008 The Sakai Foundation
@@ -61,8 +61,10 @@ private static Log log = LogFactory.getLog(AgentFacade.class);
   private String agentString;
   private String eid;
   private boolean accessViaUrl;
+  private String displayId;
+    private String displayIdString;
 
-  /**
+    /**
    * Create AgentFacade for agent Id
    * @param agentId the agent Id
    */
@@ -71,6 +73,7 @@ private static Log log = LogFactory.getLog(AgentFacade.class);
     agent = new AgentImpl(agentId, null, new IdImpl(agentId));
     agentString = agentId;
     eid = helper.getEid(agentId);
+    displayId = helper.getDisplayId(agentId);
   }
 
   /**
@@ -82,7 +85,7 @@ private static Log log = LogFactory.getLog(AgentFacade.class);
     String agentId = helper.getAgentString(AgentHelper.UNASSIGNED_AGENT_STRING);
     agent = new AgentImpl(agentId, null, new IdImpl(agentId));
     agentString = agentId;
-    eid = helper.getEid(AgentHelper.UNASSIGNED_AGENT_STRING); 
+    eid = helper.getEid(AgentHelper.UNASSIGNED_AGENT_STRING);
   }
 
   /**
@@ -399,4 +402,12 @@ log.debug("agentfacade.getEid(agentS) agentString = " + agentString);
 	  return true;
   }
 
+    public static String getDisplayId() {
+        AgentFacade facade =new AgentFacade();
+        return facade.displayId;
+    }
+
+    public String getDisplayIdString() {
+        return helper.getDisplayId(agentString);
+    }
 }

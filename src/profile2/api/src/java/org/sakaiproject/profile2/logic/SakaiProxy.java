@@ -508,6 +508,15 @@ public interface SakaiProxy {
 	public boolean isProfileGalleryEnabledGlobally();
 	
 	/**
+	 * Is the profile2.messaging.enabled flag set in sakai.properties?
+	 * If not set, default to <code>true</code>.
+	 * 
+	 * @return the status of the profile2.messaging.enabled flag in sakai.properties.
+	 * Returns <code>true</code> by default.
+	 */
+	public boolean isMessagingEnabledGlobally();
+	
+	/**
 	 * Is the profile2.picture.change.enabled flag set in sakai.properties?
 	 * If not set, defaults to true
 	 * 
@@ -890,4 +899,17 @@ public interface SakaiProxy {
 	 *         is set, otherwise returns <code>false</code>.
 	 */
 	public boolean isStudentProfileEnabled();
+	
+	
+	/**
+	 * Is the profile2.import.images flag set in sakai.properties?
+	 * If not set, defaults to false
+	 * 
+	 * <p>If enabled then at startup profile 2 will attempt to download any profile URLs set 
+	 * and upload them as profile images.
+	 * </p>
+	 * 
+	 * @return true or false
+	 */
+	public boolean isProfileImageImportEnabled();
 }

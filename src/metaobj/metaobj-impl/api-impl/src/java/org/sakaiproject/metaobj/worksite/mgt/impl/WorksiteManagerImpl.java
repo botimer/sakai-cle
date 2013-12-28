@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/metaobj/trunk/metaobj-impl/api-impl/src/java/org/sakaiproject/metaobj/worksite/mgt/impl/WorksiteManagerImpl.java $
- * $Id: WorksiteManagerImpl.java 105079 2012-02-24 23:08:11Z ottenhoff@longsight.com $
+ * $Id: WorksiteManagerImpl.java 128044 2013-08-01 03:14:24Z botimer@umich.edu $
  ***********************************************************************************
  *
  * Copyright (c) 2004, 2005, 2006, 2008 The Sakai Foundation
@@ -57,8 +57,14 @@ public class WorksiteManagerImpl implements WorksiteManager {
    }
    
    public List getUserSites(Map properties, List siteTypes) {
-      List mySites = SiteService.getSites(org.sakaiproject.site.api.SiteService.SelectionType.ACCESS,
+      List mySites;
+      if ((properties == null || properties.isEmpty()) && (siteTypes == null || siteTypes.isEmpty())) {
+         mySites = SiteService.getUserSites();
+      }
+      else {
+         mySites = SiteService.getSites(org.sakaiproject.site.api.SiteService.SelectionType.ACCESS,
             siteTypes, null, properties, org.sakaiproject.site.api.SiteService.SortType.NONE, null);
+      }
 
       if (mySites.size() > 0) {
          Collections.sort(mySites);

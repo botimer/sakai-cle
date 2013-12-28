@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/metaobj/trunk/metaobj-api/api/src/java/org/sakaiproject/metaobj/shared/model/Agent.java $
- * $Id: Agent.java 105079 2012-02-24 23:08:11Z ottenhoff@longsight.com $
+ * $Id: Agent.java 130481 2013-10-15 17:36:54Z dsobiera@indiana.edu $
  ***********************************************************************************
  *
  * Copyright (c) 2004, 2005, 2006, 2008, 2009 The Sakai Foundation
@@ -24,7 +24,6 @@ package org.sakaiproject.metaobj.shared.model;
 import java.io.Serializable;
 import java.security.Principal;
 import java.util.List;
-
 
 /**
  * Created by IntelliJ IDEA.
@@ -61,7 +60,7 @@ public interface Agent extends Serializable, Principal {
    public List getWorksiteRoles(String worksiteId);
 
    public List getWorksiteRoles();
-
+   
    public boolean isRole();
 
    public String getPassword();

@@ -16,11 +16,37 @@
 				<span class="indnt2">
 				<img border="0" src="<c:out value="${taggableItem.iconUrl}" />" />
 				<a class="thickbox"
-					href="<c:if test="${scaffoldingCan.accessUserList}"><c:out value="${taggableItem.itemDetailUrl}"/></c:if><c:if test="${!scaffoldingCan.accessUserList}"><c:out value="${taggableItem.itemDetailPrivateUrl}"/></c:if><c:if test="${taggableItem.useDecoration}"><c:out value="/${decoWrapper}" /></c:if><c:out value="${taggableItem.itemDetailUrlParams}"/>&tagReference=<c:out value="${criteriaRef}"/>">
+					href="<c:if test="${scaffoldingCan.accessUserList}"><c:out value="${taggableItem.itemDetailUrl}"/></c:if><c:if test="${!scaffoldingCan.accessUserList}"><c:out value="${taggableItem.itemDetailPrivateUrl}"/></c:if><c:if test="${taggableItem.useDecoration}"><c:out value="/${decoWrapper}" /></c:if><c:out value="${taggableItem.itemDetailUrlParams}"/>&tagReference=<c:out value="${criteriaRef}"/>>&tagReference=<c:out value="${criteriaRef}"/>&tagDecoWrapper=<c:out value="${decoWrapper}" />">
 					<c:out value="${taggableItem.activity.title}" /> 
 				</a></span>
 			</td>
-			<td></td>
+			<td>
+			<c:set var="hasFirstAction" value="false"/>
+			<!-- Item Level Eval -->
+			<c:if   test="${(isWizard != 'true' && matrixCanEvaluate) && 
+				((cell.scaffoldingCell.wizardPageDefinition.itemLevelEvaluationDevice != null && !cell.scaffoldingCell.wizardPageDefinition.defaultItemLevelEval) 
+				|| (cell.scaffoldingCell.scaffolding.itemLevelEvaluationDevice != null && cell.scaffoldingCell.wizardPageDefinition.defaultItemLevelEval))}">
+
+				<c:if test="${hasFirstAction == 'true'}">
+				|
+				</c:if> <a class="TB_hideControl"
+					href="<osp:url value="osp.review.processor.helper/reviewHelper.osp">
+                          <osp:param name="page_id" value="${cell.wizardPage.id}" />
+                          <osp:param name="org_theospi_portfolio_review_type" value="3" />
+                          <osp:param name="process_type_key" value="page_id" />
+                          <osp:param name="isWizard" value="${isWizard}" />
+                          <osp:param name="objectId" value="${objectId}" />
+                          <osp:param name="objectTitle" value="${objectTitle}" />
+                          <osp:param name="itemId" value="${taggableItem.reference}" />
+                          <c:if test="${cell.scaffoldingCell.wizardPageDefinition.defaultItemLevelEval}">
+				       		<osp:param name="scaffoldingId" value="${cell.scaffoldingCell.scaffolding.id}" />
+				          </c:if>
+                          </osp:url>"><osp:message
+					key="item_evaluation" /></a>
+					<c:set var="hasFirstAction" value="true"/>
+			</c:if>
+			
+			</td>
 			<td><c:out value="${taggableItem.siteTitle}" /></td>
 			<td>
 				<c:choose>
@@ -38,6 +64,80 @@
 						value="${taggableItem.lastModifiedDate}"
 						pattern="${date_format}" /></td>
 		</tr>
+		
+		
+		
+		<!-- ************* Item Eval Area Start ************* -->
+		<c:set var="feedbackHeader" value="false" />
+		<c:forEach var="object" items="${wrappedItemFeedbackAndEvals}" varStatus="loopStatus">
+			<c:if test="${object.review.itemId == taggableItem.reference}">
+
+				<tr>
+					<td colspan="2">
+						<h6><span class="indnt3"> <img
+							src='/library/image/silk/${object.icon}' border='0' hspace='0' alt="" />
+							<c:if test="${object.canView}">
+								<a href='<c:out value="${object.review.reviewContentNode.externalUri}"/>'
+									target="_blank">
+							</c:if>
+								 <c:out value="${object.review.reviewContentNode.displayName}" />
+							<c:if test="${object.canView}">
+								</a> 
+							</c:if>
+							</span>
+						</h6>
+					</td>
+					<td nowrap="nowrap">
+						<!-- Allow Reviewers to edit/delete feedback -->
+						<c:if
+							test="${object.canModify}">
+							<a
+								href="<osp:url value="osp.review.processor.helper/reviewHelper.osp">
+										<osp:param name="page_id" value="${cell.wizardPage.id}" />
+										<osp:param name="org_theospi_portfolio_review_type" value="${object.review.type}" />
+										<osp:param name="current_review_id" value="${object.review.reviewContentNode.resource.id}" />
+										<osp:param name="review_id" value="${object.review.id}"/>
+										<osp:param name="process_type_key" value="page_id" />
+										<c:if test="${cell.scaffoldingCell.wizardPageDefinition.defaultItemLevelEval}">
+							       			<osp:param name="scaffoldingId" value="${cell.scaffoldingCell.scaffolding.id}" />
+							          	</c:if>
+										</osp:url>"
+								title="<fmt:message key="edit"/>"> 
+										<fmt:message key="edit"/></a>
+										 |
+								 <a
+								href="<osp:url value="osp.wizard.page.contents.helper/formDelete.osp">
+										<osp:param name="page_id" value="${cell.wizardPage.id}" />
+										<osp:param name="formDefId" value="${cell.scaffoldingCell.reviewDevice}" />
+										<osp:param name="current_form_id" value="${object.review.reviewContentNode.resource.id}" />
+										<osp:param name="review_id" value="${object.review.id}"/>
+										<osp:param name="submit" value="deleteReview" />
+										<c:if test="${cell.scaffoldingCell.wizardPageDefinition.defaultItemLevelEval}">
+							       			<osp:param name="scaffoldingId" value="${cell.scaffoldingCell.scaffolding.id}" />
+							          	</c:if>
+										</osp:url>"
+								title="<fmt:message key="delete"/>">
+										<fmt:message key="remove"/>
+								 </a>
+							 </c:if>
+					</td>
+					<td></td>
+					<td><c:out
+						value="${object.review.reviewContentNode.technicalMetadata.owner.displayName}" />
+					</td>
+					<td><fmt:formatDate
+						value="${object.review.reviewContentNode.technicalMetadata.lastModified}"
+						pattern="${date_format}" /></td>
+				</tr>
+			</c:if>
+		</c:forEach>
+
+		<!-- ************* Item Eval Area End ************* -->
+		
+		
+		
+		
+		
 		</c:forEach>
 	</c:forEach>
 	

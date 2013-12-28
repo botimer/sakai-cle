@@ -1,7 +1,7 @@
 
 /**********************************************************************************
 * $URL: https://source.sakaiproject.org/svn/osp/trunk/matrix/tool/src/java/org/theospi/portfolio/matrix/control/AddScaffoldingController.java $
-* $Id: AddScaffoldingController.java 105079 2012-02-24 23:08:11Z ottenhoff@longsight.com $
+* $Id: AddScaffoldingController.java 131548 2013-11-14 16:42:13Z dsobiera@indiana.edu $
 ***********************************************************************************
 *
  * Copyright (c) 2005, 2006, 2007, 2008 The Sakai Foundation
@@ -139,6 +139,18 @@ public class AddScaffoldingController extends BaseScaffoldingController
       }else{
     	  scaffolding.setHideEvaluations(true);  
       }
+      
+      if(request.get("enableItemLevelEvalsInLinkedTools") == null || request.get("enableItemLevelEvalsInLinkedTools").toString() == "false"){
+    	  scaffolding.setEnableItemLevelEvalsInLinkedTools(false);
+      }else{
+    	  scaffolding.setEnableItemLevelEvalsInLinkedTools(true);  
+      }
+      
+      if(request.get("hideItemLevelEvals") == null || request.get("hideItemLevelEvals").toString() == "false"){
+    	  scaffolding.setHideItemLevelEvals(false);
+      }else{
+    	  scaffolding.setHideItemLevelEvals(true);  
+      }
 
       if (addFormAction != null) {
 
@@ -258,8 +270,11 @@ public class AddScaffoldingController extends BaseScaffoldingController
 		session.remove(AudienceSelectionHelper.CONTEXT);
 		session.remove(AudienceSelectionHelper.CONTEXT2);
 		
-		session.put(AudienceSelectionHelper.CONTEXT, scaffolding.getTitle());
-	}  
+        if(scaffolding != null){ 
+            session.put(AudienceSelectionHelper.CONTEXT,
+                    scaffolding.getTitle());
+        }	
+   }  
    
    
    protected Collection getEvaluationDevices(String siteId, Scaffolding scaffolding) {

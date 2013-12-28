@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/help/trunk/help-tool/src/java/org/sakaiproject/tool/help/ContentServlet.java $
- * $Id: ContentServlet.java 117275 2012-12-05 23:04:55Z matthew@longsight.com $
+ * $Id: ContentServlet.java 132173 2013-12-03 21:01:14Z matthew@longsight.com $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2008 The Sakai Foundation
@@ -26,6 +26,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.net.ConnectException;
 import java.net.URL;
 
 import javax.servlet.ServletException;
@@ -46,7 +47,7 @@ import org.apache.commons.lang.StringUtils;
 
 /**
  * Content Servlet serves help documents to document frame.
- * @version $Id: ContentServlet.java 117275 2012-12-05 23:04:55Z matthew@longsight.com $
+ * @version $Id: ContentServlet.java 132173 2013-12-03 21:01:14Z matthew@longsight.com $
  */
 public class ContentServlet extends HttpServlet
 {
@@ -69,6 +70,11 @@ public class ContentServlet extends HttpServlet
 
       getHelpManager().initialize();
       String docId = req.getParameter(DOC_ID);
+
+      if (docId == null) {
+          res.sendError(HttpServletResponse.SC_BAD_REQUEST);
+	  return;
+      }
 
       OutputStreamWriter writer = new OutputStreamWriter(res.getOutputStream(), "UTF-8");
       try {
@@ -139,8 +145,15 @@ public class ContentServlet extends HttpServlet
                       if (url == null) {
                     	  M_log.warn("Help document " + docId + " not found at: " + resource.getLocation());
                       } else {
-	                      BufferedReader br = new BufferedReader(
-	                              new InputStreamReader(url.openStream(),"UTF-8"));
+                    	  BufferedReader br = null;
+                    	  try {
+                    		  br = new BufferedReader(new InputStreamReader(url.openStream(),"UTF-8"));
+                    	  }
+                    	  catch (ConnectException e){
+                    		  M_log.info("ConnectException on " + url.getPath());
+                    		  res.sendRedirect(resource.getLocation());
+                    		  return;
+                    	  }
 	                      try {
 	                          String sbuf;
 	                          while ((sbuf = br.readLine()) != null)

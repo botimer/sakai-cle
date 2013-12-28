@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/kernel/trunk/kernel-impl/src/main/java/org/sakaiproject/site/impl/BaseSiteService.java $
- * $Id: BaseSiteService.java 124677 2013-05-20 16:23:56Z botimer@umich.edu $
+ * $Id: BaseSiteService.java 130212 2013-10-07 16:16:02Z azeckoski@unicon.net $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008 Sakai Foundation
@@ -80,6 +80,8 @@ import org.sakaiproject.site.api.SiteAdvisor;
 import org.sakaiproject.site.api.SitePage;
 import org.sakaiproject.site.api.SiteService;
 import org.sakaiproject.site.api.ToolConfiguration;
+import org.sakaiproject.site.api.SiteService.SelectionType;
+import org.sakaiproject.site.api.SiteService.SortType;
 import org.sakaiproject.thread_local.api.ThreadLocalManager;
 import org.sakaiproject.time.api.Time;
 import org.sakaiproject.time.api.TimeService;
@@ -130,6 +132,8 @@ public abstract class BaseSiteService implements SiteService, Observer
 	private static final String RESOURCEBUNDLE = "resource.bundle.siteimpl";
 	private static final String PORTAL_SKIN_NEOPREFIX_PROPERTY = "portal.neoprefix";
 	private static final String PORTAL_SKIN_NEOPREFIX_DEFAULT = "neo-";
+	private static final String ORIGINAL_SITE_ID_PROPERTY = "original-site-id";
+
 	private static String portalSkinPrefix;
 
 	private ResourceLoader rb = null;
@@ -1111,18 +1115,10 @@ public abstract class BaseSiteService implements SiteService, Observer
 	 */
 	public void saveSiteInfo(String id, String description, String infoUrl) throws IdUnusedException, PermissionException
 	{
-		String ref = siteReference(id);
-
-		// check security (throws if not permitted)
-		unlock(SECURE_UPDATE_SITE, ref);
-
-		// check for existance
-		if (!storage().check(id))
-		{
-			throw new IdUnusedException(id);
-		}
-
-		storage().saveInfo(id, description, infoUrl);
+		Site site = getSite(id);
+		site.setDescription(description);
+		site.setInfoUrl(infoUrl);
+		save(site);
 	}
 
 	/**
@@ -1343,6 +1339,9 @@ public abstract class BaseSiteService implements SiteService, Observer
 
 		// clear the site's notification id in properties
 		site.getPropertiesEdit().removeProperty(ResourceProperties.PROP_SITE_EMAIL_NOTIFICATION_ID);
+
+		// KNL-1103, store the site we are copying from
+		site.getPropertiesEdit().addProperty(ORIGINAL_SITE_ID_PROPERTY, other.getId());
 
 		((BaseSite) site).setEvent(SECURE_ADD_SITE);
 
@@ -1925,6 +1924,13 @@ public abstract class BaseSiteService implements SiteService, Observer
 			PagingPosition page, boolean requireDescription)
 	{
 		return storage().getSites(type, ofType, criteria, propertyCriteria, sort, page, requireDescription);
+	}
+
+	/* (non-Javadoc)
+	 * @see org.sakaiproject.site.api.SiteService#getSiteIds(org.sakaiproject.site.api.SiteService.SelectionType, java.lang.Object, java.lang.String, java.util.Map, org.sakaiproject.site.api.SiteService.SortType, org.sakaiproject.javax.PagingPosition)
+	 */
+	public List<String> getSiteIds(SelectionType type, Object ofType, String criteria, Map<String, String> propertyCriteria, SortType sort, PagingPosition page) {
+	    return storage().getSiteIds(type, ofType, criteria, propertyCriteria, sort, page);
 	}
 
 	/**
@@ -2721,6 +2727,28 @@ public abstract class BaseSiteService implements SiteService, Observer
 		 */
 		public List<Site> getSites(SelectionType type, Object ofType, String criteria, Map propertyCriteria, SortType sort,
 				PagingPosition page, boolean requireDescription);
+
+		/**
+		 * Get the Site IDs for all sites matching criteria.
+		 * This is useful when you only need the listing of site ids (for other operations) and do not need the actual Site objects.
+		 *
+		 * All parameters are the same as {@link #getSites(org.sakaiproject.site.api.SiteService.SelectionType, Object, String, Map, org.sakaiproject.site.api.SiteService.SortType, PagingPosition)}
+		 * 
+		 * @param type
+		 *        The SelectionType specifying what sort of selection is intended.
+		 * @param ofType
+		 *        Site type criteria: null for any type; a String to match a single type; A String[], List or Set to match any type in the collection.
+		 * @param criteria
+		 *        Additional selection criteria: sites returned will match this string somewhere in their id, title, description, or skin.
+		 * @param propertyCriteria
+		 *        Additional selection criteria: sites returned will have a property named to match each key in the map, whose values match (somewhere in their value) the value in the map (may be null or empty).
+		 * @param sort
+		 *        A SortType indicating the desired sort. For no sort, set to SortType.NONE.
+		 * @param page
+		 *        The PagePosition subset of items to return.
+		 * @return a List of the Site IDs for the sites matching the criteria.
+		 */
+		List<String> getSiteIds(SelectionType type, Object ofType, String criteria, Map<String, String> propertyCriteria, SortType sort, PagingPosition page);
 
 		/**
 		 * Count the Site objets that meet specified criteria.

@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/portal/trunk/portal-render-engine-impl/impl/src/java/org/sakaiproject/portal/charon/velocity/VelocityPortalRenderEngine.java $
- * $Id: VelocityPortalRenderEngine.java 111844 2012-08-24 20:31:42Z earle.nietzel@gmail.com $
+ * $Id: VelocityPortalRenderEngine.java 132676 2013-12-17 17:01:38Z csev@umich.edu $
  ***********************************************************************************
  *
  * Copyright (c) 2005, 2006, 2007, 2008 The Sakai Foundation
@@ -53,7 +53,7 @@ import org.sakaiproject.tool.api.SessionManager;
  * 
  * @author ieb
  * @since Sakai 2.4
- * @version $Rev: 111844 $
+ * @version $Rev: 132676 $
  */
 
 public class VelocityPortalRenderEngine implements PortalRenderEngine
@@ -68,7 +68,7 @@ public class VelocityPortalRenderEngine implements PortalRenderEngine
 
 	private ServletContext context;
 
-	private String defaultSkin = "defaultskin";
+	private String defaultSkin = "neoskin";
 
 	private boolean styleAble = false;
 

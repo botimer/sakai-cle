@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/msgcntr/trunk/messageforums-api/src/java/org/sakaiproject/api/app/messageforums/PrivateMessageRecipient.java $
- * $Id: PrivateMessageRecipient.java 105078 2012-02-24 23:00:38Z ottenhoff@longsight.com $
+ * $Id: PrivateMessageRecipient.java 130099 2013-10-02 13:01:07Z holladay@longsight.com $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2008 The Sakai Foundation
@@ -42,6 +42,10 @@ public interface PrivateMessageRecipient
   public Boolean getBcc();
   
   public void setBcc(Boolean bcc);
+
+  public Boolean getReplied();
+
+  public void setReplied(Boolean replied);
 
 }
 

@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/jsf/trunk/jsf-app/src/java/org/sakaiproject/jsf/app/SakaiViewHandler.java $
- * $Id: SakaiViewHandler.java 106443 2012-04-01 20:09:04Z darolmar@upvnet.upv.es $
+ * $Id: SakaiViewHandler.java 128959 2013-08-23 00:01:46Z ottenhoff@longsight.com $
  **********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2008 The Sakai Foundation
@@ -42,7 +42,7 @@ import org.sakaiproject.util.Web;
  * SakaiViewHandler extends the basic ViewHandler functionality for getActionURL(). getActionURL() is extended ...
  * 
  * @author University of Michigan, Sakai Software Development Team
- * @version $Revision: 106443 $
+ * @version $Revision: 128959 $
  */
 public class SakaiViewHandler extends ViewHandler
 {
@@ -91,8 +91,11 @@ public class SakaiViewHandler extends ViewHandler
 		String prefix = (String) req.getAttribute(URL_PATH);
 		if ((prefix != null) && path.startsWith(prefix)) path = path.substring(prefix.length());
 
-		String ext = (String) req.getAttribute(URL_EXT);
-		if ((ext != null) && path.endsWith(ext)) path = path.substring(0, path.length() - ext.length());
+		Object extensions = req.getAttribute(URL_EXT);
+		String [] exts = extensions instanceof String?new String[]{(String)extensions}:(String[])extensions; 
+		for (String ext:exts) {
+			if ((ext != null) && path.endsWith(ext)) path = path.substring(0, path.length() - ext.length());
+		}
 
 		// make sure the URL processing uses the Sakai, not Native the request object so we can get at the URL information setup by the invoker
 		req.removeAttribute(Tool.NATIVE_URL);

@@ -1,0 +1,75 @@
+/**********************************************************************************
+* $URL$
+* $Id$
+***********************************************************************************
+*
+ * Copyright (c) 2011 The Sakai Foundation
+ *
+ * Licensed under the Educational Community License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.osedu.org/licenses/ECL-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*
+**********************************************************************************/
+
+package org.theospi.portfolio.util.cover;
+
+import org.sakaiproject.component.cover.ComponentManager;
+import org.sakaiproject.user.api.User;
+import org.sakaiproject.user.api.UserNotDefinedException;
+
+public class CacheUtil {
+
+    private static org.theospi.portfolio.util.api.CacheUtil m_instance = null;
+
+    /**
+     * Access the component instance: special cover only method.
+     * 
+     * @return the component instance.
+     */
+    public static org.theospi.portfolio.util.api.CacheUtil getInstance()
+    {
+        if (ComponentManager.CACHE_COMPONENTS)
+        {
+            if (m_instance == null)
+                m_instance = (org.theospi.portfolio.util.api.CacheUtil) ComponentManager.get(org.theospi.portfolio.util.api.CacheUtil.class);
+            return m_instance;
+        }
+        else
+        {
+            return (org.theospi.portfolio.util.api.CacheUtil) ComponentManager.get(org.theospi.portfolio.util.api.CacheUtil.class);
+        }
+    }
+
+    public static String fetchSiteName(String siteId)
+    {
+        org.theospi.portfolio.util.api.CacheUtil service = getInstance();
+        if (service == null) return null;
+
+        return service.fetchSiteName(siteId);
+    }
+    
+    public static String fetchGroupList(String userId, String siteId)
+    {
+        org.theospi.portfolio.util.api.CacheUtil service = getInstance();
+        if (service == null) return null;
+
+        return service.fetchGroupList(userId, siteId);
+    }
+    
+    public static User fetchUser(String userId) throws UserNotDefinedException
+    {
+        org.theospi.portfolio.util.api.CacheUtil service = getInstance();
+        if (service == null) return null;
+
+        return service.fetchUser(userId);
+    }
+
+}

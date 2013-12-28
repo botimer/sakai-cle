@@ -285,7 +285,7 @@ function toPoint(id)
  * @param pulldown
  */
 function applyMenuListener(pulldown) {
-	var $pulldownHolder = $("[id=itemForm:" + pulldown + "]");	
+	var $pulldownHolder = $("[id='itemForm:" + pulldown + "']");	
 	$pulldownHolder.change( function() {
 		var $editor = $(this).parent("div").find("div.toggle_link_container").parent("td:last");
 		if (this.value === "*new*") {
@@ -298,3 +298,287 @@ function applyMenuListener(pulldown) {
 	// hide the match if needed
 	$pulldownHolder.change();
 };
+
+//consolidate common used functions here for assessment settings
+//improve feedback UI, get rid of page reload bugid:5574 -Qu 10/31/2013
+
+// If we select "No Feedback will be displayed to the student"
+// it will disable and uncheck feedback as well as blank out text, otherwise,
+// if a different radio button is selected, we reenable feedback checkboxes & text.
+function disableAllFeedbackCheck(feedbackType)
+{
+  // By convention we start all feedback JSF ids with "feedback".
+  var feedbackIdFlag = "assessmentSettingsAction:feedback";
+  var feedbackComponentOptionFlag = "assessmentSettingsAction:feedbackComponentOption";
+  var noFeedback = "3";
+  var feedbacks = document.getElementsByTagName('INPUT');
+  var feedbackComponentOptions =document.getElementsByName(feedbackComponentOptionFlag);
+
+  for (i=0; i<feedbacks.length; i++)
+  {
+    if (feedbacks[i].name.indexOf(feedbackIdFlag)==0)
+    {
+      if (feedbackType == noFeedback)
+      {
+        if (feedbacks[i].type == 'checkbox')
+        {
+          feedbacks[i].checked = false;
+          feedbacks[i].disabled = true;
+        }
+        else if (feedbacks[i].type == 'text')
+        {
+          feedbacks[i].value = "";
+          feedbacks[i].disabled = true;
+        }
+        else if ((feedbacks[i].type == 'radio') && (feedbacks[i].name.indexOf(feedbackComponentOptionFlag)==0))
+        {
+            if(feedbacks[i].value == 2) {
+                feedbacks[i].checked = true;
+            }
+            if(feedbacks[i].value == 1) {
+                feedbacks[i].checked = false;
+                feedbacks[i].disabled = true;
+            }
+        }
+      }
+      else
+      {
+         if(feedbackComponentOptions[0].value==1 && feedbackComponentOptions[0].checked == true && feedbacks[i].type=='checkbox')
+         {
+            feedbacks[i].disabled = true;
+         }
+         if(feedbackComponentOptions[1].value==2 && feedbackComponentOptions[1].checked == true){
+            feedbacks[i].disabled = false;
+         }
+      }
+	}
+  }
+}
+
+
+function disableOtherFeedbackComponentOption(field)
+{
+  var fieldValue = field.getAttribute("value");
+  var feedbacks = document.getElementsByTagName('INPUT');
+  var feedbackComponentIdFlag = "assessmentSettingsAction:feedbackCheckbox";
+
+  for (i=0; i<feedbacks.length; i++)
+  {
+    if (feedbacks[i].name.indexOf(feedbackComponentIdFlag)==0)
+
+    {
+         if (feedbacks[i].type == 'checkbox')
+        {
+             if(fieldValue ==1 ){
+                  feedbacks[i].checked = false;
+                  feedbacks[i].disabled = true;
+             }
+             if(fieldValue == 2){
+	              feedbacks[i].disabled = false;
+             }
+        }
+     }
+  }
+}
+
+function validateUrl(){
+  var list =document.getElementsByTagName("input");
+  for (var i=0; i<list.length; i++){
+    if (list[i].id.indexOf("finalPageUrl") >=0){
+      var finalPageUrl = list[i].value;
+	  if (finalPageUrl.substring(0,4).toLowerCase().indexOf("http") == -1)
+	  {
+		finalPageUrl = "http://" + finalPageUrl;
+	  }
+	  //alert(finalPageUrl);
+      window.open(finalPageUrl,'validateUrl');
+    }
+  }
+}
+
+function updateItemNavigation(isFromItemNavigation)
+{
+  var inputhidden = document.getElementById("assessmentSettingsAction:itemNavigationUpdated");
+  inputhidden.value = isFromItemNavigation;
+}
+    
+function uncheckOther(field){
+ var fieldname = field.getAttribute("name");
+ var inputList = document.getElementsByTagName("INPUT");
+
+ for(i = 0; i < inputList.length; i++){
+    if((inputList[i].name.indexOf("background")>=0)&&(inputList[i].name != fieldname))
+         inputList[i].checked=false;
+      
+ }
+}
+
+function showHideReleaseGroups(){
+  var showGroups;
+  var inputList= document.getElementsByTagName("INPUT");
+  for (i = 0; i <inputList.length; i++) 
+  {
+    if(inputList[i].type=='radio')
+    {
+      if(inputList[i].value.indexOf("Selected Groups")>=0) {
+        showGroups=inputList[i].checked;
+        break;
+      }  
+    }
+  }
+  if(showGroups) {
+	document.getElementById("groupDiv").style.display = "block";
+	document.getElementById("groupDiv").style.width = "80%";
+  }
+  else {
+	document.getElementById("groupDiv").style.display = "none";
+  }
+}
+
+function setBlockDivs()
+{  
+   //alert("setBlockDivs()");
+   var divisionNo = ""; 
+   var blockDivs = ""; 
+   blockElements = document.getElementsByTagName("div");
+   //alert("blockElements.length" + blockElements.length);
+   for (i=0 ; i < blockElements.length; i++)
+   {
+      divisionNo = "" + blockElements[i].id;
+	  //alert("divisionNo=" + divisionNo);
+	  //alert("display=" + blockElements[i].style.display);
+      if(divisionNo.indexOf("__hide_division_assessmentSettingsAction") >=0 && blockElements[i].style.display == "block")
+      { 
+         //alert("divisionNo=" + divisionNo);
+         var id = divisionNo.substring(41);
+		 if (blockDivs == "") {
+            blockDivs = id;
+         }
+		 else {
+			 blockDivs = blockDivs + ";" + id; 
+		 }
+		 //alert("blockDivs=" + blockDivs);
+	  }
+   }
+   //document.forms[0].elements['assessmentSettingsAction:blockDivs'].value = "_id224";
+   document.forms[0].elements['assessmentSettingsAction:blockDivs'].value = blockDivs;
+}
+
+function checkUncheckTimeBox(){
+  var inputList= document.getElementsByTagName("INPUT");
+  var timedCheckBoxId;
+  var timedHourId;
+  var timedMinuteId;
+  for (i = 0; i <inputList.length; i++) 
+  {
+    if(inputList[i].type=='checkbox')
+    {
+      if(inputList[i].id.indexOf("selTimeAssess")>=0)
+        timedCheckBoxId = inputList[i].id;
+    }
+  }
+  inputList= document.getElementsByTagName("select");
+  for (i = 0; i <inputList.length; i++) 
+  {
+    if(inputList[i].id.indexOf("timedHours")>=0)
+      timedHourId =inputList[i].id;
+    if(inputList[i].id.indexOf("timedMinutes")>=0)
+      timedMinuteId =inputList[i].id;
+  }
+  if(document.getElementById(timedCheckBoxId) != null)
+  {
+    if(!document.getElementById(timedCheckBoxId).checked)
+    {
+      if(document.getElementById(timedHourId) != null)
+      {
+        for(i=0; i<document.getElementById(timedHourId).options.length; i++)
+        {
+          if(i==0)
+            document.getElementById(timedHourId).options[i].selected = true;
+          else
+            document.getElementById(timedHourId).options[i].selected = false;
+        }
+      }
+      if(document.getElementById(timedMinuteId) != null)
+      {
+        for(i=0; i<document.getElementById(timedMinuteId).options.length; i++)
+        {
+          if(i==0)
+            document.getElementById(timedMinuteId).options[i].selected = true;
+          else
+            document.getElementById(timedMinuteId).options[i].selected = false;
+        }
+      }
+    }
+    else 
+    { // SAM-2121: now the "Timed Assessment" box is checked"
+      // I wish we didn't have to submit this form now, but I could not get it to work properly without submitting.
+      //document.getElementById(timedHourId).disabled = false;
+      //document.getElementById(timedMinuteId).disabled = false;
+      document.forms[0].submit();
+    }    
+  }
+}
+
+function checkUncheckAllReleaseGroups(){
+  var checkboxState = document.getElementById("assessmentSettingsAction:checkUncheckAllReleaseGroups").checked;
+  var inputList= document.getElementsByTagName("INPUT");
+  for (i = 0; i <inputList.length; i++) 
+  {
+    if(inputList[i].type=='checkbox')
+    {
+      if(inputList[i].name.indexOf("groupsForSite")>=0)
+        inputList[i].checked=checkboxState;
+    }
+  }
+}
+
+function checkTimeSelect(){
+  var autoSubmitId;
+  var timedAssessmentId;
+  var inputList= document.getElementsByTagName("INPUT");
+  for (i = 0; i <inputList.length; i++) {
+    if(inputList[i].type=='checkbox'){
+      if(inputList[i].id.indexOf("selTimeAssess")>=0)
+        timedAssessmentId= inputList[i].id;
+      if(inputList[i].id.indexOf("automatic")>=0)
+        autoSubmitId=inputList[i].id;
+    }
+  }
+
+  if(document.getElementById(timedAssessmentId) != null)
+  {
+    if(!document.getElementById(timedAssessmentId).checked && document.getElementById(autoSubmitId) != null)
+    {
+      document.getElementById(autoSubmitId).disabled=true;
+    }
+    else if((document.getElementById(autoSubmitId) != null) && (document.getElementById(autoSubmitId).disabled != null))
+    {
+      document.getElementById(autoSubmitId).disabled=false;
+    }
+  }
+  else if((document.getElementById(autoSubmitId) != null) && (document.getElementById(autoSubmitId).disabled != null))
+  {
+    document.getElementById(autoSubmitId).disabled=false;
+  }
+}
+
+function lockdownQuestionLayout(value) {
+  if (value == 1) {
+    $('#assessmentSettingsAction\\:assessmentFormat input[value=1]').prop('checked', 'checked');
+    $('#assessmentSettingsAction\\:assessmentFormat input').prop('disabled', 'disabled');
+  } 
+  else {
+    $('#assessmentSettingsAction\\:assessmentFormat input').prop('disabled', '');
+  }
+}
+
+function lockdownMarkForReview(value) {
+  if (value == 1) {
+    $('#assessmentSettingsAction\\:markForReview1').prop('checked', '');
+    $('#assessmentSettingsAction\\:markForReview1').prop('disabled', 'disabled');
+  } 
+  else {
+    $('#assessmentSettingsAction\\:markForReview1').prop('disabled', '');
+  }
+}

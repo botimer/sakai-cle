@@ -14,6 +14,11 @@ $(document).ready(function() {
 			var params = { id : osp.bag.presentationId };
 			params[$(this).attr('name')] = $(this).val();
 			$.post('updatePresentation.osp', params );
+		} else {
+			if ($(this).is(':checkbox')) {
+				var params = { id : osp.bag.presentationId };
+				$.post('updatePresentation.osp', params );
+			}
 		}
 	});
 });
@@ -82,27 +87,41 @@ $(document).ready(function() {
 	<div class="presentation_menu_block">
 		<div>
 			<div> 
+			      <fieldset style="margin-top: 0;">
+			        <legend style="position:absolute; left:-10000px; top:auto; width:1px; height:1px; overflow:hidden;">
+	                          <fmt:message key="legend_portfolio_status" />
+                    </legend> 
 				<p class="quickLink">
 					<input class="autoPost" type="radio"
 					       id="btnActive"
 					       name="active" value="true"
+					       aria-describedby="rbStatus1"
 					       <c:if test="${active}">checked="checked"</c:if> />
 					<label for="btnActive"><c:out value="${msgs.button_active}" /></label>
 				</p>
 				<p class="quickLinkInfo">
-					<c:out value="${msgs.active_caption}" />
+				    <input class="autoPost"  type="checkbox" 
+				           id="btnNotSearchable" name="not_searchable" value="true"
+				           <c:if test="${not_searchable}">checked="checked"</c:if> />
+                    <fmt:message key="button_not_include_in_search"/>				           
 				</p>
-				
+				<p style="line-height:4px;">&nbsp;</p>
+				<p class="quickLinkInfo" id="rbStatus1">
+					<fmt:message key="active_caption" />
+				</p>
+				<p class="quickLink">&nbsp;</p>				
 				<p class="quickLink">
 					<input class="autoPost" type="radio"
 					       id="btnInactive"
 					       name="active" value="false"
+					       aria-describedby="rbStatus2"
 					       <c:if test="${not active}">checked="checked"</c:if> />
 					<label for="btnInactive"><c:out value="${msgs.button_inactive}" /></label>
 				</p>
-				<p class="quickLinkInfo">
+				<p class="quickLinkInfo" id="rbStatus2">
 					<c:out value="${msgs.inactive_caption}" />
 				</p>
+			      </fieldset>				
 			</div>
 		</div>
 	</div>
@@ -146,26 +165,33 @@ $(document).ready(function() {
 	<div class="presentation_menu_block">
 		<div>
 			<div>
+        	    <fieldset style="margin-top: 0;">
+                  <legend style="position:absolute; left:-10000px; top:auto; width:1px; height:1px; overflow:hidden;">
+                    <fmt:message key="legend_allowComments" />
+                  </legend>			
 				<p class="quickLink">
 					<input class="autoPost" type="radio"
 					       id="btnAllow"
 					       name="allowComments" value="true"
+					       aria-describedby="rbComments1"
 					       <c:if test="${presentation.allowComments}">checked="checked"</c:if> />
 					<label for="btnAllow"><c:out value="${msgs.button_allow}" /></label>
 				</p>
-				<p class="quickLinkInfo">
+				<p class="quickLinkInfo" id="rbComments1">
 					<c:out value="${msgs.allowed_caption}" />
 				</p>
 				<p class="quickLink">
 					<input class="autoPost" type="radio"
 					       id="btnDisallow"
 					       name="allowComments" value="false"
+					       aria-describedby="rbComments2"
 					       <c:if test="${not presentation.allowComments}">checked="checked"</c:if> />
 					<label for="btnDisallow"><c:out value="${msgs.button_disallow}" /></label>
 				</p>
-				<p class="quickLinkInfo">
+				<p class="quickLinkInfo" id="rbComments2">
 					<c:out value="${msgs.disallowed_caption}" />
 				</p>
+		        </fieldset>
 			</div>
 			<c:if test="${numComments > 0}">
 				<hr style="border: 1px solid #CCCCCC; width: 90%; "/>

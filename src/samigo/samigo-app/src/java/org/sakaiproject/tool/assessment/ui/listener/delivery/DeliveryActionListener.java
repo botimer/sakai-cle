@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/sam/trunk/samigo-app/src/java/org/sakaiproject/tool/assessment/ui/listener/delivery/DeliveryActionListener.java $
- * $Id: DeliveryActionListener.java 124154 2013-05-16 14:04:00Z azeckoski@unicon.net $
+ * $Id: DeliveryActionListener.java 130878 2013-10-25 22:48:06Z ktsao@stanford.edu $
  ***********************************************************************************
  *
  * Copyright (c) 2004, 2005, 2006, 2007, 2008, 2009 The Sakai Foundation
@@ -106,7 +106,7 @@ import org.sakaiproject.util.ResourceLoader;
  * <p>Purpose:  this module creates the lists of published assessments for the select index
  * <p>Description: Sakai Assessment Manager</p>
  * @author Ed Smiley
- * @version $Id: DeliveryActionListener.java 124154 2013-05-16 14:04:00Z azeckoski@unicon.net $
+ * @version $Id: DeliveryActionListener.java 130878 2013-10-25 22:48:06Z ktsao@stanford.edu $
  */
 
 public class DeliveryActionListener
@@ -211,6 +211,7 @@ public class DeliveryActionListener
       GradingService service = new GradingService();
       PublishedAssessmentService pubService = new PublishedAssessmentService();
       AssessmentGradingData ag = null;
+      SecureDeliveryServiceAPI secureDelivery = SamigoApiFactory.getInstance().getSecureDeliveryServiceAPI();
       boolean isFirstTimeBegin = false;
       
       switch (action){
@@ -257,7 +258,6 @@ public class DeliveryActionListener
               delivery.setSecureDeliveryHTMLFragment( "" );
               delivery.setBlockDelivery( false );
               
-              SecureDeliveryServiceAPI secureDelivery = SamigoApiFactory.getInstance().getSecureDeliveryServiceAPI();
               if ( secureDelivery.isSecureDeliveryAvaliable() ) {
             	  
             	  String moduleId = publishedAssessment.getAssessmentMetaDataByLabel( SecureDeliveryServiceAPI.MODULE_KEY );
@@ -307,6 +307,18 @@ public class DeliveryActionListener
             			  return;
             		  }
             	  }
+                  
+                  // #3. secure delivery START phase
+                  if ( secureDelivery.isSecureDeliveryAvaliable() ) {
+                      String moduleId = publishedAssessment.getAssessmentMetaDataByLabel( SecureDeliveryServiceAPI.MODULE_KEY );
+                      if ( moduleId != null && ! SecureDeliveryServiceAPI.NONE_ID.equals( moduleId ) ) {
+                          HttpServletRequest request = (HttpServletRequest) FacesContext.getCurrentInstance().getExternalContext().getRequest();
+                          PhaseStatus status = secureDelivery.validatePhase(moduleId, Phase.ASSESSMENT_START, publishedAssessment, request );
+                          if ( PhaseStatus.FAILURE == status ) {
+                              return;
+                          }
+                      }    	  
+                  }
               }
               
               // If this is a linear access and user clicks on Show Feedback, we do not
@@ -409,10 +421,7 @@ public class DeliveryActionListener
                       
                   eventLogFacade.setData(eventLogData);
                   eventService.saveOrUpdateEventLog(eventLogFacade);           	  
-                  LearningResourceStoreService lrss = (LearningResourceStoreService) ComponentManager
-                            .get("org.sakaiproject.event.api.LearningResourceStoreService");
-                  StringBuffer lrssMetaInfo = new StringBuffer("Assesment: " + delivery.getAssessmentTitle());
-                  lrssMetaInfo.append(", Past Due?: " + delivery.getPastDue());
+                  
             	  if (action == DeliveryBean.TAKE_ASSESSMENT) {
             		  StringBuffer eventRef = new StringBuffer("publishedAssessmentId=");
             		  eventRef.append(delivery.getAssessmentId());
@@ -428,9 +437,7 @@ public class DeliveryActionListener
                       Event event = EventTrackingService.newEvent("sam.assessment.take",
                               "siteId=" + site_id + ", " + eventRef.toString(), true);
                       EventTrackingService.post(event);
-                      if (null != lrss) {
-                          lrss.registerStatement(getStatementForTakeAssessment(lrss.getEventActor(event), event, lrssMetaInfo.toString()), "samigo");
-                      }
+                      registerIrss(delivery, event, false);
             	  }
             	  else if (action == DeliveryBean.TAKE_ASSESSMENT_VIA_URL) {
             		  StringBuffer eventRef = new StringBuffer("publishedAssessmentId=");
@@ -447,10 +454,7 @@ public class DeliveryActionListener
                       Event event = EventTrackingService.newEvent("sam.assessment.take.via_url",
                                 "siteId=" + site_id + ", " + eventRef.toString(), site_id, true, NotificationService.NOTI_REQUIRED);
                       EventTrackingService.post(event);
-                      lrssMetaInfo.append(", Assesment taken via URL.");
-                      if (null != lrss) {
-                          lrss.registerStatement(getStatementForTakeAssessment(lrss.getEventActor(event), event, lrssMetaInfo.toString()), "samigo");
-                      }
+                      registerIrss(delivery, event, true);
             	  }
               }
               else {
@@ -529,6 +533,19 @@ public class DeliveryActionListener
     	throw e;
     }
 
+  }
+  
+  protected void registerIrss(DeliveryBean delivery, Event event, boolean isViaURL) {
+	  LearningResourceStoreService lrss = (LearningResourceStoreService) ComponentManager
+			  .get("org.sakaiproject.event.api.LearningResourceStoreService");
+	  if (null != lrss && lrss.getEventActor(event) != null) {
+		  StringBuffer lrssMetaInfo = new StringBuffer("Assesment: " + delivery.getAssessmentTitle());
+		  lrssMetaInfo.append(", Past Due?: " + delivery.getPastDue());
+		  if (isViaURL) {
+			  lrssMetaInfo.append(", Assesment taken via URL.");
+		  }
+		  lrss.registerStatement(getStatementForTakeAssessment(lrss.getEventActor(event), event, lrssMetaInfo.toString()), "samigo");
+	  }
   }
 
   /**
@@ -1623,11 +1640,11 @@ public class DeliveryActionListener
     }
     else if (item.getTypeId().equals(TypeIfc.FILL_IN_BLANK)) // fill in the blank
     {
-      populateFib(item, itemBean);
+      populateFib(item, itemBean, publishedAnswerHash);
     }
     else if (item.getTypeId().equals(TypeIfc.FILL_IN_NUMERIC)) //numeric response
     {
-      populateFin(item, itemBean);
+      populateFin(item, itemBean, publishedAnswerHash);
     }
     else if (item.getTypeId().equals(TypeIfc.ESSAY_QUESTION)) 
     {
@@ -1749,7 +1766,7 @@ public class DeliveryActionListener
     bean.setAnswers(newAnswers); // Change the answers to just text
   }
 
-  public void populateFib(ItemDataIfc item, ItemContentsBean bean)
+  public void populateFib(ItemDataIfc item, ItemContentsBean bean, HashMap<Long, AnswerIfc> publishedAnswerHash)
   {
     // Only one text in FIB
     ItemTextIfc text = (ItemTextIfc) item.getItemTextArraySorted().toArray()[0];
@@ -1785,15 +1802,23 @@ public class DeliveryActionListener
           {
             fbean.setItemGradingData(data);
             fbean.setResponse(FormattedText.convertFormattedTextToPlaintext(data.getAnswerText()));
-            fbean.setIsCorrect(false);
             if (answer.getText() == null)
             {
               answer.setText("");
             }
             
-            if (data.getIsCorrect() != null && data.getIsCorrect().booleanValue())
-            {
-              fbean.setIsCorrect(true);
+            if (data.getIsCorrect() == null) {
+            	GradingService gs = new GradingService();
+            	HashMap<Long, Set<String>> fibmap = new HashMap<Long, Set<String>>();
+            	fbean.setIsCorrect(gs.getFIBResult(data, fibmap, item, publishedAnswerHash));
+            }
+            else {
+            	if (data.getIsCorrect().booleanValue()) {
+            		fbean.setIsCorrect(true);
+            	}
+            	else {
+            		fbean.setIsCorrect(false);
+            	}
             }
           }
         }
@@ -1891,7 +1916,7 @@ public class DeliveryActionListener
   } 
   */
    
-  public void populateFin(ItemDataIfc item, ItemContentsBean bean)
+  public void populateFin(ItemDataIfc item, ItemContentsBean bean, HashMap<Long, AnswerIfc> publishedAnswerHash)
   {
     // Only one text in FIN
     ItemTextIfc text = (ItemTextIfc) item.getItemTextArraySorted().toArray()[0];
@@ -1932,15 +1957,23 @@ public class DeliveryActionListener
         	  
             fbean.setItemGradingData(data);
             fbean.setResponse(FormattedText.convertFormattedTextToPlaintext(data.getAnswerText()));
-            fbean.setIsCorrect(false);
             if (answer.getText() == null)
             {
               answer.setText("");
             }
             
-            if (data.getIsCorrect() != null && data.getIsCorrect().booleanValue())
-            {
-              fbean.setIsCorrect(true);
+            if (data.getIsCorrect() == null) {
+            	GradingService gs = new GradingService();
+            	HashMap<Long, Set<String>> fibmap = new HashMap<Long, Set<String>>();
+            	fbean.setIsCorrect(gs.getFINResult(data, item, publishedAnswerHash));
+            }
+            else {
+            	if (data.getIsCorrect().booleanValue()) {
+            		fbean.setIsCorrect(true);
+            	}
+            	else {
+            		fbean.setIsCorrect(false);
+            	}
             }
           }
         }

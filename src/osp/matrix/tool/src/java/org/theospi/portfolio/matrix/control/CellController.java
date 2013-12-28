@@ -75,6 +75,7 @@ import org.theospi.portfolio.matrix.WizardPageHelper;
 import org.theospi.portfolio.matrix.model.Cell;
 import org.theospi.portfolio.matrix.model.Scaffolding;
 import org.theospi.portfolio.matrix.model.WizardPage;
+import org.theospi.portfolio.matrix.model.WizardPageDefinition;
 import org.theospi.portfolio.matrix.model.impl.MatrixContentEntityProducer;
 import org.theospi.portfolio.review.ReviewHelper;
 import org.theospi.portfolio.review.mgt.ReviewManager;
@@ -89,6 +90,7 @@ import org.theospi.portfolio.tagging.api.DTaggingPager;
 import org.theospi.portfolio.tagging.api.DTaggingSort;
 import org.theospi.portfolio.tagging.api.DecoratedTaggableItem;
 import org.theospi.portfolio.tagging.api.DecoratedTaggingProvider;
+import org.theospi.portfolio.wizard.WizardFunctionConstants;
 import org.theospi.portfolio.wizard.mgt.WizardManager;
 import org.theospi.portfolio.wizard.taggable.api.WizardActivityProducer;
 
@@ -173,12 +175,13 @@ public class CellController implements FormController, LoadObjectController {
 		}
 	
 
-		
+		boolean matrixCanEvaluate = false;
+		boolean matrixCanReview = false;
 		
 		model.put("matrixCanViewCell", false);
 		if(request.get("comingFromWizard") == null){
 			//depending on isDefaultFeedbackEval, either send the scaffolding id or the scaffolding cell's id
-			boolean matrixCanEvaluate = getMatrixManager().hasPermission(cell.getCell()
+			matrixCanEvaluate = getMatrixManager().hasPermission(cell.getCell()
 					.getScaffoldingCell().isDefaultEvaluators() ? cell.getCell()
 							.getScaffoldingCell().getScaffolding().getId() : cell.getCell()
 							.getScaffoldingCell().getWizardPageDefinition().getId(),
@@ -193,7 +196,7 @@ public class CellController implements FormController, LoadObjectController {
 					.isAllowRequestFeedback() : cell.getCell()
 					.getScaffoldingCell().getWizardPageDefinition()
 					.isAllowRequestFeedback();
-			boolean matrixCanReview = getMatrixManager().hasPermission(cell.getCell()
+			matrixCanReview = getMatrixManager().hasPermission(cell.getCell()
 					.getScaffoldingCell().isDefaultReviewers() ? cell.getCell()
 							.getScaffoldingCell().getScaffolding().getId() : cell.getCell()
 							.getScaffoldingCell().getWizardPageDefinition().getId(),
@@ -233,10 +236,11 @@ public class CellController implements FormController, LoadObjectController {
 			
 		}
 		
-		model.put("isMatrix", "true");
-		model.put("isWizard", "false");
+		model.put("isMatrix", isMatrix());
+		model.put("isWizard", isWizard());
 		model.put("enableReviewEdit", getEnableReviewEdit());
-		model.put("currentUser", getSessionManager().getCurrentSessionUserId());
+		String currentUser = getSessionManager().getCurrentSessionUserId();
+		model.put("currentUser", currentUser);
 		model.put("CURRENT_GUIDANCE_ID_KEY", "session."
 				+ GuidanceManager.CURRENT_GUIDANCE_ID);
 
@@ -262,7 +266,7 @@ public class CellController implements FormController, LoadObjectController {
 		String pageId = cell.getCell().getWizardPage().getId().getValue();
 		String siteId = cell.getCell().getWizardPage().getPageDefinition().getSiteId();
 		model.put("siteId", idManager.getId(siteId));
-		List reviews =	
+		List<Review> reviews =	
 			getReviewManager().getReviewsByParentAndType( pageId, Review.FEEDBACK_TYPE, siteId, getEntityProducer() );
 		ArrayList<Node> cellForms = new ArrayList<Node>(getMatrixManager().getPageForms(cell.getCell().getWizardPage()));
 		Collections.sort(cellForms, new NodeNameComparator());
@@ -281,10 +285,22 @@ public class CellController implements FormController, LoadObjectController {
 				pageId, Review.EVALUATION_TYPE, siteId, getEntityProducer()));
 		model.put("reflections", getReviewManager().getReviewsByParentAndType(
 				pageId, Review.REFLECTION_TYPE, siteId, getEntityProducer()));
+		List<Review> itemEvals = getReviewManager().getReviewsByParentAndType(
+				pageId, Review.ITEM_LEVEL_EVAL_TYPE, siteId, getEntityProducer());
+		model.put("itemEvals", itemEvals);
 		model.put("cellForms", cellForms );
 		model.put("numCellForms", cellForms.size() );		
 
 		Boolean readOnly = Boolean.valueOf(false);
+		List<Review> itemFeedbackAndEvals = new ArrayList<Review>();
+		itemFeedbackAndEvals.addAll(reviews);
+		itemFeedbackAndEvals.addAll(itemEvals);
+		
+		boolean wizardCanEval = getAuthzManager().isAuthorized(WizardFunctionConstants.EVALUATE_WIZARD, getIdManager().getId(siteId));
+		boolean wizardCanReview = getAuthzManager().isAuthorized(WizardFunctionConstants.REVIEW_WIZARD, getIdManager().getId(siteId));
+		
+		boolean canViewOtherFeedback = false;
+		boolean canViewOtherEvals = false;
 				
 		// Matrix-only initializations
 		if (cell.getCell().getMatrix() != null) {
@@ -306,14 +322,21 @@ public class CellController implements FormController, LoadObjectController {
 			model.put("objectTitle", scaffolding.getTitle());
 			model.put("objectDesc", scaffolding.getDescription());
 			model.put("wizardOwner", rb.getFormattedMessage("matrix_of", new Object[]{owner.getDisplayName()}) );
+			
+			String scaffoldingRef = scaffolding.getReference();
+			canViewOtherFeedback = getAuthzManager().isAuthorized(MatrixFunctionConstants.VIEW_FEEDBACK_OTHER, getIdManager().getId(scaffoldingRef));
+			canViewOtherEvals = getAuthzManager().isAuthorized(MatrixFunctionConstants.VIEW_EVAL_OTHER, getIdManager().getId(scaffoldingRef));
 		}
-
+		
+		model.put("wrappedItemFeedbackAndEvals", wrapReviews(itemFeedbackAndEvals, currentUser, isWizard(), canViewOtherFeedback, canViewOtherEvals, 
+					cell.getCell(), wizardCanReview, wizardCanEval, matrixCanReview, matrixCanEvaluate));
+		
 		model.put("readOnlyMatrix", readOnly);
 
       model.put("styles",
     		  getStyleManager().createStyleUrlList(getStyleManager().getStyles(getIdManager().getId(pageId))));
 
-      if (getTaggingManager().isTaggable()) {
+      if (getTaggingManager().isTaggable() && serverConfigurationService.getBoolean(WizardActivityProducer.PRODUCER_ENABLED_KEY, true)) {
 			TaggableItem item = wizardActivityProducer.getItem(cell.getCell()
 					.getWizardPage());
 			model.put("taggable", "true");
@@ -344,6 +367,18 @@ public class CellController implements FormController, LoadObjectController {
 
 		clearSession(session);
 		return model;
+	}
+	
+	protected String isWizard() {
+		return "false";
+	}
+	
+	protected String isMatrix() {
+		return "true";
+	}
+	
+	protected boolean canEval(Id id) {
+		return getAuthzManager().isAuthorized(WizardFunctionConstants.EVALUATE_WIZARD, id);
 	}
 	
 	public static Comparator<DecoratedTaggableItem> decoTaggableItemComparator;
@@ -936,6 +971,147 @@ public class CellController implements FormController, LoadObjectController {
 
 	public void setWizardManager(WizardManager wizardManager) {
 		this.wizardManager = wizardManager;
+	}
+	
+	private List<WrappedReview> wrapReviews(List<Review> reviews, String currentUser, String isWizard, 
+			boolean viewFeedbackOther, boolean viewEvalOther, Cell cell,
+			boolean wizardCanReview, boolean wizardCanEval, boolean matrixCanReview, boolean matrixCanEvaluate) {
+		List<WrappedReview> wrapped = new ArrayList<WrappedReview>();
+		
+		WizardPage page = cell.getWizardPage();
+		WizardPageDefinition pageDef = page.getPageDefinition();
+		
+		for (Review rev : reviews) {
+			//if not hidden
+			if (rev.getType() == Review.ITEM_LEVEL_EVAL_TYPE && !page.getOwner().getId().getValue().equals(currentUser) || 
+					(page.getOwner().getId().getValue().equals(currentUser) && !Boolean.parseBoolean(isWizard) &&
+							(!pageDef.isHideItemLevelEvals() && !pageDef.isDefaultItemLevelEval() || 
+					(!cell.getScaffoldingCell().getScaffolding().isHideItemLevelEvals() && pageDef.isDefaultItemLevelEval())
+					))) {
+				wrapped.add(new WrappedReview(rev, currentUser, isWizard, viewFeedbackOther, viewEvalOther, page, wizardCanReview, wizardCanEval, matrixCanReview, matrixCanEvaluate));
+			}
+			else if (rev.getType() != Review.ITEM_LEVEL_EVAL_TYPE) {
+				wrapped.add(new WrappedReview(rev, currentUser, isWizard, viewFeedbackOther, viewEvalOther, page, wizardCanReview, wizardCanEval, matrixCanReview, matrixCanEvaluate));
+			}
+		}
+		Collections.sort(wrapped, new WrappedReviewComparator());
+		return wrapped;
+	}
+	
+	/**
+	 * Comparator for last mod date
+	 * @author chrismaurer
+	 *
+	 */
+	private class WrappedReviewComparator implements Comparator<WrappedReview> {
+        public int compare(WrappedReview n1, WrappedReview n2) {
+            return -1 * n1.getReview().getReviewContentNode().getTechnicalMetadata().getLastModified().compareTo(
+            		n2.getReview().getReviewContentNode().getTechnicalMetadata().getLastModified());
+        }
+
+        public boolean equals(Object o) {
+            return (this == o || o instanceof WrappedReviewComparator);
+        }
+    }
+	
+	/**
+	 * Wrapper class will be used in the various viewCell pages to help with displaying content
+	 * @author chrismaurer
+	 *
+	 */
+	public class WrappedReview {
+		private Review review;
+		private boolean canModify = false;
+		private boolean canView = false;
+		private String icon;
+		
+		
+		public WrappedReview() {
+			
+		}
+		
+		public WrappedReview(Review review, String currentUser, String isWizard, boolean viewFeedbackOther, 
+				boolean viewEvalOther, WizardPage page, boolean wizardCanReview, boolean wizardCanEval,
+				boolean matrixCanReview, boolean matrixCanEvaluate) {
+			this.setReview(review);
+			switch(review.getType()) {
+			case Review.FEEDBACK_TYPE:
+				this.icon = "comment.gif";
+
+				//object.reviewContentNode.technicalMetadata.owner.id == currentUser || 
+				//(scaffoldingCan.viewFeedbackOther && isWizard != 'true') || 
+				//((wizardCan.evaluate || wizardCan.review) && isWizard == 'true') || 
+				//cell.wizardPage.owner.id == currentUser}">
+				this.canView = review.getReviewContentNode().getTechnicalMetadata().getOwner().getId().getValue().equals(currentUser) ||
+					(viewFeedbackOther && !"true".equalsIgnoreCase(isWizard)) ||
+					((wizardCanEval || wizardCanReview) && "true".equalsIgnoreCase(isWizard)) ||
+					(page.getOwner().getId().getValue().equals(currentUser));
+
+				//((isWizard != 'true' && matrixCanReview) || (isWizard == 'true' && wizardCan.review))
+		        //&& enableReviewEdit && object.reviewContentNode.technicalMetadata.owner.id == currentUser 
+				this.canModify = ((!"true".equalsIgnoreCase(isWizard) && matrixCanReview) || ("true".equalsIgnoreCase(isWizard) && wizardCanReview)) &&
+					getEnableReviewEdit() && review.getReviewContentNode().getTechnicalMetadata().getOwner().getId().getValue().equals(currentUser);
+
+				break;
+			case Review.ITEM_LEVEL_EVAL_TYPE:
+				this.icon = "comments.gif";
+				//object.reviewContentNode.technicalMetadata.owner.id == currentUser || 
+				//	(scaffoldingCan.viewEvalOther && isWizard != 'true') || 
+				//	(wizardCan.evaluate && isWizard == 'true') || 
+				//	cell.wizardPage.owner.id == currentUser
+				this.canView = review.getReviewContentNode().getTechnicalMetadata().getOwner().getId().getValue().equals(currentUser) ||
+					(viewEvalOther && !"true".equalsIgnoreCase(isWizard)) ||
+					(wizardCanEval && "true".equalsIgnoreCase(isWizard)) ||
+					(page.getOwner().getId().getValue().equals(currentUser));
+
+				// "${((isWizard != 'true' && matrixCanEvaluate) || (isWizard == 'true' && wizardCan.evaluate))
+				//	&& enableReviewEdit && object.reviewContentNode.technicalMetadata.owner.id == currentUser }"
+				this.canModify = ((!"true".equalsIgnoreCase(isWizard) && matrixCanEvaluate) || ("true".equalsIgnoreCase(isWizard) && wizardCanEval)) &&
+					getEnableReviewEdit() && review.getReviewContentNode().getTechnicalMetadata().getOwner().getId().getValue().equals(currentUser);
+
+				break;
+
+			}
+
+		}
+
+		/**
+		 * @param review the review to set
+		 */
+		public void setReview(Review review) {
+			this.review = review;
+		}
+
+		/**
+		 * @return the review
+		 */
+		public Review getReview() {
+			return review;
+		}
+
+		public boolean isCanModify() {
+			return canModify;
+		}
+
+		public void setCanModify(boolean canModify) {
+			this.canModify = canModify;
+		}
+
+		public boolean isCanView() {
+			return canView;
+		}
+
+		public void setCanView(boolean canView) {
+			this.canView = canView;
+		}
+
+		public String getIcon() {
+			return icon;
+		}
+
+		public void setIcon(String icon) {
+			this.icon = icon;
+		}
 	}
 
 }

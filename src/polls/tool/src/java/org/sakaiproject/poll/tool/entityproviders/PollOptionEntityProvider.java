@@ -1,5 +1,5 @@
 /**
- * $Id: PollOptionEntityProvider.java 105078 2012-02-24 23:00:38Z ottenhoff@longsight.com $
+ * $Id: PollOptionEntityProvider.java 127888 2013-07-29 11:54:18Z steve.swinsburg@gmail.com $
  * $URL: https://source.sakaiproject.org/svn/polls/trunk/tool/src/java/org/sakaiproject/poll/tool/entityproviders/PollOptionEntityProvider.java $
  * VoteEntityProvider.java - polls - Aug 22, 2008 9:50:39 PM - azeckoski
  **************************************************************************
@@ -56,6 +56,7 @@ public class PollOptionEntityProvider extends AbstractEntityProvider implements 
         return PREFIX;
     }
 
+    @Deprecated
     public boolean entityExists(String id) {
         if (id == null) {
             return false;
@@ -68,6 +69,7 @@ public class PollOptionEntityProvider extends AbstractEntityProvider implements 
         return exists;
     }
 
+    @Deprecated
     public String createEntity(EntityReference ref, Object entity, Map<String, Object> params) {
         String userReference = developerHelperService.getCurrentUserReference();
         if (userReference == null) {
@@ -92,6 +94,7 @@ public class PollOptionEntityProvider extends AbstractEntityProvider implements 
         return option.getId()+"";
     }
 
+    @Deprecated
     public void updateEntity(EntityReference ref, Object entity, Map<String, Object> params) {
         String id = ref.getId();
         if (id == null) {
@@ -114,6 +117,7 @@ public class PollOptionEntityProvider extends AbstractEntityProvider implements 
         }
     }
 
+    @Deprecated
     public void deleteEntity(EntityReference ref, Map<String, Object> params) {
         String id = ref.getId();
         String userReference = developerHelperService.getCurrentUserReference();
@@ -132,6 +136,7 @@ public class PollOptionEntityProvider extends AbstractEntityProvider implements 
         return new Option();
     }
 
+    @Deprecated
     public Object getEntity(EntityReference ref) {
         String id = ref.getId();
         if (id == null) {
@@ -156,6 +161,7 @@ public class PollOptionEntityProvider extends AbstractEntityProvider implements 
         return option;
     }
 
+    @Deprecated
     public List<?> getEntities(EntityReference ref, Search search) {
         // get the pollId
         Restriction pollRes = search.getRestrictionByProperty("pollId");
@@ -207,6 +213,7 @@ public class PollOptionEntityProvider extends AbstractEntityProvider implements 
      * @param userRef
      * @param option
      */
+    @Deprecated
     private void checkOptionPermission(String userRef, Option option) {
         if (option.getPollId() == null) {
             throw new IllegalArgumentException("Poll Id must be set in the option to check permissions: " + option);
@@ -228,6 +235,7 @@ public class PollOptionEntityProvider extends AbstractEntityProvider implements 
      * @param id
      * @return
      */
+    @Deprecated
     private Option getOptionById(String id) {
         Long optionId;
         try {

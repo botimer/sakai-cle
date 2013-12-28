@@ -125,6 +125,9 @@ public class ProfileConstants {
 	
 	//gravatar base URL
 	public static final String GRAVATAR_BASE_URL = "http://www.gravatar.com/avatar/";
+
+    // Defines the name of the blank image, the one a user gets when nothing else is available
+    public static final String BLANK = "blank";
 	
 	
 	/*
@@ -215,6 +218,7 @@ public class ProfileConstants {
 	public static final boolean SAKAI_PROP_PROFILE2_IMPORT_ENABLED = false; //profile2.import
 	public static final boolean SAKAI_PROP_PROFILE2_PROFILE_FIELDS_ENABLED = true; //profile2.profile.fields.enabled
 	public static final boolean SAKAI_PROP_PROFILE2_PROFILE_STATUS_ENABLED = true; //profile2.profile.status.enabled
+	public static final boolean SAKAI_PROP_PROFILE2_IMPORT_IMAGES_ENABLED = false; // profile2.import.images
 
 
 	
@@ -395,6 +399,7 @@ public class ProfileConstants {
 	 */
 	
 	public static final String ROSTER_VIEW_PHOTO = "roster.viewofficialphoto";
+	public static final String ROSTER_VIEW_EMAIL = "roster.viewemail";
 	
 	
 	/*
@@ -402,6 +407,7 @@ public class ProfileConstants {
 	 */
 	public static final String GOOGLE_REDIRECT_URI = "urn:ietf:wg:oauth:2.0:oob";
 	public static final String GOOGLE_DOCS_SCOPE = "https://docs.google.com/feeds/";
+
 	
 	
 }

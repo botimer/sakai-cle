@@ -165,7 +165,7 @@ public class EditScaffoldingCellController extends
 		model.put("enableAssignments", ServerConfigurationService.getBoolean("osp.experimental.assignments",false) );
 		model.put("feedbackOpts", sCell.getScaffolding());
 
-		if (sCell.getScaffolding() != null){
+		if (sCell != null && sCell.getScaffolding() != null){
 			//after the cell used booleans are set to false, have "icCellUsed(sCell)" update them accordingly
 			if(sCell.getScaffolding().isPublished()){
 				customFormUsed = getMatrixManager().getFormCountByPageDef(sCell.getWizardPageDefinition().getId()) > 0;
@@ -298,6 +298,30 @@ public class EditScaffoldingCellController extends
 	      }else{
 	    	  scaffoldingCell.setHideEvaluations(true);  
 	      }
+		  
+		  if(request.get("defaultItemLevelEval") == null || request.get("defaultItemLevelEval").toString().equals("false")){
+			  scaffoldingCell.getWizardPageDefinition().setDefaultItemLevelEval(false);
+		  }else{
+			  scaffoldingCell.getWizardPageDefinition().setDefaultItemLevelEval(true);  
+		  }
+
+		  if(request.get("itemLevelEvals") == null || request.get("itemLevelEvals").toString().equals("false")){
+			  scaffoldingCell.getWizardPageDefinition().setItemLevelEvals(false);
+		  }else{
+			  scaffoldingCell.getWizardPageDefinition().setItemLevelEvals(true);  
+		  }
+
+		  if(request.get("enableItemLevelEvalsInLinkedTools") == null || request.get("enableItemLevelEvalsInLinkedTools").toString().equals("false")){
+			  scaffoldingCell.getWizardPageDefinition().setEnableItemLevelEvalsInLinkedTools(false);
+		  }else{
+			  scaffoldingCell.getWizardPageDefinition().setEnableItemLevelEvalsInLinkedTools(true);  
+		  }
+
+		  if(request.get("hideItemLevelEvals") == null || request.get("hideItemLevelEvals").toString().equals("false")){
+			  scaffoldingCell.getWizardPageDefinition().setHideItemLevelEvals(false);
+		  }else{
+			  scaffoldingCell.getWizardPageDefinition().setHideItemLevelEvals(true);  
+		  }
 		//End Checkbox saves
 
 		if (addFormAction != null) {
@@ -578,16 +602,20 @@ public class EditScaffoldingCellController extends
     	  session.remove("audience");
     	  session.remove("osp.audiencesakai.tool.helper.done.url");
     	  
+          boolean isWizard = false;
+          if(!scaffoldingCell.getWizardPageDefinition().getType().equals(scaffoldingCell.getWizardPageDefinition().WPD_MATRIX_TYPE))
+              isWizard = true;
+        
     	  if(forwardView.compareTo("selectEvaluators") == 0){
     		  session.put(EditedScaffoldingStorage.STORED_SCAFFOLDING_FLAG,
     		  "true");
     		  model.put(EditedScaffoldingStorage.STORED_SCAFFOLDING_FLAG, "true");
-    		  setAudienceSelectionVariables(session, scaffoldingCell, AudienceSelectionHelper.AUDIENCE_FUNCTION_MATRIX);
+    		  setAudienceSelectionVariables(session, scaffoldingCell, AudienceSelectionHelper.AUDIENCE_FUNCTION_MATRIX, isWizard);
 		  }else if(forwardView.compareTo("selectReviewers") == 0){
 			  session.put(EditedScaffoldingStorage.STORED_SCAFFOLDING_FLAG,
 			  "true");
 			  model.put(EditedScaffoldingStorage.STORED_SCAFFOLDING_FLAG, "true");
-			  setAudienceSelectionVariables(session, scaffoldingCell, AudienceSelectionHelper.AUDIENCE_FUNCTION_MATRIX_REVIEW);
+			  setAudienceSelectionVariables(session, scaffoldingCell, AudienceSelectionHelper.AUDIENCE_FUNCTION_MATRIX_REVIEW, isWizard);
 		  }
 		}
 		return model;
@@ -671,7 +699,7 @@ public class EditScaffoldingCellController extends
 //	}
 
 	protected void setAudienceSelectionVariables(Map session,
-			ScaffoldingCell scaffoldingCell, String audienceFunction) {
+			ScaffoldingCell scaffoldingCell, String audienceFunction, boolean isWizard) {
 		WizardPageDefinition wpd = scaffoldingCell.getWizardPageDefinition();
 		
 		session.put(AudienceSelectionHelper.AUDIENCE_FUNCTION,
@@ -692,6 +720,13 @@ public class EditScaffoldingCellController extends
 		}
 		session.put(AudienceSelectionHelper.CONTEXT2,
 				scaffoldingCell.getTitle());
+		
+	    /*
+         *  This is used to check if this is a wizard page... if so, then only allow the roles with the correct
+         *  evaluation permission to be listed.  This is not the same for a matrix cell
+         */
+        if(isWizard)
+            session.put(AudienceSelectionHelper.WIZARD_PAGE_EVALUATE_FUNCTION, AudienceSelectionHelper.AUDIENCE_FUNCTION_WIZARD);
 
 	}
 	

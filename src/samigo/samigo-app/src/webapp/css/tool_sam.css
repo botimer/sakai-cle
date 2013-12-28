@@ -1,3 +1,14 @@
+.samigo-subheading {
+  font-weight: 400;
+  border-bottom: 1px solid #999;
+  font-size: 1.1em;
+  margin: 8px 0;
+}
+h4.samigo-category-subhead {
+  font-weight: bold;
+  padding-bottom: 8px;
+  color: black;
+}
 
 .treefolder {
  background-repeat: no-repeat;
@@ -109,6 +120,12 @@ font-size:1.2em
 	vertical-align:bottom;
     text-align:left;
 }
+
+.samLeftTopNav  {
+	vertical-align:top;
+    text-align:top;
+}
+
 .samRightNav  {
 	vertical-align:bottom;
     text-align:right;
@@ -136,7 +153,7 @@ font-size:1.2em
 }
 
 .textBelowHeader {
-	padding: .5em 0 0 0;
+	padding: .3em 0 0 0;
 }
 
 .selectAction {
@@ -288,38 +305,34 @@ li.last {
 }
 
 #samigo-create-container {
-	width: 100%;
-	overflow: hidden;
 	margin-bottom: 20px;
-	height: 180px;
 }
 #samigo-create-new {
+	display: table-cell;
 	background-color: #F0F0F0;
-	float: left;
 	width: 40%;
 	padding: 12px;
-	height: 180px;
 }
 #samigo-create-new h4 {
 	margin: 0 0 8px;
 }
 #samigo-create-or {
-	float: left;
+	display: table-cell;
 	width: 10%;
 	text-align: center;
 	vertical-align: middle;
-	height: 180px;
 	line-height: 140px;
 }
 #samigo-create-import {
+	display: table-cell;
 	background-color: #F3F3F3;
-	float: left;
 	width: 40%;
 	padding: 20px;
-	height: 180px;
 }
 #tabs {
 	padding: 0;
+	min-height: 300px;
+	overflow: auto;
 }
 ul.ui-tabs-nav {
 	border-bottom: 2px solid #828282;
@@ -495,12 +508,29 @@ table.listHierEventLog {
 
 .mcAnswerText {
 	display:inline-table;
-	width: 90%;
+	width: 80%;
 }
 
 #timer-expired-warning{
 	text-align: center;	
 }
+
+#audio-recorder-header {
+    text-align: center;
+    border-bottom: 1px solid black;
+    font-size: 1.1em;
+    padding: 4px 0;
+    margin-bottom: 8px;
+}
+#audio-popup-question {
+    font-size: 1.1em;
+    font-weight: bold;
+    padding-bottom: 12px;
+}
+#audio-recorder-intro div {
+    padding-bottom: 12px;
+}
+
 #squaresWaveG{
 position:relative;
 width:124px;
@@ -664,7 +694,12 @@ background-color:#DBDBDB;
 
 }
 
+.downloanQuestionCheckbox {
+	vertical-align:top;
+}
 
+.downloanQuestionDescription {
+	vertical-align:top;
+}
 
-
-
+<<<<<<< .working

@@ -2,6 +2,8 @@
 <%@ taglib prefix="spring" uri="http://www.springframework.org/tags"%>
 
 <jsp:useBean id="msgs" class="org.sakaiproject.util.ResourceLoader" scope="request"><jsp:setProperty name="msgs" property="baseName" value="org.theospi.portfolio.matrix.bundle.Messages"/></jsp:useBean>
+<fmt:setLocale value="${locale}" />
+<fmt:setBundle basename="org.theospi.portfolio.matrix.bundle.Messages" />
 
 
 <osp-c:authZMap	prefix="osp.wizard." var="wizardCan" qualifier="${siteId}" />
@@ -26,77 +28,6 @@
     	thisId = "Main" + org.sakaiproject.tool.cover.ToolManager.getCurrentPlacement().getId();
  		 }
 %>
-<script type="text/javascript">
-	function resize(){
-		mySetMainFrameHeightViewCell('<%= org.sakaiproject.util.Web.escapeJavascript(thisId)%>');
-	}
-	
-	
-function mySetMainFrameHeightViewCell(id)
-{
-	// run the script only if this window's name matches the id parameter
-	// this tells us that the iframe in parent by the name of 'id' is the one who spawned us
-	if (typeof window.name != "undefined" && id != window.name) return;
-
-	var frame = parent.document.getElementById(id);
-	if (frame)
-	{
-
-		var objToResize = (frame.style) ? frame.style : frame;
-  
-    // SAK-11014 revert           if ( false ) {
-
-		var height; 		
-		var offsetH = document.body.offsetHeight;
-		var innerDocScrollH = null;
-
-		if (typeof(frame.contentDocument) != 'undefined' || typeof(frame.contentWindow) != 'undefined')
-		{
-			// very special way to get the height from IE on Windows!
-			// note that the above special way of testing for undefined variables is necessary for older browsers
-			// (IE 5.5 Mac) to not choke on the undefined variables.
- 			var innerDoc = (frame.contentDocument) ? frame.contentDocument : frame.contentWindow.document;
-			innerDocScrollH = (innerDoc != null) ? innerDoc.body.scrollHeight : null;
-		}
-	
-		if (document.all && innerDocScrollH != null)
-		{
-			// IE on Windows only
-			height = innerDocScrollH;
-		}
-		else
-		{
-			// every other browser!
-			height = offsetH;
-		}
-   // SAK-11014 revert		} 
-
-   // SAK-11014 revert             var height = getFrameHeight(frame);
-
-		// here we fudge to get a little bigger
-		var newHeight = height + 40;
-
-		// but not too big!
-		if (newHeight > 32760) newHeight = 32760;
-
-		// capture my current scroll position
-		var scroll = findScroll();
-
-		// resize parent frame (this resets the scroll as well)
-		objToResize.height=newHeight + "px";
-
-		// reset the scroll, unless it was y=0)
-		if (scroll[1] > 0)
-		{
-			var position = findPosition(frame);
-			parent.window.scrollTo(position[0]+scroll[0], position[1]+scroll[1]);
-		}
-	}
-}
-</script> 
-			
-			
-
 
 <c:set var="date_format">
 	<osp:message key="dateFormat_time" />
@@ -178,10 +109,17 @@ function mySetMainFrameHeightViewCell(id)
 	</osp-h:glossary>
 
 	<c:if test="${sequential == 'true'}">
-		<p class="step"><c:out value="${msgs.seq_pages_step}"/>
+		<p class="step"><fmt:message key="seq_pages_step">
+                <fmt:param>
 				<c:out value="${currentStep}" /> / 
+                </fmt:param>
+                <fmt:param>
 				<c:out value="${totalSteps}" /> :
+                </fmt:param>
+                <fmt:param>
 				<c:out value="${cell.scaffoldingCell.wizardPageDefinition.title}" />
+                </fmt:param>
+              </fmt:message>
 		</p>
 	</c:if>
 
@@ -215,7 +153,11 @@ function mySetMainFrameHeightViewCell(id)
 		
 		
 </osp-h:glossary> <c:if test="${(cell.status != 'READY' && cell.status != 'RETURNED')}">
-	<div class="information"><c:out value="${msgs.status_warning}"/> <c:out value="${cell.status}" />
+	<div class="information"><fmt:message key="status_warning">
+	    <fmt:param>
+	     <c:out value="${cell.status}" />
+	    </fmt:param>
+	   </fmt:message>
 	</div>
 </c:if> 
 <c:if test="${feedbackSent}">

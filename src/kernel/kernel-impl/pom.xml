@@ -4,13 +4,12 @@
   <parent>
     <artifactId>kernel</artifactId>
     <groupId>org.sakaiproject</groupId>
-    <version>1.4.0-SNAPSHOT</version>
+    <version>10.0-SNAPSHOT</version><!-- KernelVersion -->
     <relativePath>../pom.xml</relativePath>
   </parent>
   <name>Sakai Core Kernel Implementation</name>
   <groupId>org.sakaiproject.kernel</groupId>
   <artifactId>sakai-kernel-impl</artifactId>
-  <version>1.4.0-SNAPSHOT</version>
   <organization>
     <name>Sakai Foundation</name>
     <url>http://sakaiproject.org/</url>
@@ -117,6 +116,11 @@
 		<groupId>commons-lang</groupId>
 		<artifactId>commons-lang</artifactId>
 	</dependency>
+    <dependency>
+      <groupId>commons-validator</groupId>
+      <artifactId>commons-validator</artifactId>
+      <version>1.4.0</version>
+    </dependency>
     <dependency>
         <!-- for parsing CSV data from config service files -->
         <groupId>net.sf.opencsv</groupId>
@@ -253,6 +257,13 @@
         <artifactId>jmock-junit4</artifactId>
         <version>2.5.1</version>
         <scope>test</scope>
+        <!-- This is so that we only get one copy of junit. -->
+        <exclusions>
+           <exclusion>
+               <groupId>junit</groupId>
+               <artifactId>junit-dep</artifactId>
+           </exclusion>
+        </exclusions>
     </dependency>
     <dependency>
         <groupId>org.jmock</groupId>
@@ -266,5 +277,17 @@
       <version>2.5.1</version>
       <scope>test</scope>
     </dependency>
+   <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-all</artifactId>
+      <version>1.9.5</version>
+      <scope>test</scope>
+   </dependency>
+      <dependency>
+        <groupId>org.sakaiproject.kernel</groupId>
+        <artifactId>sakai-kernel-util</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+
   </dependencies>
 </project>

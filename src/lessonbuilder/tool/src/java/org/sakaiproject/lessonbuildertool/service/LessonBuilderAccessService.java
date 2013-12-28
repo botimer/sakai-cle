@@ -347,6 +347,20 @@ public class LessonBuilderAccessService {
 				    }
 				}
 
+				// basically there are two checks to be done: is the item accessible in Lessons,
+				// and is the underlying resource accessible in Sakai.
+				// This code really does check both. Sort of. 
+				// 1) it checks accessibility to the containing page by seeing if it has been visited.
+				//  This is stricter than necessary, but there's no obvious reason to let people use this
+				//  who aren't following an actual URL we gave them.
+				// 2) it checks group access as part of the normal resource permission check. Sakai
+				//  should sync the two. We actually don't check it for items in student home directories,
+				//  as far as I can tell
+				// 3) it checks availability (prerequisites) by calling the code from SimplePageBean
+				// We could rewrite this with the new LessonsAccess methods, but since we have to do
+				// resource permission checking also, and there's some duplication, it doesn't seem worth
+				// rewriting this code. What I've done is review it to make sure it does the same thing.
+
 				String id = itemString.substring(i);
 				itemString = itemString.substring(0, i);
 
@@ -364,6 +378,9 @@ public class LessonBuilderAccessService {
 						throw new EntityNotDefinedException(ref.getReference());
 					}
 					
+	// code here is also in simplePageBean.isItemVisible. change it there
+	// too if you change this logic
+
 					SimplePageItem item = simplePageToolDao.findItem(itemId.longValue());
 					SimplePage currentPage = simplePageToolDao.getPage(item.getPageId());
 					String owner = currentPage.getOwner();  // if student content
@@ -430,10 +447,24 @@ public class LessonBuilderAccessService {
 						try {
 						    usersite = UserDirectoryService.getUserId(usersite);
 						} catch (Exception e) {};
+						String itemcreator = item.getAttribute("addedby");
+						// suppose a member of the group adds a resource from another member of
+						// the group. (This will only work if they have read access to it.)
+						// We don't want to gimick access in that case. I think if you
+						// add your own item, you've given consent. But not if someone else does.
+						// itemcreator == null is for items added before this patch. I'm going to
+						// continue to allow access for them, to avoid breaking existing content.
+						if (usersite != null && itemcreator != null && !usersite.equals(itemcreator))
+						    usersite = null;
 					    }							
+
+					// code here is also in simplePageBean.isItemVisible. change it there
+					// too if you change this logic
+
 					    // for a student page, if it's in one of the groups' worksites, allow it
 					    // The assumption is that only one of those people can put content in the
 					    // page, and then only if the can see it.
+
 					    if (owner != null && usersite != null && AuthzGroupService.getUserRole(usersite, group) != null) {
 						// OK
 					    } else if (owner != null && group == null && id.startsWith("/user/" + owner)) {
@@ -445,7 +476,10 @@ public class LessonBuilderAccessService {
 						    pushedAdvisor = false;
 						}
 						// our version of allowget does not check hidden but does everything else
-						if (!allowGetResource(id, currentSiteId)) {
+						// if it's a student page, however use the normal check so students can't
+						// use this to bypass release control
+						if (owner == null && !allowGetResource(id, currentSiteId) ||
+						    owner != null && !contentHostingService.allowGetResource(id)) {
 						    throw new EntityPermissionException(sessionManager.getCurrentSessionUserId(), 
 							      ContentHostingService.AUTH_RESOURCE_READ, ref.getReference());
 						}
@@ -466,6 +500,7 @@ public class LessonBuilderAccessService {
 						// caches that we aren't trying to manage in the long term
 						// but don't do this unless the item needs checking
 
+						if (!canSeeAll(currentPage.getSiteId())) {
 						SimplePageBean simplePageBean = new SimplePageBean();
 						simplePageBean.setMessageLocator(messageLocator);
 						simplePageBean.setToolManager(toolManager);
@@ -483,9 +518,11 @@ public class LessonBuilderAccessService {
 						simplePageBean.setCurrentSiteId(currentPage.getSiteId());
 						simplePageBean.setCurrentPage(currentPage);
 						simplePageBean.setCurrentPageId(currentPage.getPageId());
+						simplePageBean.init();
 
 						if (!simplePageBean.isItemAvailable(item, item.getPageId())) {
 							throw new EntityPermissionException(null, null, null);
+						}
 						}
 						accessCache.put(accessKey, "true", DEFAULT_EXPIRATION);
 						
@@ -1157,6 +1194,13 @@ public class LessonBuilderAccessService {
 				ref = getReference(id);
 			}
 
+			// if site maintainer or see all, allow any access.
+			// used to check this after the unlock below, but a user with see all
+			// may be prevented by group access from seeing the resource, but
+			// we still want them to see it.
+			if (canSeeAll(siteId) && id.startsWith("/group/" + siteId))
+			    return true;
+
 			// this will check basic access and group access. FOr that normal Sakai
 			// checking is fine.
 			isAllowed = ref != null && securityService.unlock(lock, ref);
@@ -1166,11 +1210,6 @@ public class LessonBuilderAccessService {
 			// resources from normal view but still see them through Lessons
 
 			if (isAllowed) {
-			    // if site maintainer, don't check release dates. The real check is complex, involving
-			    // who owns the page. For our purposes if it's a resource in this site, allow a maintainer
-			    // to access it.
-			    if (canWritePage(siteId) && id.startsWith("/group/" + siteId))
-				return true;
 
 			    boolean pushedAdvisor = false;
 			    ContentResource resource = null;
@@ -1220,9 +1259,13 @@ public class LessonBuilderAccessService {
 		return securityService.unlock(SimplePage.PERMISSION_LESSONBUILDER_READ, ref);
 	}
 
-	public boolean canWritePage(String siteId) {
+	public boolean canSeeAll(String siteId) {
 		String ref = "/site/" + siteId;
-		return securityService.unlock(SimplePage.PERMISSION_LESSONBUILDER_UPDATE, ref);
+		if (securityService.unlock(SimplePage.PERMISSION_LESSONBUILDER_UPDATE, ref))
+		    return true;
+		if (securityService.unlock(SimplePage.PERMISSION_LESSONBUILDER_SEE_ALL, ref))
+		    return true;
+		return false;
 	}
 
 

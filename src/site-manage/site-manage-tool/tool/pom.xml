@@ -5,7 +5,7 @@
     <parent>
         <groupId>org.sakaiproject.sitemanage</groupId>
         <artifactId>sitemanage</artifactId>
-        <version>2.10-SNAPSHOT</version>
+        <version>10.0-SNAPSHOT</version>
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
@@ -56,7 +56,6 @@
         <dependency>
             <groupId>org.sakaiproject.common</groupId>
             <artifactId>sakai-import-util</artifactId>
-            <version>${sakai.common.version}</version>
         </dependency>
         <dependency>
             <groupId>org.sakaiproject.edu-services.course-management</groupId>
@@ -76,9 +75,18 @@
             <artifactId>sakai-velocity-tool</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.sakaiproject.userauditservice</groupId>
+            <artifactId>userauditservice-api</artifactId>
+        </dependency>
+        <dependency>
             <groupId>commons-beanutils</groupId>
             <artifactId>commons-beanutils</artifactId>
             <version>1.7.0</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-validator</groupId>
+            <artifactId>commons-validator</artifactId>
+            <version>1.4.0</version>
         </dependency>
         <dependency>
             <groupId>commons-logging</groupId>

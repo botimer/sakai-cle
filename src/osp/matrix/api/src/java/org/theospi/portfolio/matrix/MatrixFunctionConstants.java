@@ -1,7 +1,7 @@
 
 /**********************************************************************************
 * $URL: https://source.sakaiproject.org/svn/osp/trunk/matrix/api/src/java/org/theospi/portfolio/matrix/MatrixFunctionConstants.java $
-* $Id: MatrixFunctionConstants.java 105079 2012-02-24 23:08:11Z ottenhoff@longsight.com $
+* $Id: MatrixFunctionConstants.java 131548 2013-11-14 16:42:13Z dsobiera@indiana.edu $
 ***********************************************************************************
 *
  * Copyright (c) 2005, 2006, 2007, 2008 The Sakai Foundation
@@ -75,6 +75,6 @@ public interface MatrixFunctionConstants {
    public static final int EVALUATION_REVIEW_TYPE = 1;
    public static final int FEEDBACK_REVIEW_TYPE = 2;
    
-   
+   public static final String UNASSIGNED_GROUP = "UNASSIGNED_GROUP";   
    
 }

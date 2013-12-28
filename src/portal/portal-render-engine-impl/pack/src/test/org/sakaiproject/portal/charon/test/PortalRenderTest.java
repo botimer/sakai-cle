@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/portal/trunk/portal-render-engine-impl/pack/src/test/org/sakaiproject/portal/charon/test/PortalRenderTest.java $
- * $Id: PortalRenderTest.java 105079 2012-02-24 23:08:11Z ottenhoff@longsight.com $
+ * $Id: PortalRenderTest.java 132920 2013-12-26 17:29:01Z csev@umich.edu $
  ***********************************************************************************
  *
  * Copyright (c) 2005, 2006, 2007, 2008 The Sakai Foundation
@@ -137,21 +137,7 @@ public class PortalRenderTest extends TestCase
 
 		}
 	}
-	public void testGallery() throws Exception
-	{
-		try
-		{
-			log.info("========= Testing testGallery");
-			mock.doGallery();
-			log.info("========= PASSED Testing testGallery");
-		}
-		catch (Exception ex)
-		{
-			ex.printStackTrace();
-			log.info("========= FAILED Testing testGallery");
-			fail(ex.getMessage());
-		}
-	}
+
 	public void testPage() throws Exception
 	{
 		try
@@ -167,6 +153,7 @@ public class PortalRenderTest extends TestCase
 			fail(ex.getMessage());
 		}
 	}
+
 	public void testSite() throws Exception
 	{
 		try
@@ -197,35 +184,4 @@ public class PortalRenderTest extends TestCase
 			fail(ex.getMessage());
 		}
 	}
-	public void testSiteFrameTop() throws Exception
-	{
-		try
-		{
-			log.info("========= Testing testSiteFrameTop");
-			mock.doSiteFrameTop();
-			log.info("========= PASSED Testing testSiteFrameTop");
-		}
-		catch (Exception ex)
-		{
-			ex.printStackTrace();
-			log.info("========= FAILED Testing testSiteFrameTop");
-			fail(ex.getMessage());
-		}
-	}
-	public void testGalleryFrameTop() throws Exception
-	{
-		try
-		{
-			log.info("========= Testing testGalleryFrameTop");
-			mock.doGalleryFrameTop();
-			log.info("========= PASSED Testing testGalleryFrameTop");
-		}
-		catch (Exception ex)
-		{
-			ex.printStackTrace();
-			log.info("========= FAILED Testing testGalleryFrameTop");
-			fail(ex.getMessage());
-		}
-	}
-
 }

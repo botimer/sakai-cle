@@ -79,6 +79,8 @@
     <regexp name="cssOnsiteUri" value="url\(([\p{L}\p{N}\\/\.\?=\#&amp;;\-_~]+|\#(\w)+)\)" />
     <regexp name="cssOffsiteUri" value="url\((\s)*((ht|f)tp(s?)://)[\p{L}\p{N}]+[~\p{L}\p{N}\p{Zs}\-_\.@#$%&amp;;:,\?=/\+!]*(\s)*\)" />
 
+    <regexp name="imageURI" value="^data:image/.*" />
+
     <!-- This if for CSS Identifiers -->
     <regexp name="cssIdentifier" value="[a-zA-Z0-9\-_]+" />
 
@@ -106,8 +108,14 @@
     <!-- CSS2 Allowed System Color Values -->
     <regexp name="systemColor" value="(activeborder|activecaption|appworkspace|background|buttonface|buttonhighlight|buttonshadow|buttontext|captiontext|graytext|highlight|highlighttext|inactiveborder|inactivecaption|inactivecaptiontext|infobackground|infotext|menu|menutext|scrollbar|threeddarkshadow|threedface|threedhighlight|threedlightshadow|threedshadow|window|windowframe|windowtext)" />
 
-    <!-- This is where we specify what Flash src to allow -->
-    <regexp name="flashSites" value="(((https?:)?//(download\.macromedia\.com/pub|www\.macromedia\.com/(go|shockwave)|c\.brightcove\.com/services|gamevideos\.1up\.com/swf|(www\.)?youtube(\-nocookie)?\.com/(v|embed)|(www\.)?youtu\.be|vimeo\.com|www\.gametrailers\.com|videomedia\.ign\.com/ev|image\.com\.com/gamespot|www\.hulu\.com/embed|embed\.break\.com|player\.ordienetworks\.com/flash|www\.adultswim\.com/video/vplayer|www\.dailymotion\.com/swf|www\.ustream\.tv/flash/video|cdn-i\.dmdentertainment\.com|media\.mtvnservices\.com|www\.justin\.tv/widgets|www\.viddler\.com/(player|simple_on_site)|static\.twitter\.com/flash|www\.gamepro\.com/bin|www\.divshare\.com/flash|www\.facebook\.com/v)/.*)|(/library/(?!.*\.\.[/|\\]).*)/.+)" />
+    <!-- SAKAI customized trusted sites listing:
+        This is where we specify what Flash/embed/iframe src to allow 
+        To add a new host/site to this list:
+        Find this in the flashSites below: ...(download\.macromedia\.com/pub|... 
+        Add in your site (e.g. "new.site.host.com/path": with escaped ".": "new\.site\.host\.com/path|"
+        Like shown here: (new\.site\.host\.com/path|download\.macromedia\.com/pub|
+    -->
+    <regexp name="flashSites" value="(((https?:)?//(download\.macromedia\.com/pub|www\.macromedia\.com/(go|shockwave)|c\.brightcove\.com/services|gamevideos\.1up\.com/swf|(www\.)?youtube(\-nocookie)?\.com/(v|embed)|(www\.)?youtu\.be|(www\.|player\.)?vimeo\.com|www\.gametrailers\.com|videomedia\.ign\.com/ev|image\.com\.com/gamespot|www\.hulu\.com/embed|embed\.break\.com|player\.ordienetworks\.com/flash|www\.adultswim\.com/video/vplayer|www\.dailymotion\.com/swf|www\.ustream\.tv/flash/video|cdn-i\.dmdentertainment\.com|media\.mtvnservices\.com|www\.justin\.tv/widgets|www\.viddler\.com/(player|simple_on_site)|static\.twitter\.com/flash|www\.gamepro\.com/bin|(www|cdnapisec|cdnapi)\.kaltura\.com/p|www\.divshare\.com/flash|www\.facebook\.com/v)/.*)|(/library/(?!.*\.\.[/|\\]).*)/.+)" />
 
     <!-- This is a basic alphanumeric and punctuation string -->
     <regexp name="basicAlphaNumeric" value="^[a-zA-Z0-9\s\-_.\?!,]*$" />
@@ -483,6 +491,16 @@
                     <regexp name="boolean"/>
                 </regexp-list>
             </attribute>
+            <attribute name="webkitallowfullscreen">
+                <regexp-list>
+                    <regexp name="boolean"/>
+                </regexp-list>
+            </attribute>
+            <attribute name="mozallowfullscreen">
+                <regexp-list>
+                    <regexp name="boolean"/>
+                </regexp-list>
+            </attribute>
         </tag>
         <tag name="frameset" action="remove"/>
         <tag name="frame" action="remove"/>
@@ -773,14 +791,141 @@
             <attribute name="align"/>
         </tag>
 
-    
-        <!-- Image & image related tags -->
         
+        <!-- HTML5 audio video source tags -->
+        <tag name="video" action="validate">
+            <attribute name="height"/>
+            <attribute name="width"/>
+            <attribute name="autoplay">
+                <literal-list>
+                    <literal value="autoplay"/>
+                </literal-list>
+                <regexp-list>
+                    <regexp name="boolean"/>
+                </regexp-list>
+            </attribute>
+            <attribute name="controls">
+                <literal-list>
+                    <literal value="controls"/>
+                </literal-list>
+                <regexp-list>
+                    <regexp name="boolean"/>
+                </regexp-list>
+            </attribute>
+            <attribute name="muted">
+                <literal-list>
+                    <literal value="muted"/>
+                </literal-list>
+                <regexp-list>
+                    <regexp name="boolean"/>
+                </regexp-list>
+            </attribute>
+            <attribute name="loop">
+                <literal-list>
+                    <literal value="loop"/>
+                </literal-list>
+                <regexp-list>
+                    <regexp name="boolean"/>
+                </regexp-list>
+            </attribute>
+            <attribute name="preload">
+                <literal-list>
+                    <literal value="auto"/>
+                    <literal value="metadata"/>
+                    <literal value="none"/>
+                </literal-list>
+                <regexp-list>
+                    <regexp name="boolean"/>
+                </regexp-list>
+            </attribute>
+            <attribute name="src" onInvalid="removeTag">
+                <regexp-list>
+                    <regexp name="onsiteURL"/>
+                    <regexp name="offsiteURL"/>
+                </regexp-list>
+            </attribute>
+            <attribute name="poster" onInvalid="removeTag">
+                <regexp-list>
+                    <regexp name="onsiteURL"/>
+                    <regexp name="offsiteURL"/>
+                </regexp-list>
+            </attribute>
+        </tag>
+
+        <tag name="audio" action="validate">
+            <attribute name="autoplay">
+                <literal-list>
+                    <literal value="autoplay"/>
+                </literal-list>
+                <regexp-list>
+                    <regexp name="boolean"/>
+                </regexp-list>
+            </attribute>
+            <attribute name="controls">
+                <literal-list>
+                    <literal value="controls"/>
+                </literal-list>
+                <regexp-list>
+                    <regexp name="boolean"/>
+                </regexp-list>
+            </attribute>
+            <attribute name="muted">
+                <literal-list>
+                    <literal value="muted"/>
+                </literal-list>
+                <regexp-list>
+                    <regexp name="boolean"/>
+                </regexp-list>
+            </attribute>
+            <attribute name="loop">
+                <literal-list>
+                    <literal value="loop"/>
+                </literal-list>
+                <regexp-list>
+                    <regexp name="boolean"/>
+                </regexp-list>
+            </attribute>
+            <attribute name="preload">
+                <literal-list>
+                    <literal value="auto"/>
+                    <literal value="metadata"/>
+                    <literal value="none"/>
+                </literal-list>
+                <regexp-list>
+                    <regexp name="boolean"/>
+                </regexp-list>
+            </attribute>
+            <attribute name="src" onInvalid="removeTag">
+                <regexp-list>
+                    <regexp name="onsiteURL"/>
+                    <regexp name="offsiteURL"/>
+                </regexp-list>
+            </attribute>
+        </tag>
+        <tag name="source" action="validate">
+            <!-- Not yet supported 
+            <attribute name="media" />
+            -->
+            <attribute name="type" onInvalid="removeTag">
+                <regexp-list>
+                    <regexp name="anything" />
+                </regexp-list>
+            </attribute>
+            <attribute name="src" onInvalid="removeTag">
+                <regexp-list>
+                    <regexp name="onsiteURL"/>
+                    <regexp name="offsiteURL"/>
+                </regexp-list>
+            </attribute>
+        </tag>
+
+        <!-- Image & image related tags -->
         <tag name="img" action="validate">
             <attribute name="src" onInvalid="removeTag">
                 <regexp-list>
                     <regexp name="onsiteURL"/>
                     <regexp name="offsiteURL"/>
+                    <regexp name="imageURI"/>
                 </regexp-list>
             </attribute>
             <attribute name="name"/>
@@ -846,7 +991,30 @@
         <!-- List tags -->
 
         <tag name="ul" action="validate"/>
-        <tag name="ol" action="validate"/>
+
+        <tag name="ol" action="validate">
+            <attribute name="start">
+              <regexp-list>
+                <regexp name="number"/>
+              </regexp-list>
+            </attribute>
+            <attribute name="reversed">
+                <literal-list>
+                    <literal value="reversed" />
+                    <regexp-list>
+                        <regexp name="boolean"/>
+                    </regexp-list>
+                </literal-list>
+            </attribute>
+            <attribute name="type">
+                <literal-list>
+                    <literal value="1" />
+                    <literal value="a" />
+                    <literal value="i" />
+                </literal-list>
+            </attribute>
+        </tag>
+
         <tag name="li" action="validate"/>
         
 
