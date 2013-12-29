@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/portal/trunk/portal-impl/impl/src/java/org/sakaiproject/portal/charon/handlers/SiteHandler.java $
- * $Id: SiteHandler.java 132923 2013-12-26 21:35:50Z csev@umich.edu $
+ * $Id: SiteHandler.java 132937 2013-12-29 16:42:57Z csev@umich.edu $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008 The Sakai Foundation
@@ -72,6 +72,7 @@ import org.sakaiproject.util.Web;
 import org.sakaiproject.util.ResourceLoader;
 import org.sakaiproject.portal.util.URLUtils;
 import org.sakaiproject.portal.util.ToolUtils;
+import org.sakaiproject.portal.util.PortalUtils;
 import org.sakaiproject.portal.util.ByteArrayServletResponse;
 import org.sakaiproject.util.Validator;
 
@@ -80,7 +81,7 @@ import org.sakaiproject.portal.charon.handlers.PDAHandler;
 /**
  * @author ieb
  * @since Sakai 2.4
- * @version $Rev: 132923 $
+ * @version $Rev: 132937 $
  */
 public class SiteHandler extends WorksiteHandler
 {
@@ -316,26 +317,8 @@ public class SiteHandler extends WorksiteHandler
 
 		// Find the pageId looking backwards through the toolId
 		if(site != null && pageId == null && toolId != null ) {
-			List pages = site.getOrderedPages();
-			for (Iterator i = pages.iterator(); i.hasNext();)
-			{
-
-				SitePage p = (SitePage) i.next();
-				// check if current user has permission to see page
-				// we will draw page button if it have permission to see at least
-				// one tool on the page
-				List<ToolConfiguration> pTools = p.getTools();
-				Iterator<ToolConfiguration> toolz = pTools.iterator();
-				while(toolz.hasNext()){
-					ToolConfiguration tc = toolz.next();
-					Tool to = tc.getTool();
-					if ( toolId.equals(tc.getId()) ) {
-						pageId = p.getId();
-						break;
-					}
-				}
-				if ( pageId != null ) break;
-			}
+			SitePage p = (SitePage) ToolUtils.getPageForTool(site, toolId);
+			if ( p != null ) pageId = p.getId();
 		}
 
 		// if no page id, see if there was a last page visited for this site
@@ -438,12 +421,15 @@ public class SiteHandler extends WorksiteHandler
 
 			// If the buffered response was not parseable
 			if ( BC instanceof ByteArrayServletResponse ) {
+				ByteArrayServletResponse bufferResponse = (ByteArrayServletResponse) BC;
 				StringBuffer queryUrl = req.getRequestURL();
 				String queryString = req.getQueryString();
 				if ( queryString != null ) queryUrl.append('?').append(queryString);
 				// SAK-25494 - This probably should be a log.debug later
-				log.warn("Post buffer bypass CTI="+commonToolId+" URL="+queryUrl);
-				ByteArrayServletResponse bufferResponse = (ByteArrayServletResponse) BC;
+				String msg = "Post buffer bypass CTI="+commonToolId+" URL="+queryUrl;
+				String redir = bufferResponse.getRedirect();
+				if ( redir != null ) msg = msg + " redirect to="+redir;
+				log.warn(msg);
 				bufferResponse.forwardResponse();
 				return;
 			}

@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/portal/trunk/portal-impl/impl/src/java/org/sakaiproject/portal/charon/SkinnableCharonPortal.java $
- * $Id: SkinnableCharonPortal.java 132925 2013-12-27 04:14:26Z csev@umich.edu $
+ * $Id: SkinnableCharonPortal.java 132937 2013-12-29 16:42:57Z csev@umich.edu $
  ***********************************************************************************
  *
  * Copyright (c) 2005, 2006, 2007, 2008 The Sakai Foundation
@@ -102,6 +102,7 @@ import org.sakaiproject.portal.util.ToolURLManagerImpl;
 import org.sakaiproject.portal.util.URLUtils;
 import org.sakaiproject.portal.util.CSSUtils;
 import org.sakaiproject.portal.util.ToolUtils;
+import org.sakaiproject.portal.util.PortalUtils;
 import org.sakaiproject.site.api.Site;
 import org.sakaiproject.site.api.SitePage;
 import org.sakaiproject.site.api.ToolConfiguration;
@@ -136,7 +137,7 @@ import au.com.flyingkite.mobiledetect.UAgentInfo;
  * </p>
  * 
  * @since Sakai 2.4
- * @version $Rev: 132925 $
+ * @version $Rev: 132937 $
  * 
  */
 @SuppressWarnings("deprecation")
@@ -605,29 +606,32 @@ public class SkinnableCharonPortal extends HttpServlet implements Portal
 			site = null;
 		}
 
-		// FIXME: This does not look absolutely right,
-		// this appears to say, reset all tools on the page since there
-		// is no filtering of the tool that is bing reset, surely there
-		// should be a check which tool is being reset, rather than all
-		// tools on the page.
-		// let the tool do some the work (include) (see note above)
-
-		String toolUrl = ServerConfigurationService.getToolUrl() + "/"
-		   + Web.escapeUrl(placement.getId()) + "/";
+		// emit title information
 		String titleString = Web.escapeHtml(placement.getTitle());
 		String toolId = Web.escapeHtml(placement.getToolId());
 
+		// for the reset button
+		String toolUrl = ServerConfigurationService.getToolUrl() + "/"
+		   + Web.escapeUrl(placement.getId()) + "/";
+
+		// Reset is different (and awesome) when inlining
+		boolean toolInline = ToolUtils.isInlineRequest(req);
+		if ( toolInline ) {
+			String newUrl = ToolUtils.getPageUrlForTool(req, site, placement);
+			if ( newUrl != null ) toolUrl = newUrl;
+		}
+
 		// Reset the tool state if requested
-		if (portalService.isResetRequested(req))
+		// Resets of inline tools have already been handled earlier in the request
+		// (See PDAHandler.java and SiteJHandler.java)
+		if (!toolInline && portalService.isResetRequested(req))
 		{
 			Session s = SessionManager.getCurrentSession();
 			ToolSession ts = s.getToolSession(placement.getId());
 			ts.clearAttributes();
 		}
 
-		// emit title information
 
-		// for the reset button
 		boolean showResetButton = !"false".equals(placement.getConfig().getProperty(
 				Portal.TOOLCONFIG_SHOW_RESET_BUTTON));
 
@@ -758,6 +762,7 @@ public class SkinnableCharonPortal extends HttpServlet implements Portal
 		toolMap.put("toolShowHelpButton", Boolean.valueOf(showHelpButton));
 		toolMap.put("toolHelpActionUrl", helpActionUrl);
 		toolMap.put("toolId", toolId);
+		toolMap.put("toolInline", Boolean.valueOf(toolInline));
 		
 		String directToolUrl = ServerConfigurationService.getPortalUrl() + "/" + DirectToolHandler.URL_FRAGMENT +"/" + Web.escapeUrl(placement.getId()) + "/";
 		toolMap.put("directToolUrl", directToolUrl);
@@ -1144,7 +1149,9 @@ public class SkinnableCharonPortal extends HttpServlet implements Portal
 		rcontext.put("pageSkinRepo", skinRepo);
 		rcontext.put("pageSkin", skin);
 		rcontext.put("pageTitle", Web.escapeHtml(title));
-		rcontext.put("pageScriptPath", getScriptPath());
+		rcontext.put("pageScriptPath", PortalUtils.getScriptPath());
+		rcontext.put("portalCDNPath", PortalUtils.getCDNPath());
+		rcontext.put("portalCDNQuery", PortalUtils.getCDNQuery());
 		rcontext.put("pageTop", Boolean.valueOf(true));
 		rcontext.put("rloader", rloader);
 		//rcontext.put("browser", new BrowserDetector(request));
@@ -1405,23 +1412,41 @@ public class SkinnableCharonPortal extends HttpServlet implements Portal
 		String skinRepo = ServerConfigurationService.getString("skin.repo");
 		// Adjust skin name if we are in the neo Portal
 		String headCssToolBase = "<link href=\""
+			+ PortalUtils.getCDNPath()
 			+ CSSUtils.getCssToolBase()
+			+ PortalUtils.getCDNQuery()
 			+ "\" type=\"text/css\" rel=\"stylesheet\" media=\"all\" />\n";
 		String headCssToolSkin = "<link href=\"" 
+			+ PortalUtils.getCDNPath()
 			+ CSSUtils.getCssToolSkin(skin)
+			+ PortalUtils.getCDNQuery()
 			+ "\" type=\"text/css\" rel=\"stylesheet\" media=\"all\" />\n";
 		String headCss = headCssToolBase + headCssToolSkin;
 		
 		Editor editor = portalService.getActiveEditor(placement);
 		String preloadScript = editor.getPreloadScript() == null ? ""
-				: "<script type=\"text/javascript\">" + editor.getPreloadScript() + "</script>\n";
+				: "<script type=\"text/javascript\">" 
+				+ editor.getPreloadScript() 
+				+ "</script>\n";
 		String editorScript = editor.getEditorUrl() == null ? ""
-				: "<script type=\"text/javascript\" src=\"" + editor.getEditorUrl() + "\"></script>\n";
+				: "<script type=\"text/javascript\" src=\"" 
+				+ PortalUtils.getCDNPath()
+				+ editor.getEditorUrl() 
+				+ PortalUtils.getCDNQuery()
+				+ "\"></script>\n";
 		String launchScript = editor.getLaunchUrl() == null ? ""
-				: "<script type=\"text/javascript\" src=\"" + editor.getLaunchUrl() + "\"></script>\n";
+				: "<script type=\"text/javascript\" src=\"" 
+				+ PortalUtils.getCDNPath()
+				+ editor.getLaunchUrl() 
+				+ PortalUtils.getCDNQuery()
+				+ "\"></script>\n";
 		
 		StringBuilder headJs = new StringBuilder();
-		headJs.append("<script type=\"text/javascript\" src=\"/library/js/headscripts.js\"></script>\n");
+		headJs.append("<script type=\"text/javascript\" src=\"");
+		headJs.append(PortalUtils.getCDNPath());
+		headJs.append("/library/js/headscripts.js");
+		headJs.append(PortalUtils.getCDNQuery());
+		headJs.append("\"></script>\n");
 		headJs.append("<script type=\"text/javascript\">var sakai = sakai || {}; sakai.editor = sakai.editor || {};  sakai.locale = sakai.locale || {};\n");
 		headJs.append("sakai.locale.userCountry = '" + rloader.getLocale().getCountry() + "';\n");
 		headJs.append("sakai.locale.userLanguage = '" + rloader.getLocale().getLanguage() + "';\n");
@@ -1552,11 +1577,6 @@ public class SkinnableCharonPortal extends HttpServlet implements Portal
 			page = p.getPageId();
 		}
 		return "/site/" + p.getSiteId() + "/page/" + page;
-	}
-
-	protected String getScriptPath()
-	{
-		return "/library/js/";
 	}
 
 	/**

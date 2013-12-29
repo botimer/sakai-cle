@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/kernel/trunk/kernel-impl/src/main/java/org/sakaiproject/content/impl/BaseContentService.java $
- * $Id: BaseContentService.java 132527 2013-12-12 17:23:21Z azeckoski@unicon.net $
+ * $Id: BaseContentService.java 132940 2013-12-29 20:57:54Z nbotimer@unicon.net $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008 Sakai Foundation
@@ -5543,7 +5543,7 @@ SiteContentAdvisorProvider, SiteContentAdvisorTypeRegistry, EntityTransferrerRef
 				//				}
 				edit.setAvailability(resource.isHidden(), resource.getReleaseDate(), resource.getRetractDate());
 
-				commitResource(edit,NotificationService.NOTI_NONE);
+				commitResource(edit,NotificationService.NOTI_OPTIONAL);
 				// close the edit object
 				((BaseResourceEdit) edit).closeEdit();
 
