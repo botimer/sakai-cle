@@ -94,8 +94,10 @@
                 <module>content</module>
                 <module>courier</module>
                 <module>dav</module>
+                <module>delegatedaccess</module>
                 <module>gradebook</module>
                 <module>help</module>
+                <module>hierarchy</module>
                 <module>login</module>
                 <module>mailarchive</module>
                 <module>memory</module>
@@ -108,6 +110,7 @@
                 <module>presence</module>
                 <module>providers</module>
                 <module>reference</module>
+                <module>roster2</module>
                 <module>rights</module>
                 <module>rwiki</module>
                 <module>sections</module>
@@ -202,9 +205,6 @@
                 <module>velocity</module>
                 <module>warehouse</module>
                 <module>web</module>
-                
-                <!-- Experimental -->
-                <module>roster2</module>
             </modules>
         </profile>
         

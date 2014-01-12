@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/kernel/trunk/kernel-impl/src/main/java/org/sakaiproject/authz/impl/DbAuthzGroupSql.java $
- * $Id: DbAuthzGroupSql.java 111730 2012-08-22 13:03:16Z azeckoski@unicon.net $
+ * $Id: DbAuthzGroupSql.java 133031 2014-01-06 20:27:07Z matthew@longsight.com $
  ***********************************************************************************
  *
  * Copyright (c) 2007, 2008 Sakai Foundation
@@ -152,4 +152,6 @@ public interface DbAuthzGroupSql
 	String getSelectRealmUserRoleSql(String inClause);
 
 	String getSelectRealmUsersInGroupsSql( String inClause);
+
+    String getMaintainRolesSql();
 }

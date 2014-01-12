@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/kernel/trunk/api/src/main/java/org/sakaiproject/authz/api/AuthzGroupService.java $
- * $Id: AuthzGroupService.java 132561 2013-12-13 14:25:40Z enietzel@anisakai.com $
+ * $Id: AuthzGroupService.java 133031 2014-01-06 20:27:07Z matthew@longsight.com $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008 Sakai Foundation
@@ -486,4 +486,12 @@ public interface AuthzGroupService extends EntityProducer
      * 
      * @return List containing the currently registered AuthzGroupAdvisors
      */
-    public List<AuthzGroupAdvisor> getAuthzGroupAdvisors();}
+    public List<AuthzGroupAdvisor> getAuthzGroupAdvisors();
+
+    /**
+     * Set of all maintain roles
+     *
+     * @return String Set containing all maintain roles.
+     */
+    public Set<String> getMaintainRoles();
+}

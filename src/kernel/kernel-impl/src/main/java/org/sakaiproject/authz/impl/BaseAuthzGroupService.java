@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/kernel/trunk/kernel-impl/src/main/java/org/sakaiproject/authz/impl/BaseAuthzGroupService.java $
- * $Id: BaseAuthzGroupService.java 129704 2013-09-13 16:00:40Z enietzel@anisakai.com $
+ * $Id: BaseAuthzGroupService.java 133031 2014-01-06 20:27:07Z matthew@longsight.com $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008 Sakai Foundation
@@ -1505,6 +1505,13 @@ public abstract class BaseAuthzGroupService implements AuthzGroupService
 		 *        The azGroup to refresh.
 		 */
 		void refreshAuthzGroup(BaseAuthzGroup azGroup);
+
+        /**
+         * Retrieve all maintain roles
+         *
+         * @return a String Set of all maintain roles
+         */
+        public Set<String> getMaintainRoles();
 	}
 
 	public class ProviderMap implements Map
@@ -1618,4 +1625,8 @@ public abstract class BaseAuthzGroupService implements AuthzGroupService
 	public List<AuthzGroupAdvisor> getAuthzGroupAdvisors() {
 		return Collections.unmodifiableList(authzGroupAdvisors);
 	}
+
+    public Set getMaintainRoles(){
+        return m_storage.getMaintainRoles();
+    }
 }

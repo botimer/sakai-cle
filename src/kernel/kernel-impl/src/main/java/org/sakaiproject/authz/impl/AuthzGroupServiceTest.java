@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/kernel/trunk/kernel-impl/src/main/java/org/sakaiproject/authz/impl/AuthzGroupServiceTest.java $
- * $Id: AuthzGroupServiceTest.java 105077 2012-02-24 22:54:29Z ottenhoff@longsight.com $
+ * $Id: AuthzGroupServiceTest.java 133031 2014-01-06 20:27:07Z matthew@longsight.com $
  ***********************************************************************************
  *
  * Copyright (c) 2006, 2008 Sakai Foundation
@@ -30,6 +30,8 @@ import org.sakaiproject.event.api.EventTrackingService;
 import org.sakaiproject.time.api.TimeService;
 import org.sakaiproject.user.api.UserDirectoryService;
 import org.sakaiproject.tool.api.SessionManager;
+
+import java.util.Set;
 
 /**
  * <p>
@@ -109,4 +111,9 @@ public class AuthzGroupServiceTest extends DbAuthzGroupService
 	{
 		return null;
 	}
+
+    @Override
+    public Set<String> getMaintainRoles() {
+        return null;
+    }
 }

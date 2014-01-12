@@ -1,7 +1,7 @@
 /**********************************************************************************
 
  * $URL: https://source.sakaiproject.org/svn/site-manage/trunk/site-manage-tool/tool/src/java/org/sakaiproject/site/tool/SiteAction.java $
- * $Id: SiteAction.java 132907 2013-12-24 16:07:23Z phaggood@umich.edu $
+ * $Id: SiteAction.java 133220 2014-01-10 17:37:17Z phaggood@umich.edu $
  ***********************************************************************************
  *
  * Copyright (c) 2003, 2004, 2005, 2006, 2007, 2008, 2009 The Sakai Foundation
@@ -1385,8 +1385,10 @@ public class SiteAction extends PagedResourceActionII {
 
 		ResourceProperties siteProperties = null;
 
-		// course site types
+		// all site types
 		context.put("courseSiteTypeStrings", SiteService.getSiteTypeStrings("course"));
+		context.put("portfolioSiteTypeStrings", SiteService.getSiteTypeStrings("portfolio"));
+		context.put("projectSiteTypeStrings", SiteService.getSiteTypeStrings("project"));
 		
 		//can the user create course sites?
 		context.put(STATE_SITE_ADD_COURSE, SiteService.allowAddCourseSite());
@@ -1610,6 +1612,7 @@ public class SiteAction extends PagedResourceActionII {
 			Boolean checkToolGroupHome = (Boolean) state.getAttribute(STATE_TOOL_HOME_SELECTED);
 
 			context.put("check_home", checkToolGroupHome);
+			context.put("ltitool_id_prefix", LTITOOL_ID_PREFIX);
 			context.put("serverName", ServerConfigurationService
 					.getServerName());
 			context.put("sites", SiteService.getSites(
@@ -9650,7 +9653,7 @@ private Map<String,List> getTools(SessionState state, String type, Site site) {
 		String email = StringUtils.trimToEmpty(params
 				.getString("siteContactEmail"));
 		if (email != null) {
-			if (!EmailValidator.getInstance().isValid(email)) {
+			if (!email.isEmpty() && !EmailValidator.getInstance().isValid(email)) {
 				// invalid email
 				addAlert(state, rb.getFormattedMessage("java.invalid.email", new Object[]{email}));
 			}

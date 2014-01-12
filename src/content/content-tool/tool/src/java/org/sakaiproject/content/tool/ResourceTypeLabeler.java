@@ -1,6 +1,6 @@
 /**********************************************************************************
  * $URL: https://source.sakaiproject.org/svn/content/trunk/content-tool/tool/src/java/org/sakaiproject/content/tool/ResourceTypeLabeler.java $
- * $Id: ResourceTypeLabeler.java 105079 2012-02-24 23:08:11Z ottenhoff@longsight.com $
+ * $Id: ResourceTypeLabeler.java 133222 2014-01-10 17:46:39Z zqian@umich.edu $
  ***********************************************************************************
  *
  * Copyright (c) 2007, 2008 The Sakai Foundation
@@ -91,6 +91,9 @@ public class ResourceTypeLabeler
 					break;
 				case PASTE_MOVED:
 					label = ResourcesAction.trb.getString("action.pastemove");
+					break;
+				case PRINT_FILE:
+					label = ResourcesAction.trb.getString("action.printfile");
 					break;
 				default:
 					ResourcesAction.logger.info("No label provided for ResourceToolAction: " + action.getTypeId() + ResourceToolAction.ACTION_DELIMITER + action.getId());

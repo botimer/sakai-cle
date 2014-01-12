@@ -1,0 +1,37 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+   <modelVersion>4.0.0</modelVersion>
+   <name>Sakai Hierarchy Components Pack</name>
+   <groupId>org.sakaiproject.hierarchy</groupId>
+   <artifactId>hierarchy-pack</artifactId>
+   <organization>
+      <name>CARET, Cambridge University</name>
+      <url>http://caret.cam.ac.uk/</url>
+   </organization>
+   <inceptionYear>2007</inceptionYear>
+   <packaging>sakai-component</packaging>
+
+   <properties>
+      <deploy.target>components</deploy.target>
+   </properties>
+
+   <!-- the base is parent -->
+   <parent>
+      <artifactId>hierarchy</artifactId>
+      <groupId>org.sakaiproject</groupId>
+      <version>1.2.7-SNAPSHOT</version><!--hierarchy.version-->
+   </parent>
+
+   <dependencies>
+
+      <!-- internal dependencies -->
+      <dependency>
+         <groupId>org.sakaiproject.hierarchy</groupId>
+         <artifactId>hierarchy-impl</artifactId>
+         <scope>runtime</scope>
+      </dependency>
+
+   </dependencies>
+
+   <build />
+
+</project>

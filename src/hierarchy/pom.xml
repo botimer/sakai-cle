@@ -1,0 +1,139 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <name>Sakai Hierarchy</name>
+    <groupId>org.sakaiproject</groupId>
+    <artifactId>hierarchy</artifactId>
+    <packaging>pom</packaging>
+    <organization>
+        <name>CARET, University of Cambridge</name>
+        <url>http://www.caret.cam.ac.uk/</url>
+    </organization>
+    <inceptionYear>2007</inceptionYear>
+    <description>
+        Hierarchy is meant to provide a high performance basic hierarchy to associate data
+        with, no data is stored in the hierarchy itself, it is simply there to allow you
+        to maintain the hierarchical structure and to provide methods to manipulate it and
+        query it
+    </description>
+    <version>1.2.7-SNAPSHOT</version><!--hierarchy.version-->
+
+	<!-- To build with 2.9, uncomment the 2.9.3 version and build with -P full,sakai-2.9 -->
+    <!-- Sakai master pom is parent -->
+    <parent>
+        <artifactId>master</artifactId>
+        <groupId>org.sakaiproject</groupId>
+        <version>10.0-SNAPSHOT</version>
+		<!--
+        <version>2.9.3</version>
+		-->
+        <relativePath>../master/pom.xml</relativePath>
+    </parent>
+
+    <profiles>
+        <profile>
+            <id>full</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <modules>
+                <module>api</module>
+                <module>impl</module>
+                <module>pack</module>
+            </modules>
+        </profile>
+        <profile>
+            <id>api</id>
+            <modules>
+                <module>api</module>
+            </modules>
+        </profile>
+        <profile>
+            <id>ddl</id>
+            <modules>
+                <module>impl/src/ddl</module>
+            </modules>
+        </profile>
+    </profiles>
+
+    <!-- Project developers -->
+    <developers>
+        <developer>
+            <id>aaronz@vt.edu</id>
+            <name>Aaron Zeckoski</name>
+            <email>aaron@caret.cam.ac.uk</email>
+            <url>http://confluence.sakaiproject.org/confluence/display/~aaronz</url>
+            <organization>CARET</organization>
+            <organizationUrl>http://www.caret.cam.ac.uk/</organizationUrl>
+            <roles>
+                <role>Project Manager</role>
+                <role>Architect</role>
+                <role>Developer</role>
+            </roles>
+            <timezone>0</timezone>
+        </developer>
+    </developers>
+
+    <repositories>
+        <repository>
+            <id>sakai-maven</id>
+            <name>Sakai Maven Repo</name>
+            <layout>default</layout>
+            <url>http://source.sakaiproject.org/maven2</url>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
+
+    <distributionManagement>
+        <repository>
+            <id>Sakai-Maven2</id>
+            <name>Sakaiproject Maven 2 repository</name>
+            <url>dav:https://source.sakaiproject.org/maven2</url>
+        </repository>
+        <site>
+            <id>local</id>
+            <name>Local Test</name>
+            <url>file:///tmp/hierarchy/site</url>
+        </site>
+    </distributionManagement>
+
+    <issueManagement>
+        <system>JIRA</system>
+        <url>http://jira.sakaiproject.org/jira/</url>
+    </issueManagement>
+
+    <!-- define the license -->
+    <licenses>
+        <license>
+            <name>Educational Community License, Version 2.0</name>
+            <url>http://www.opensource.org/licenses/ecl2.php</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <!-- define source code repository location -->
+    <scm>
+        <connection>scm:svn:https://source.sakaiproject.org/contrib/caret/hierarchy/trunk</connection>
+        <developerConnection>scm:svn:https://source.sakaiproject.org/contrib/caret/hierarchy/trunk</developerConnection>
+        <url>https://source.sakaiproject.org/contrib/caret/hierarchy/?root=contrib</url>
+    </scm>
+
+    <!-- handles the management of all related dependencies -->
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                 <groupId>org.sakaiproject.hierarchy</groupId>
+                 <artifactId>hierarchy-api</artifactId>
+                 <version>1.2.7-SNAPSHOT</version><!--hierarchy.version-->
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                 <groupId>org.sakaiproject.hierarchy</groupId>
+                 <artifactId>hierarchy-impl</artifactId>
+                <version>1.2.7-SNAPSHOT</version><!--hierarchy.version-->
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+</project>
